@@ -1,0 +1,17 @@
+{
+  "version": "1.0.0",
+  "modules": [
+    { "name": "Structure Blocks", "url": "blocks/structure.js" },
+    { "name": "Visual Blocks", "url": "blocks/visual.js" },
+    { "name": "Audio Blocks", "url": "blocks/audio.js" },
+    { "name": "MIDI Blocks", "url": "blocks/midi.js" },
+    { "name": "UI Blocks", "url": "blocks/ui.js" },
+    { "name": "Math Blocks", "url": "blocks/math.js" },
+    { "name": "Structure Generators", "url": "generators/structure.js", "type": "generator" },
+    { "name": "Visual Generators", "url": "generators/visual.js", "type": "generator" },
+    { "name": "Audio Generators", "url": "generators/audio.js", "type": "generator" },
+    { "name": "MIDI Generators", "url": "generators/midi.js", "type": "generator" },
+    { "name": "UI Generators", "url": "generators/ui.js", "type": "generator" },
+    { "name": "Math Generators", "url": "generators/math.js", "type": "generator" }
+  ]
+}

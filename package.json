@@ -1,0 +1,78 @@
+{
+  "name": "synthblockly-stage",
+  "displayName": "SynthBlockly Stage",
+  "description": "Visualize your music performance with Blockly and Processing.",
+  "version": "0.1.0",
+  "publisher": "simfonia",
+  "engines": {
+    "vscode": "^1.106.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onCommand:synthblockly-stage.openBlockly"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "synthblockly-stage.openBlockly",
+        "title": "SynthBlockly Stage: Open Workspace",
+        "category": "SynthBlockly Stage"
+      },
+      {
+        "command": "synthblockly-stage.runSketch",
+        "title": "SynthBlockly Stage: Run Sketch",
+        "icon": "$(play)",
+        "category": "SynthBlockly Stage"
+      },
+      {
+        "command": "synthblockly-stage.stopSketch",
+        "title": "SynthBlockly Stage: Stop Sketch",
+        "icon": "$(primitive-square)",
+        "category": "SynthBlockly Stage"
+      }
+    ],
+    "menus": {
+      "editor/title": [
+        {
+          "command": "synthblockly-stage.runSketch",
+          "group": "navigation",
+          "when": "synthblockly-stage.isWebviewOpen"
+        },
+        {
+          "command": "synthblockly-stage.stopSketch",
+          "group": "navigation",
+          "when": "synthblockly-stage.isWebviewOpen"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "SynthBlockly Stage",
+      "properties": {
+        "synthblockly-stage.processingPath": {
+          "type": "string",
+          "default": "",
+          "description": "Path to processing-java executable."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile && npm run lint",
+    "lint": "eslint src --ext ts",
+    "test": "node ./out/test/runTest.js"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/vscode": "^1.106.0",
+    "@typescript-eslint/eslint-plugin": "^8.0.0",
+    "@typescript-eslint/parser": "^8.0.0",
+    "eslint": "^9.0.0",
+    "typescript": "^5.0.0"
+  }
+}
