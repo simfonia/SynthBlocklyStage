@@ -18,6 +18,8 @@ Blockly.Processing.forBlock['ui_add_slider'] = function(block) {
   const label = block.getFieldValue('LABEL');
   const x = block.getFieldValue('X');
   const y = block.getFieldValue('Y');
+  const w = block.getFieldValue('W');
+  const h = block.getFieldValue('H');
   const min = block.getFieldValue('MIN');
   const max = block.getFieldValue('MAX');
   const val = block.getFieldValue('VAL');
@@ -27,6 +29,7 @@ Blockly.Processing.forBlock['ui_add_slider'] = function(block) {
 
   return `cp5.addSlider("${varName}")
      .setPosition(${x}, ${y})
+     .setSize(${w}, ${h})
      .setRange(${min}, ${max})
      .setValue(${val})
      .setCaptionLabel("${label}");\n`;

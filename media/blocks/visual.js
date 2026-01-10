@@ -142,5 +142,55 @@ Blockly.defineBlocksWithJsonArray([
     "nextStatement": null,
     "colour": "#3498DB",
     "tooltip": "自動根據螢幕密度調整繪圖解析度。建議放在 setup 中。"
+  },
+  {
+    "type": "visual_stage_setup",
+    "message0": "%{BKY_VISUAL_STAGE_SETUP}",
+    "args0": [
+      { "type": "input_dummy" },
+      { "type": "field_number", "name": "W", "value": 1000 },
+      { "type": "field_number", "name": "H", "value": 400 },
+      { "type": "input_dummy" },
+      { "type": "field_colour", "name": "BG_COLOR", "colour": "#000000" },
+      { "type": "field_colour", "name": "WAVE_COLOR", "colour": "#FF0096" },
+      { "type": "input_dummy" },
+      { "type": "field_checkbox", "name": "SHOW_WAVE", "checked": true },
+      { "type": "field_checkbox", "name": "SHOW_SPEC", "checked": false },
+      { "type": "field_checkbox", "name": "SHOW_LOG", "checked": true },
+      { "type": "field_input", "name": "MIDI_IN", "text": "0" }
+    ],
+    "previousStatement": null,
+    "nextStatement": null,
+    "colour": "#2C3E50",
+    "tooltip": "一鍵建立完整的表演環境，包含畫布、音訊引擎、MIDI 與自動視覺化效果。"
+  }
+  {
+    "type": "visual_stage_set_color",
+    "message0": "%{BKY_VISUAL_STAGE_SET_COLOR}",
+    "args0": [
+      {
+        "type": "field_dropdown",
+        "name": "TARGET",
+        "options": [
+          ["%{BKY_VISUAL_STAGE_BG}", "BG"],
+          ["%{BKY_VISUAL_STAGE_WAVE}", "WAVE"]
+        ]
+      },
+      { "type": "input_value", "name": "COLOR" }
+    ],
+    "previousStatement": null,
+    "nextStatement": null,
+    "colour": "#2C3E50",
+    "tooltip": "在 draw 迴圈或事件中動態改變舞台顏色。"
+  },
+  {
+    "type": "visual_color_picker",
+    "message0": "%1",
+    "args0": [
+      { "type": "field_colour", "name": "COLOR", "colour": "#ff0000" }
+    ],
+    "output": null,
+    "colour": "#3498DB",
+    "tooltip": "選取一個顏色數值。"
   }
 ]);

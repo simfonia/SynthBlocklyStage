@@ -1,65 +1,58 @@
 <xml xmlns="https://developers.google.com/blockly/xml">
   <block type="processing_setup" id="setup" x="20" y="20">
     <statement name="DO">
-      <block type="visual_size" id="size">
-        <field name="WIDTH">1000</field>
-        <field name="HEIGHT">400</field>
+      <block type="visual_stage_setup" id="super_stage">
+        <field name="W">1000</field>
+        <field name="H">400</field>
+        <field name="BG_COLOR">#000000</field>
+        <field name="WAVE_COLOR">#FF0096</field>
+        <field name="SHOW_WAVE">TRUE</field>
+        <field name="SHOW_SPEC">FALSE</field>
+        <field name="SHOW_LOG">TRUE</field>
+        <field name="MIDI_IN">0</field>
         <next>
-          <block type="visual_pixel_density" id="pd">
+          <block type="audio_load_sample" id="load_kick">
+            <field name="NAME">kick</field>
+            <field name="PATH">kick.wav</field>
             <next>
-              <block type="audio_minim_init" id="minim_init">
+              <block type="audio_load_sample" id="load_snare">
+                <field name="NAME">snare</field>
+                <field name="PATH">snare.wav</field>
                 <next>
-                  <block type="audio_load_sample" id="load_kick">
+                  <block type="audio_set_current_sample" id="init_sample">
                     <field name="NAME">kick</field>
-                    <field name="PATH">kick.wav</field>
                     <next>
-                      <block type="audio_load_sample" id="load_snare">
-                        <field name="NAME">snare</field>
-                        <field name="PATH">snare.wav</field>
+                      <block type="ui_set_font_size" id="ui_font">
+                        <field name="SIZE">16</field>
                         <next>
-                          <block type="audio_set_current_sample" id="init_sample">
-                            <field name="NAME">kick</field>
+                          <block type="ui_add_slider" id="gain_slider">
+                            <field name="VAR">masterGain</field>
+                            <field name="X">820</field>
+                            <field name="Y">130</field>
+                            <field name="W">150</field>
+                            <field name="H">20</field>
+                            <field name="MIN">-40</field>
+                            <field name="MAX">6</field>
+                            <field name="VAL">-10</field>
+                            <field name="LABEL">MASTER GAIN</field>
                             <next>
-                              <block type="midi_init" id="midi_init">
-                                <field name="DEVICE">0</field>
+                              <block type="ui_add_slider" id="scale_slider">
+                                <field name="VAR">waveScale</field>
+                                <field name="X">820</field>
+                                <field name="Y">180</field>
+                                <field name="W">150</field>
+                                <field name="H">20</field>
+                                <field name="MIN">0.5</field>
+                                <field name="MAX">10</field>
+                                <field name="VAL">2.5</field>
+                                <field name="LABEL">WAVE SCALE</field>
                                 <next>
-                                  <block type="ui_init" id="ui_init">
-                                    <next>
-                                      <block type="ui_set_font_size" id="ui_font">
-                                        <field name="SIZE">16</field>
-                                        <next>
-                                          <block type="ui_add_slider" id="gain_slider">
-                                            <field name="VAR">masterGain</field>
-                                            <field name="X">820</field>
-                                            <field name="Y">130</field>
-                                            <field name="MIN">-40</field>
-                                            <field name="MAX">6</field>
-                                            <field name="VAL">-10</field>
-                                            <field name="LABEL">MASTER GAIN</field>
-                                            <next>
-                                              <block type="ui_add_slider" id="scale_slider">
-                                                <field name="VAR">waveScale</field>
-                                                <field name="X">820</field>
-                                                <field name="Y">180</field>
-                                                <field name="MIN">0.5</field>
-                                                <field name="MAX">10</field>
-                                                <field name="VAL">2.5</field>
-                                                <field name="LABEL">WAVE SCALE</field>
-                                                <next>
-                                                  <block type="ui_add_toggle" id="midi_toggle">
-                                                    <field name="VAR">isMidiMode</field>
-                                                    <field name="X">820</field>
-                                                    <field name="Y">30</field>
-                                                    <field name="STATE">TRUE</field>
-                                                    <field name="LABEL">MIDI MODE</field>
-                                                  </block>
-                                                </next>
-                                              </block>
-                                            </next>
-                                          </block>
-                                        </next>
-                                      </block>
-                                    </next>
+                                  <block type="ui_add_toggle" id="midi_toggle">
+                                    <field name="VAR">isMidiMode</field>
+                                    <field name="X">820</field>
+                                    <field name="Y">30</field>
+                                    <field name="STATE">TRUE</field>
+                                    <field name="LABEL">MIDI MODE</field>
                                   </block>
                                 </next>
                               </block>
@@ -80,64 +73,11 @@
 
   <block type="processing_draw" id="draw" x="450" y="20">
     <statement name="DO">
-      <block type="visual_no_stroke" id="no_stroke_bg">
-        <next>
-          <block type="visual_fill" id="bg_fill">
-            <value name="R"><block type="math_number"><field name="NUM">0</field></block></value>
-            <value name="A"><block type="math_number"><field name="NUM">60</field></block></value>
-            <next>
-              <block type="visual_rect" id="bg_rect">
-                <value name="X"><block type="math_number"><field name="NUM">0</field></block></value>
-                <value name="Y"><block type="math_number"><field name="NUM">0</field></block></value>
-                <value name="W"><block type="math_number"><field name="NUM">800</field></block></value>
-                <value name="H"><block type="visual_constant"><field name="CONSTANT">height</field></block></value>
-                <next>
-                  <block type="visual_stroke" id="wave_stroke">
-                    <value name="R"><block type="math_number"><field name="NUM">255</field></block></value>
-                    <value name="G"><block type="math_number"><field name="NUM">0</field></block></value>
-                    <value name="B"><block type="math_number"><field name="NUM">150</field></block></value>
-                    <next>
-                      <block type="visual_stroke_weight" id="wave_weight">
-                        <value name="WEIGHT"><block type="math_number"><field name="NUM">3</field></block></value>
-                        <next>
-                          <block type="visual_no_fill" id="wave_nofill">
-                            <next>
-                              <block type="controls_for" id="wave_loop">
-                                <field name="VAR" id="i">i</field>
-                                <value name="FROM"><block type="math_number"><field name="NUM">0</field></block></value>
-                                <value name="TO">
-                                  <block type="math_arithmetic">
-                                    <field name="OP">MINUS</field>
-                                    <value name="A"><block type="audio_current_sample_property"><field name="PROP">bufferSize()</field></block></value>
-                                    <value name="B"><block type="math_number"><field name="NUM">2</field></block></value>
-                                  </block>
-                                </value>
-                                <value name="BY"><block type="math_number"><field name="NUM">1</field></block></value>
-                                <statement name="DO">
-                                  <block type="visual_line" id="draw_line">
-                                    <value name="X1"><block type="math_map"><value name="VALUE"><block type="variables_get"><field name="VAR" id="i">i</field></block></value><value name="FROM_LOW"><block type="math_number"><field name="NUM">0</field></block></value><value name="FROM_HIGH"><block type="audio_current_sample_property"><field name="PROP">bufferSize()</field></block></value><value name="TO_LOW"><block type="math_number"><field name="NUM">0</field></block></value><value name="TO_HIGH"><block type="math_number"><field name="NUM">800</field></block></value></block></value>
-                                    <value name="Y1"><block type="math_arithmetic"><field name="OP">ADD</field><value name="A"><block type="math_arithmetic"><field name="OP">DIVIDE</field><value name="A"><block type="visual_constant"><field name="CONSTANT">height</field></block></value><value name="B"><block type="math_number"><field name="NUM">2</field></block></value></block></value><value name="B"><block type="math_arithmetic"><field name="OP">MULTIPLY</field><value name="A"><block type="math_arithmetic"><field name="OP">MULTIPLY</field><value name="A"><block type="audio_current_sample_mix_get"><value name="INDEX"><block type="variables_get"><field name="VAR" id="i">i</field></block></value></block></value><value name="B"><block type="variables_get"><field name="VAR">waveScale</field></block></value></block></value><value name="B"><block type="visual_constant"><field name="CONSTANT">height</field></block></value></block></value></block></value>
-                                    <value name="X2"><block type="math_map"><value name="VALUE"><block type="math_arithmetic"><field name="OP">ADD</field><value name="A"><block type="variables_get"><field name="VAR" id="i">i</field></block></value><value name="B"><block type="math_number"><field name="NUM">1</field></block></value></block></value><value name="FROM_LOW"><block type="math_number"><field name="NUM">0</field></block></value><value name="FROM_HIGH"><block type="audio_current_sample_property"><field name="PROP">bufferSize()</field></block></value><value name="TO_LOW"><block type="math_number"><field name="NUM">0</field></block></value><value name="TO_HIGH"><block type="math_number"><field name="NUM">800</field></block></value></block></value>
-                                    <value name="Y2"><block type="math_arithmetic"><field name="OP">ADD</field><value name="A"><block type="math_arithmetic"><field name="OP">DIVIDE</field><value name="A"><block type="visual_constant"><field name="CONSTANT">height</field></block></value><value name="B"><block type="math_number"><field name="NUM">2</field></block></value></block></value><value name="B"><block type="math_arithmetic"><field name="OP">MULTIPLY</field><value name="A"><block type="math_arithmetic"><field name="OP">MULTIPLY</field><value name="A"><block type="audio_current_sample_mix_get"><value name="INDEX"><block type="math_arithmetic"><field name="OP">ADD</field><value name="A"><block type="variables_get"><field name="VAR" id="i">i</field></block></value><value name="B"><block type="math_number"><field name="NUM">1</field></block></value></block></value></block></value><value name="B"><block type="variables_get"><field name="VAR">waveScale</field></block></value></block></value><value name="B"><block type="visual_constant"><field name="CONSTANT">height</field></block></value></block></value></block></value>
-                                  </block>
-                                </statement>
-                              </block>
-                            </next>
-                          </block>
-                        </next>
-                      </block>
-                    </next>
-                  </block>
-                </next>
-              </block>
-            </next>
-          </block>
-        </next>
-      </block>
+      <!-- 現在這裡變得很空曠，使用者可以加入自己的額外繪圖 -->
     </statement>
   </block>
 
-  <block type="midi_on_note" id="midi_on" x="20" y="700">
+  <block type="midi_on_note" id="midi_on" x="20" y="550">
     <statement name="DO">
       <block type="controls_if" id="if_kick">
         <value name="IF0">

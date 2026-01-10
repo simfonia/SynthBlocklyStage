@@ -26,6 +26,12 @@
     "CAT_MIDI": "MIDI",
     "CAT_VISUAL": "Visuals",
 
+    // Visual Blocks
+    "VISUAL_STAGE_SETUP": "Create Stage %1 Width %2 Height %3 %4 Background %5 Waveform %6 %7 Show Wave %8 Show Spectrum %9 Show Log %10 MIDI In %11",
+    "VISUAL_STAGE_SET_COLOR": "Set stage %1 color to %2",
+    "VISUAL_STAGE_BG": "Background",
+    "VISUAL_STAGE_WAVE": "Waveform",
+
     // Processing Structure Blocks
     "BKY_PROCESSING_SETUP_MSG_ENGINEER": "void setup()",
     "BKY_PROCESSING_DRAW_MSG_ENGINEER": "void draw()",

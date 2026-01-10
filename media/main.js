@@ -12,6 +12,29 @@ let workspace = null;
  * Initializes the Blockly workspace.
  */
 async function init() {
+    // 0. 強化插件註冊 (參考 piBlockly 成功經驗)
+    const FieldColour = window.FieldColour || (window.Blockly && window.Blockly.FieldColour);
+    if (FieldColour) {
+        try {
+            Blockly.registry.register('field', 'field_colour', FieldColour);
+            console.log('[Registry] field_colour registered.');
+        } catch (e) {
+            console.log('[Registry] field_colour already registered.');
+        }
+    } else {
+        console.warn('[Warning] FieldColour class not found.');
+    }
+
+    const FieldMultilineInput = window.FieldMultilineInput || (window.Blockly && window.Blockly.FieldMultilineInput);
+    if (FieldMultilineInput) {
+        try {
+            Blockly.registry.register('field', 'field_multilineinput', FieldMultilineInput);
+            console.log('[Registry] field_multilineinput registered.');
+        } catch (e) {
+            console.log('[Registry] field_multilineinput already registered.');
+        }
+    }
+
     // 1. Get the container
     const blocklyDiv = document.getElementById('blocklyDiv');
     const toolboxXml = document.getElementById('toolbox-xml').textContent;

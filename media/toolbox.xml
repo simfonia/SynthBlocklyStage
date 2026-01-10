@@ -5,6 +5,13 @@
         <block type="processing_on_key_pressed"></block>
     </category>
     <category name="%{BKY_CAT_VISUAL}" colour="%{BKY_VISUAL_HUE}">
+        <block type="visual_stage_setup"></block>
+        <block type="visual_stage_set_color">
+            <value name="COLOR">
+                <shadow type="visual_color_picker"></shadow>
+            </value>
+        </block>
+        <block type="visual_color_picker"></block>
         <block type="visual_size"></block>
         <block type="visual_background">
             <value name="COLOR">

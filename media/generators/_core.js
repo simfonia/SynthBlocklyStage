@@ -37,6 +37,7 @@ Blockly.Processing.init = function(workspace) {
   Blockly.Processing.global_vars_ = Object.create(null);
   Blockly.Processing.definitions_ = Object.create(null); 
   Blockly.Processing.setups_ = Object.create(null);
+  Blockly.Processing.draws_ = Object.create(null); // 新增 draw 籃子
 
   if (!Blockly.Processing.nameDB_) {
     Blockly.Processing.nameDB_ = new Blockly.Names(Blockly.Processing.RESERVED_WORDS_);
@@ -47,24 +48,57 @@ Blockly.Processing.init = function(workspace) {
 };
 
 /**
+ * 輔助函數：添加 Import 語句
+ */
+Blockly.Processing.addImport = function(importStr) {
+  if (Blockly.Processing.imports_) {
+    Blockly.Processing.imports_[importStr] = importStr;
+  }
+};
+
+/**
+ * 輔助函數：注入程式碼到 setup()
+ */
+Blockly.Processing.provideSetup = function(code) {
+  if (Blockly.Processing.setups_) {
+    var key = code.split('\n')[0]; // 用第一行當 key 避免重複
+    Blockly.Processing.setups_[key] = code;
+  }
+};
+
+/**
+ * 輔助函數：注入程式碼到 draw() 的開頭
+ */
+Blockly.Processing.provideDraw = function(code) {
+  if (Blockly.Processing.draws_) {
+    var key = code.split('\n')[0];
+    Blockly.Processing.draws_[key] = code;
+  }
+};
+
+/**
  * Finish the code generation.
  */
 Blockly.Processing.finish = function(code) {
   // 1. Imports
-  const imports = Object.values(Blockly.Processing.imports_).sort().join('\n');
+  const imports = Object.values(Blockly.Processing.imports_ || {}).sort().join('\n');
   // 2. Global variables
-  const globalVars = Object.values(Blockly.Processing.global_vars_).sort().join('\n');
+  const globalVars = Object.values(Blockly.Processing.global_vars_ || {}).sort().join('\n');
+  
   // 3. Setup function
-  const setups = Object.values(Blockly.Processing.setups_);
-  const setup = 'void setup() {\n  ' + setups.join('\n  ') + '\n}\n';
-  // 4. Draw function
-  const draw = 'void draw() {\n  ' + code.replace(/\n/g, '\n  ') + '\n}\n';
+  const setups = Object.values(Blockly.Processing.setups_ || []);
+  const setup = 'void setup() {\n  ' + setups.join('\n  ').replace(/\n/g, '\n  ') + '\n}\n';
+  
+  // 4. Draw function (結合注入的 draws_ 與主要 code)
+  const drawParts = Object.values(Blockly.Processing.draws_ || []);
+  const fullDrawCode = drawParts.join('\n') + '\n' + code;
+  const draw = 'void draw() {\n  ' + fullDrawCode.trim().replace(/\n/g, '\n  ') + '\n}\n';
 
   let finalCode = '';
   if (imports) finalCode += imports + '\n\n';
   if (globalVars) finalCode += globalVars + '\n\n';
   
-  const definitions = Object.values(Blockly.Processing.definitions_).join('\n\n');
+  const definitions = Object.values(Blockly.Processing.definitions_ || {}).join('\n\n');
   if (definitions) finalCode += definitions + '\n\n';
 
   finalCode += setup + '\n' + draw;
@@ -74,6 +108,7 @@ Blockly.Processing.finish = function(code) {
   delete Blockly.Processing.global_vars_;
   delete Blockly.Processing.definitions_;
   delete Blockly.Processing.setups_;
+  delete Blockly.Processing.draws_;
   Blockly.Processing.nameDB_.reset();
 
   return finalCode;

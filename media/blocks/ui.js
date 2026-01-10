@@ -18,11 +18,14 @@ Blockly.defineBlocksWithJsonArray([
   },
   {
     "type": "ui_add_slider",
-    "message0": "新增滑桿 名稱 %1 位置 x %2 y %3 範圍 %4 到 %5 初始值 %6 標籤 %7",
+    "message0": "新增滑桿 %1 位置 x %2 y %3 寬 %4 高 %5 %6 範圍 %7 到 %8 初始值 %9 標籤 %10",
     "args0": [
       { "type": "field_input", "name": "VAR", "text": "masterGain" },
       { "type": "field_number", "name": "X", "value": 820 },
       { "type": "field_number", "name": "Y", "value": 130 },
+      { "type": "field_number", "name": "W", "value": 150 },
+      { "type": "field_number", "name": "H", "value": 20 },
+      { "type": "input_dummy" },
       { "type": "field_number", "name": "MIN", "value": -40 },
       { "type": "field_number", "name": "MAX", "value": 6 },
       { "type": "field_number", "name": "VAL", "value": -10 },

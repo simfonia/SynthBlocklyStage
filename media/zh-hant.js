@@ -27,6 +27,12 @@
     "CAT_UI": "介面控制 (UI)",
     "CAT_VISUAL": "視覺繪圖",
 
+    // Visual Blocks
+    "VISUAL_STAGE_SETUP": "建立表演舞台 %1 寬 %2 高 %3 %4 背景顏色 %5 波形顏色 %6 %7 顯示波形 %8 顯示頻譜 %9 顯示日誌 %10 MIDI 輸入 %11",
+    "VISUAL_STAGE_SET_COLOR": "設定舞台 %1 顏色為 %2",
+    "VISUAL_STAGE_BG": "背景",
+    "VISUAL_STAGE_WAVE": "波形",
+
     // Hues
     "STRUCTURE_HUE": "#16A085",
     "LOGIC_HUE": "#b198de",
