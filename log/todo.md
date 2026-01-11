@@ -66,13 +66,14 @@
     - 實作：`ADSR Envelope` 在 Minim 中的對應控制。
     - 實作：常用效果器（`Delay`, `Reverb`）。
 - [ ] **3-3. MIDI 深度支援**
-    - 增加：Note Off 監聽、控制變更 (Control Change) 監聽。
+    - 增加：Note Off 監聽。
+    - **[新增] 實作控制變更 (Control Change, CC) 監聽，用以對接實體旋鈕控制舞台變數。**
 
-### 階段四：互動與通訊
+### 階段四：互動與通訊 (未來展望)
 - [ ] **4-1. Serial (Arduino) 串接**
     - 研究 Processing Serial 庫的積木封裝。
     - 實作：`Serial.list()`, `Serial.readString()`。
-    - 範例：LDR 感測器控制波形縮放。
+    - **範例：LDR 或超音波感測器控制 `waveScale` 或 `trailAlpha` 達到實體互動感。**
 
 ### 階段五：教學導向 (PBL) 整理
 - [ ] **5-1. 撰寫開發教學文件**

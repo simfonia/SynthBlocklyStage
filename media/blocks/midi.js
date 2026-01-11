@@ -34,5 +34,21 @@ Blockly.defineBlocksWithJsonArray([
     "colour": "#5B67E7",
     "tooltip": "當外部 MIDI 裝置按下琴鍵時執行的動作。",
     "hat": true
+  },
+  {
+    "type": "midi_off_note",
+    "message0": "%{BKY_MIDI_OFF_NOTE}",
+    "args0": [
+      { "type": "input_dummy" },
+      { "type": "input_dummy" },
+      { "type": "field_variable", "name": "CHANNEL", "variable": "channel" },
+      { "type": "field_variable", "name": "PITCH", "variable": "pitch" },
+      { "type": "field_variable", "name": "VELOCITY", "variable": "velocity" },
+      { "type": "input_dummy" },
+      { "type": "input_statement", "name": "DO" }
+    ],
+    "colour": "#5B67E7",
+    "tooltip": "當外部 MIDI 裝置放開琴鍵時執行的動作。",
+    "hat": true
   }
 ]);

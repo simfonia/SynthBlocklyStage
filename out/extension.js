@@ -43,7 +43,7 @@ let processingProcess = null;
 function activate(context) {
     console.log('SynthBlockly Stage is active!');
     let disposable = vscode.commands.registerCommand('synthblockly-stage.openBlockly', () => {
-        SynthBlocklyPanel.createOrShow(context.extensionUri);
+        SynthBlocklyPanel.createOrShow(context);
     });
     context.subscriptions.push(disposable);
     context.subscriptions.push(vscode.commands.registerCommand('synthblockly-stage.runSketch', () => {
@@ -73,10 +73,11 @@ class SynthBlocklyPanel {
     static currentPanel;
     static viewType = 'synthblocklyStage';
     _panel;
+    _extensionContext;
     _extensionUri;
     _currentXmlPath;
     _disposables = [];
-    static createOrShow(extensionUri) {
+    static createOrShow(context) {
         const column = vscode.window.activeTextEditor ? vscode.window.activeTextEditor.viewColumn : undefined;
         if (SynthBlocklyPanel.currentPanel) {
             SynthBlocklyPanel.currentPanel._panel.reveal(column);
@@ -85,16 +86,17 @@ class SynthBlocklyPanel {
         const panel = vscode.window.createWebviewPanel(SynthBlocklyPanel.viewType, 'SynthBlockly Stage', column || vscode.ViewColumn.One, {
             enableScripts: true,
             localResourceRoots: [
-                vscode.Uri.joinPath(extensionUri, 'media'),
-                vscode.Uri.joinPath(extensionUri, 'node_modules')
+                vscode.Uri.joinPath(context.extensionUri, 'media'),
+                vscode.Uri.joinPath(context.extensionUri, 'node_modules')
             ],
             retainContextWhenHidden: true
         });
-        SynthBlocklyPanel.currentPanel = new SynthBlocklyPanel(panel, extensionUri);
+        SynthBlocklyPanel.currentPanel = new SynthBlocklyPanel(panel, context);
     }
-    constructor(panel, extensionUri) {
+    constructor(panel, context) {
         this._panel = panel;
-        this._extensionUri = extensionUri;
+        this._extensionContext = context;
+        this._extensionUri = context.extensionUri;
         this._update();
         this._panel.onDidDispose(() => this.dispose(), null, this._disposables);
         this._panel.webview.onDidReceiveMessage(async (message) => {
@@ -103,13 +105,16 @@ class SynthBlocklyPanel {
                     this._handleExecuteCode(message.code);
                     return;
                 case 'openProject':
-                    this._handleOpenProject();
+                    this._handleOpenProject(message.isDirty);
                     return;
                 case 'saveProject':
-                    this._handleSaveProject(message.xml);
+                    this._handleSaveProject(message.xml, message.code);
+                    return;
+                case 'autoSaveProject':
+                    this._handleAutoSave(message.xml, message.code);
                     return;
                 case 'newProject':
-                    this._panel.webview.postMessage({ command: 'initializeWorkspace', xml: '<xml xmlns="https://developers.google.com/blockly/xml"></xml>' });
+                    this._handleNewProject(message.isDirty);
                     return;
                 case 'webviewReady':
                     return;
@@ -120,30 +125,103 @@ class SynthBlocklyPanel {
     runSketch() {
         this._panel.webview.postMessage({ command: 'generateCode' });
     }
-    async _handleOpenProject() {
+    async _handleNewProject(isDirty) {
+        if (isDirty) {
+            const answer = await vscode.window.showWarningMessage("You have unsaved changes. Are you sure you want to start a new project?", { modal: true }, "Discard Changes");
+            if (answer !== "Discard Changes") {
+                return;
+            }
+        }
+        this._currentXmlPath = undefined;
+        this._panel.title = "SynthBlockly Stage";
+        this._panel.webview.postMessage({
+            command: 'initializeWorkspace',
+            xml: '<xml xmlns="https://developers.google.com/blockly/xml"></xml>',
+            fileName: "",
+            fullPath: ""
+        });
+    }
+    async _handleOpenProject(isDirty) {
+        if (isDirty) {
+            const answer = await vscode.window.showWarningMessage("You have unsaved changes. Are you sure you want to open another project?", { modal: true }, "Discard Changes");
+            if (answer !== "Discard Changes") {
+                return;
+            }
+        }
+        const lastPath = this._extensionContext.globalState.get('lastPath');
+        const defaultUri = lastPath ? vscode.Uri.file(lastPath) : undefined;
         const options = {
             canSelectMany: false,
             openLabel: 'Open SynthBlockly Project',
-            filters: { 'Blockly XML': ['xml'] }
+            filters: { 'Blockly XML': ['xml'] },
+            defaultUri: defaultUri
         };
         const fileUri = await vscode.window.showOpenDialog(options);
         if (fileUri && fileUri[0]) {
             this._currentXmlPath = fileUri[0].fsPath;
+            const fileName = path.basename(this._currentXmlPath);
+            // Store the directory of the last opened file
+            this._extensionContext.globalState.update('lastPath', path.dirname(this._currentXmlPath));
             const xml = fs.readFileSync(this._currentXmlPath, 'utf8');
-            this._panel.webview.postMessage({ command: 'initializeWorkspace', xml: xml });
+            this._panel.title = `SynthBlockly: ${fileName}`;
+            this._panel.webview.postMessage({
+                command: 'initializeWorkspace',
+                xml: xml,
+                fileName: fileName,
+                fullPath: this._currentXmlPath
+            });
         }
     }
-    async _handleSaveProject(xml) {
+    async _handleAutoSave(xml, code) {
+        if (!this._currentXmlPath) {
+            return; // Skip if no file is currently opened/saved
+        }
+        try {
+            const xmlPath = this._currentXmlPath;
+            const projectDir = path.dirname(xmlPath);
+            const fileName = path.basename(xmlPath, '.xml');
+            const pdePath = path.join(projectDir, `${fileName}.pde`);
+            fs.writeFileSync(xmlPath, xml);
+            fs.writeFileSync(pdePath, code);
+            console.log(`[AutoSave] Success: ${fileName}`);
+        }
+        catch (e) {
+            console.error('[AutoSave] Failed:', e);
+        }
+    }
+    async _handleSaveProject(xml, code) {
+        const lastPath = this._extensionContext.globalState.get('lastPath');
+        const defaultUri = this._currentXmlPath ? vscode.Uri.file(this._currentXmlPath) : (lastPath ? vscode.Uri.file(lastPath) : undefined);
         const options = {
             saveLabel: 'Save SynthBlockly Project',
             filters: { 'Blockly XML': ['xml'] },
-            defaultUri: this._currentXmlPath ? vscode.Uri.file(this._currentXmlPath) : undefined
+            defaultUri: defaultUri
         };
         const fileUri = await vscode.window.showSaveDialog(options);
         if (fileUri) {
-            this._currentXmlPath = fileUri.fsPath;
-            fs.writeFileSync(this._currentXmlPath, xml);
-            vscode.window.showInformationMessage(`Project saved to ${path.basename(this._currentXmlPath)}`);
+            const xmlFilePath = fileUri.fsPath;
+            const projectDir = path.dirname(xmlFilePath);
+            const fileName = path.basename(xmlFilePath, '.xml');
+            // Processing Standard: sketch folder must match sketch name
+            const targetFolder = path.join(projectDir, fileName);
+            const finalXmlPath = path.join(targetFolder, `${fileName}.xml`);
+            const finalPdePath = path.join(targetFolder, `${fileName}.pde`);
+            if (!fs.existsSync(targetFolder)) {
+                fs.mkdirSync(targetFolder, { recursive: true });
+            }
+            fs.writeFileSync(finalXmlPath, xml);
+            fs.writeFileSync(finalPdePath, code);
+            this._currentXmlPath = finalXmlPath;
+            const finalName = path.basename(finalXmlPath);
+            this._extensionContext.globalState.update('lastPath', targetFolder);
+            this._panel.title = `SynthBlockly: ${finalName}`;
+            this._panel.webview.postMessage({
+                command: 'initializeWorkspace',
+                xml: xml,
+                fileName: finalName,
+                fullPath: this._currentXmlPath
+            });
+            vscode.window.showInformationMessage(`Project saved to folder: ${fileName}`);
         }
     }
     _handleExecuteCode(code) {
@@ -257,9 +335,11 @@ class SynthBlocklyPanel {
 </head>
 <body>
     <div id="toolbar">
-        <img id="newButton" class="toolbar-button" src="${iconUri}/new_24dp_1F1F1F.svg" title="New Project">
-        <img id="openButton" class="toolbar-button" src="${iconUri}/open_24dp_1F1F1F.svg" title="Open Project">
-        <img id="saveButton" class="toolbar-button" src="${iconUri}/save_24dp_1F1F1F.svg" title="Save Project">
+        <img id="newButton" class="toolbar-button" src="${iconUri}/new_24dp_1F1F1F.png" title="New Project">
+        <img id="openButton" class="toolbar-button" src="${iconUri}/load_project_24dp_1F1F1F.png" title="Open Project">
+        <img id="saveButton" class="toolbar-button" src="${iconUri}/save_as_24dp_1F1F1F.png" title="Save As">
+        <span id="projectName" class="project-name"></span>
+        <span id="saveStatus" class="status-label"></span>
     </div>
     <div id="blocklyDiv"></div>
     

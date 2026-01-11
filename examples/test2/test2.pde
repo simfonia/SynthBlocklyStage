@@ -11,14 +11,10 @@ import themidibus.*;
 AudioOutput out;
 ControlP5 cp5;
 FFT fft;
-Gain kick_gain;
-Gain snare_gain;
 HashMap<Integer, ADSR> activeNotes = new HashMap<Integer, ADSR>();
 MidiBus myBus;
 Minim minim;
 Sampler currentSample;
-Sampler kick;
-Sampler snare;
 boolean isMidiMode = false;
 boolean showADSR = true;
 boolean showLog = true;
@@ -34,11 +30,9 @@ float trailAlpha = 100.0;
 float waveScale = 2.5;
 int adsrState = 0;
 int adsrTimer = 0;
-int pitch;
 int pitchTranspose = 0;
 int stageBgColor;
 int stageFgColor;
-int velocity;
 
 void logToScreen(String msg, int type) {
     Textarea target = (type >= 1) ? cp5.get(Textarea.class, "alertsArea") : cp5.get(Textarea.class, "consoleArea");
@@ -167,50 +161,6 @@ void logToScreen(String msg, int type) {
     }
   }
 
-void noteOn(int channel, int pitch, int velocity) {
-  logToScreen("Note ON - Pitch: " + pitch + " Vel: " + velocity, 0);
-    if (pitch == 57) {
-    if (kick != null) {
-      kick_gain.setValue(map(velocity, 0, 127, -40, 0));
-      kick.trigger();
-    }
-  }
-  if (pitch == 59) {
-    if (snare != null) {
-      snare_gain.setValue(map(velocity, 0, 127, -40, 0));
-      snare.trigger();
-    }
-  }
-  if (pitch >= 60) {
-    {
-      float amp = map(velocity, 0, 127, 0, 0.6f);
-      Oscil wave = new Oscil(mtof(pitch), amp, Waves.TRIANGLE);
-      ADSR adsr = new ADSR(1.0, adsrA, adsrD, adsrS, adsrR);
-      wave.patch(adsr).patch(out);
-      adsr.noteOn();
-      activeNotes.put(pitch, adsr);
-      adsrTimer = millis(); adsrState = 1; // Visual Trigger
-    }
-  }
-
-}
-
-void noteOff(int channel, int pitch, int velocity) {
-  logToScreen("Note OFF - Pitch: " + pitch, 0);
-    if (pitch >= 60) {
-    {
-      ADSR adsr = activeNotes.get(pitch);
-      if (adsr != null) {
-        adsr.unpatchAfterRelease(out);
-        adsr.noteOff();
-        activeNotes.remove(pitch);
-        adsrTimer = millis(); adsrState = 2; // Visual Release
-      }
-    }
-  }
-
-}
-
 void setup() {
   size(1600, 600);
   pixelDensity(displayDensity());
@@ -279,12 +229,7 @@ void setup() {
      .setCaptionLabel("SCAN")
      .getCaptionLabel().toUpperCase(false).getStyle().setMarginTop(4);
   logToScreen("System Initialized.", 0);
-    kick = new Sampler("kick.wav", 4, minim);
-    kick_gain = new Gain(0.f);
-    kick.patch(kick_gain).patch(out);
-    snare = new Sampler("snare.wav", 4, minim);
-    snare_gain = new Gain(0.f);
-    snare.patch(snare_gain).patch(out);
+    stageBgColor = color(255, 0, 0);
 }
 
 

@@ -31,6 +31,34 @@ body {
     opacity: 1;
 }
 
+.project-name {
+    font-size: 13px;
+    margin-left: auto;
+    margin-right: 10px;
+    font-style: italic;
+    color: #555;
+}
+
+.status-label {
+    font-size: 13px;
+    margin-left: auto;
+    margin-right: 15px;
+    font-weight: bold;
+    transition: color 0.3s;
+}
+
+.status-dirty {
+    color: #E74C3C; /* Red */
+}
+
+.status-saved {
+    color: #27AE60; /* Green */
+}
+
+.status-new {
+    color: #7F8C8D; /* Gray */
+}
+
 #blocklyDiv {
     flex-grow: 1;
     width: 100%;

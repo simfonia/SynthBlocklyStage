@@ -16,21 +16,40 @@ Blockly.Processing.forBlock['midi_init'] = function(block) {
 };
 
 Blockly.Processing.forBlock['midi_on_note'] = function(block) {
-  const channelVar = Blockly.Processing.nameDB_.getName(block.getFieldValue('CHANNEL'), Blockly.Variables.NAME_TYPE);
-  const pitchVar = Blockly.Processing.nameDB_.getName(block.getFieldValue('PITCH'), Blockly.Variables.NAME_TYPE);
-  const velocityVar = Blockly.Processing.nameDB_.getName(block.getFieldValue('VELOCITY'), Blockly.Variables.NAME_TYPE);
+  // 強制使用固定名稱以匹配 _core.js 的變數強制更名邏輯
+  const channelVar = "channel";
+  const pitchVar = "pitch";
+  const velocityVar = "velocity";
   
   const branch = Blockly.Processing.statementToCode(block, 'DO');
   
-  // Custom function definition for the whole sketch
   const funcCode = `
 void noteOn(int ${channelVar}, int ${pitchVar}, int ${velocityVar}) {
+  logToScreen("Note ON - Pitch: " + ${pitchVar} + " Vel: " + ${velocityVar}, 0);
   ${branch}
 }
   `;
   
   Blockly.Processing.definitions_['midi_on_note'] = funcCode;
-  return ''; // Return empty string as it's a definition, not an inline instruction
+  return ''; 
+};
+
+Blockly.Processing.forBlock['midi_off_note'] = function(block) {
+  const channelVar = "channel";
+  const pitchVar = "pitch";
+  const velocityVar = "velocity";
+  
+  const branch = Blockly.Processing.statementToCode(block, 'DO');
+  
+  const funcCode = `
+void noteOff(int ${channelVar}, int ${pitchVar}, int ${velocityVar}) {
+  logToScreen("Note OFF - Pitch: " + ${pitchVar}, 0);
+  ${branch}
+}
+  `;
+  
+  Blockly.Processing.definitions_['midi_off_note'] = funcCode;
+  return ''; 
 };
 
 

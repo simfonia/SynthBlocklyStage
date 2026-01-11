@@ -80,38 +80,63 @@ Blockly.Processing.provideDraw = function(code) {
  * Finish the code generation.
  */
 Blockly.Processing.finish = function(code) {
-  // 1. Imports
-  const imports = Object.values(Blockly.Processing.imports_ || {}).sort().join('\n');
-  // 2. Global variables
-  const globalVars = Object.values(Blockly.Processing.global_vars_ || {}).sort().join('\n');
+  // 1. 處理 Imports (確保唯一、修剪空白、補齊分號)
+  const uniqueImports = new Set();
+  if (Blockly.Processing.imports_) {
+    Object.values(Blockly.Processing.imports_).forEach(imp => {
+      if (imp) {
+        let cleanImp = imp.trim();
+        if (cleanImp && !cleanImp.endsWith(';')) cleanImp += ';';
+        if (cleanImp) uniqueImports.add(cleanImp);
+      }
+    });
+  }
+  const importsStr = Array.from(uniqueImports).sort().join('\n');
+
+  // 2. 處理全域變數
+  const globalVars = Object.values(Blockly.Processing.global_vars_ || {})
+    .map(v => v.trim())
+    .filter(v => v !== "")
+    .sort()
+    .join('\n');
   
-  // 3. Setup function
-  const setups = Object.values(Blockly.Processing.setups_ || []);
+  // 3. 處理定義
+  const definitions = Object.values(Blockly.Processing.definitions_ || {})
+    .map(d => d.trim())
+    .filter(d => d !== "")
+    .join('\n\n');
+
+  // 4. Setup 函式
+  const setups = Object.values(Blockly.Processing.setups_ || [])
+    .map(s => s.trim())
+    .filter(s => s !== "");
   const setup = 'void setup() {\n  ' + setups.join('\n  ').replace(/\n/g, '\n  ') + '\n}\n';
   
-  // 4. Draw function (結合注入的 draws_ 與主要 code)
-  const drawParts = Object.values(Blockly.Processing.draws_ || []);
-  const fullDrawCode = drawParts.join('\n') + '\n' + code;
-  const draw = 'void draw() {\n  ' + fullDrawCode.trim().replace(/\n/g, '\n  ') + '\n}\n';
+  // 5. Draw 函式
+  const drawParts = Object.values(Blockly.Processing.draws_ || [])
+    .map(d => d.trim())
+    .filter(d => d !== "");
+  const fullDrawCode = (drawParts.join('\n') + '\n' + code).trim();
+  const draw = 'void draw() {\n  ' + (fullDrawCode ? fullDrawCode.replace(/\n/g, '\n  ') : '') + '\n}\n';
 
-  let finalCode = '';
-  if (imports) finalCode += imports + '\n\n';
-  if (globalVars) finalCode += globalVars + '\n\n';
+  // 6. 最終組合 (嚴格控制換行)
+  let segments = [];
+  if (importsStr) segments.push(importsStr);
+  if (globalVars) segments.push(globalVars);
+  if (definitions) segments.push(definitions);
+  segments.push(setup);
+  segments.push(draw);
+
+  const finalCode = segments.join('\n\n').trim();
   
-  const definitions = Object.values(Blockly.Processing.definitions_ || {}).join('\n\n');
-  if (definitions) finalCode += definitions + '\n\n';
-
-  finalCode += setup + '\n' + draw;
-
-  // Cleanup
+  // 清理
   delete Blockly.Processing.imports_;
   delete Blockly.Processing.global_vars_;
   delete Blockly.Processing.definitions_;
   delete Blockly.Processing.setups_;
   delete Blockly.Processing.draws_;
-  Blockly.Processing.nameDB_.reset();
-
-  return finalCode;
+  
+  return finalCode; 
 };
 
 Blockly.Processing.scrubNakedValue = function(line) {
@@ -165,16 +190,18 @@ Blockly.Processing.forBlock['variables_get'] = function(block) {
   const varId = block.getFieldValue('VAR');
   let varName = Blockly.Processing.nameDB_.getName(varId, Blockly.Variables.NAME_TYPE);
   
-  // FORCE LITERAL NAMES for common variables to ensure UI/logic sync
-  const forceNames = ['waveScale', 'masterGain', 'pitch', 'velocity', 'channel', 'isMidiMode', 'trailAlpha'];
+  // FORCE LITERAL NAMES & TYPES
+  const forceNames = ['waveScale', 'masterGain', 'pitch', 'velocity', 'channel', 'isMidiMode', 'trailAlpha', 'stageBgColor', 'stageFgColor'];
+  const intVars = ['stageBgColor', 'stageFgColor', 'pitch', 'velocity', 'channel'];
+  
   const actualName = block.workspace.getVariableMap().getVariableById(varId)?.name;
   if (actualName && forceNames.includes(actualName)) {
       varName = actualName;
   }
 
-  // Auto-declare if absolutely unknown (don't overwrite existing init)
   if (!Blockly.Processing.global_vars_[varName]) {
-      Blockly.Processing.global_vars_[varName] = "float " + varName + ";";
+      const type = intVars.includes(varName) ? "int" : "float";
+      Blockly.Processing.global_vars_[varName] = type + " " + varName + ";";
   }
   
   return [varName, Blockly.Processing.ORDER_ATOMIC];
@@ -185,15 +212,17 @@ Blockly.Processing.forBlock['variables_set'] = function(block) {
   const varId = block.getFieldValue('VAR');
   let varName = Blockly.Processing.nameDB_.getName(varId, Blockly.Variables.NAME_TYPE);
 
-  const forceNames = ['waveScale', 'masterGain', 'pitch', 'velocity', 'channel', 'isMidiMode', 'trailAlpha'];
+  const forceNames = ['waveScale', 'masterGain', 'pitch', 'velocity', 'channel', 'isMidiMode', 'trailAlpha', 'stageBgColor', 'stageFgColor'];
+  const intVars = ['stageBgColor', 'stageFgColor', 'pitch', 'velocity', 'channel'];
+  
   const actualName = block.workspace.getVariableMap().getVariableById(varId)?.name;
   if (actualName && forceNames.includes(actualName)) {
       varName = actualName;
   }
   
-  // Explicit set takes precedence
   if (!Blockly.Processing.global_vars_[varName] || !Blockly.Processing.global_vars_[varName].includes('=')) {
-      Blockly.Processing.global_vars_[varName] = "float " + varName + " = 0;"; 
+      const type = intVars.includes(varName) ? "int" : "float";
+      Blockly.Processing.global_vars_[varName] = type + " " + varName + " = 0;"; 
   }
   return varName + ' = ' + argument0 + ';\n';
 };

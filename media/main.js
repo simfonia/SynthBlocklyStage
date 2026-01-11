@@ -7,6 +7,24 @@ import { loadModules } from './module_loader.js';
 
 const vscode = acquireVsCodeApi();
 let workspace = null;
+let isDirty = false;
+let hasPath = false; // Tracks if the current project has a file location
+
+function updateStatusUI() {
+    const label = document.getElementById('saveStatus');
+    if (!label) return;
+    
+    if (!hasPath) {
+        label.textContent = "○ New Project (unsaved!)";
+        label.className = "status-label status-dirty";
+    } else if (isDirty) {
+        label.textContent = "● Unsaved Changes";
+        label.className = "status-label status-dirty";
+    } else {
+        label.textContent = "✓ Saved";
+        label.className = "status-label status-saved";
+    }
+}
 
 /**
  * Initializes the Blockly workspace.
@@ -79,22 +97,107 @@ async function init() {
         move: { scrollbars: true, drag: true, wheel: true }
     });
 
+    let autoSaveTimeout = null;
+    const triggerAutoSave = () => {
+        if (autoSaveTimeout) clearTimeout(autoSaveTimeout);
+        autoSaveTimeout = setTimeout(() => {
+            const xml = Blockly.Xml.workspaceToDom(workspace);
+            const xmlText = Blockly.Xml.domToText(xml);
+            
+            // Generate current code
+            Blockly.Processing.init(workspace);
+            const topBlocks = workspace.getTopBlocks(true);
+            let drawCode = '';
+            topBlocks.forEach(block => {
+                if (block.type === 'processing_draw') {
+                    drawCode += Blockly.Processing.blockToCode(block);
+                } else {
+                    Blockly.Processing.blockToCode(block);
+                }
+            });
+            const finalCode = Blockly.Processing.finish(drawCode);
+
+            vscode.postMessage({ 
+                command: 'autoSaveProject', 
+                xml: xmlText,
+                code: finalCode
+            });
+            isDirty = false;
+            updateStatusUI();
+            console.log('[Status] Auto-saved');
+        }, 2000); // 2 seconds debounce
+    };
+
+    workspace.addChangeListener((event) => {
+        // Only trigger isDirty for actual block changes, not UI or scrolling
+        const isBlockChange = [
+            Blockly.Events.BLOCK_CREATE,
+            Blockly.Events.BLOCK_DELETE,
+            Blockly.Events.BLOCK_CHANGE,
+            Blockly.Events.BLOCK_MOVE
+        ].includes(event.type);
+
+        if (isBlockChange && !event.isUiEvent && workspace.getTopBlocks().length > 0) {
+            if (!isDirty) {
+                isDirty = true;
+                updateStatusUI();
+                console.log('[Status] Workspace is now DIRTY');
+            }
+            triggerAutoSave();
+        }
+    });
+
     // 5. Signal VS Code that we are ready
     vscode.postMessage({ command: 'webviewReady' });
+    updateStatusUI();
 
     // 6. Handle Toolbar Buttons
+    const setupButtonHover = (id) => {
+        const btn = document.getElementById(id);
+        if (!btn) return;
+        btn.addEventListener('mouseover', () => {
+            btn.src = btn.src.replace('1F1F1F', 'FE2F89');
+        });
+        btn.addEventListener('mouseout', () => {
+            btn.src = btn.src.replace('FE2F89', '1F1F1F');
+        });
+    };
+
+    ['newButton', 'openButton', 'saveButton'].forEach(setupButtonHover);
+
     document.getElementById('openButton')?.addEventListener('click', () => {
-        vscode.postMessage({ command: 'openProject' });
+        vscode.postMessage({ command: 'openProject', isDirty: isDirty });
     });
 
     document.getElementById('saveButton')?.addEventListener('click', () => {
         const xml = Blockly.Xml.workspaceToDom(workspace);
         const xmlText = Blockly.Xml.domToText(xml);
-        vscode.postMessage({ command: 'saveProject', xml: xmlText });
+        
+        // Generate current code for saving pde alongside xml
+        Blockly.Processing.init(workspace);
+        const topBlocks = workspace.getTopBlocks(true);
+        let drawCode = '';
+        topBlocks.forEach(block => {
+            if (block.type === 'processing_draw') {
+                drawCode += Blockly.Processing.blockToCode(block);
+            } else {
+                Blockly.Processing.blockToCode(block);
+            }
+        });
+        const finalCode = Blockly.Processing.finish(drawCode);
+
+        vscode.postMessage({ 
+            command: 'saveProject', 
+            xml: xmlText,
+            code: finalCode
+        });
+        isDirty = false;
+        hasPath = true; // Manual save established a path
+        updateStatusUI();
     });
 
     document.getElementById('newButton')?.addEventListener('click', () => {
-        vscode.postMessage({ command: 'newProject' });
+        vscode.postMessage({ command: 'newProject', isDirty: isDirty });
     });
 
     // 7. Handle messages from VS Code
@@ -105,7 +208,9 @@ async function init() {
                 generateAndSendCode();
                 break;
             case 'initializeWorkspace':
-                loadXmlToWorkspace(message.xml);
+                // Check if this is a fresh new project (empty/default XML)
+                const isNew = message.xml.includes('<xml xmlns="https://developers.google.com/blockly/xml"></xml>');
+                loadXmlToWorkspace(message.xml, !isNew, message.fileName, message.fullPath);
                 break;
         }
     });
@@ -139,12 +244,27 @@ function generateAndSendCode() {
     });
 }
 
-function loadXmlToWorkspace(xmlText) {
+function loadXmlToWorkspace(xmlText, establishedPath = true, fileName = "", fullPath = "") {
     if (!xmlText) return;
     try {
+        Blockly.Events.disable(); // Prevent dirty state during initial load
         const xml = Blockly.utils.xml.textToDom(xmlText);
         Blockly.Xml.clearWorkspaceAndLoadFromXml(xml, workspace);
+        Blockly.Events.enable();
+        isDirty = false;
+        hasPath = establishedPath;
+        
+        // Update Filename UI
+        const nameLabel = document.getElementById('projectName');
+        if (nameLabel) {
+            nameLabel.textContent = fileName ? `[ ${fileName} ]` : "";
+            nameLabel.title = fullPath || ""; // Set hover tooltip to full path
+        }
+
+        updateStatusUI();
+        console.log('[Status] Workspace loaded. Path:', hasPath);
     } catch (e) {
+        Blockly.Events.enable();
         console.error('Failed to load XML', e);
     }
 }

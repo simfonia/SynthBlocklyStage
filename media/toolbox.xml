@@ -1,9 +1,131 @@
 <xml>
+    <!-- 1. Processing Structure (Stage Specific) -->
     <category name="%{BKY_CAT_STRUCTURE}" colour="%{BKY_STRUCTURE_HUE}">
         <block type="processing_setup"></block>
         <block type="processing_draw"></block>
         <block type="processing_on_key_pressed"></block>
     </category>
+
+    <sep></sep>
+
+    <!-- 2. Logic -->
+    <category name="%{BKY_CAT_LOGIC}" colour="%{BKY_LOGIC_HUE}">
+        <block type="controls_if"></block>
+        <block type="logic_compare"></block>
+        <block type="logic_operation"></block>
+        <block type="logic_negate"></block>
+        <block type="logic_boolean"></block>
+        <block type="logic_null"></block>
+        <block type="logic_ternary"></block>
+    </category>
+
+    <!-- 3. Loops -->
+    <category name="%{BKY_CAT_LOOPS}" colour="%{BKY_LOOPS_HUE}">
+        <block type="controls_repeat_ext">
+            <value name="TIMES">
+                <shadow type="math_number">
+                    <field name="NUM">10</field>
+                </shadow>
+            </value>
+        </block>
+        <block type="controls_whileUntil"></block>
+        <block type="controls_for">
+            <value name="FROM">
+                <shadow type="math_number"><field name="NUM">1</field></shadow>
+            </value>
+            <value name="TO">
+                <shadow type="math_number"><field name="NUM">10</field></shadow>
+            </value>
+            <value name="BY">
+                <shadow type="math_number"><field name="NUM">1</field></shadow>
+            </value>
+        </block>
+        <block type="controls_forEach"></block>
+        <block type="controls_flow_statements"></block>
+    </category>
+
+    <!-- 4. Math -->
+    <category name="%{BKY_CAT_MATH}" colour="%{BKY_MATH_HUE}">
+        <block type="math_number"></block>
+        <block type="math_arithmetic">
+            <value name="A">
+                <shadow type="math_number"><field name="NUM">1</field></shadow>
+            </value>
+            <value name="B">
+                <shadow type="math_number"><field name="NUM">1</field></shadow>
+            </value>
+        </block>
+        <block type="math_single"></block>
+        <block type="math_trig"></block>
+        <block type="math_constant"></block>
+        <block type="math_number_property"></block>
+        <block type="math_round"></block>
+        <block type="math_on_list"></block>
+        <block type="math_modulo"></block>
+        <block type="math_map">
+            <value name="FROM_LOW"><shadow type="math_number"><field name="NUM">0</field></shadow></value>
+            <value name="FROM_HIGH"><shadow type="math_number"><field name="NUM">127</field></shadow></value>
+            <value name="TO_LOW"><shadow type="math_number"><field name="NUM">0</field></shadow></value>
+            <value name="TO_HIGH"><shadow type="math_number"><field name="NUM">100</field></shadow></value>
+        </block>
+        <block type="math_constrain">
+            <value name="LOW"><shadow type="math_number"><field name="NUM">0</field></shadow></value>
+            <value name="HIGH"><shadow type="math_number"><field name="NUM">100</field></shadow></value>
+        </block>
+    </category>
+
+    <!-- 5. Text -->
+    <category name="%{BKY_CAT_TEXT}" colour="%{BKY_TEXT_HUE}">
+        <block type="text"></block>
+        <block type="text_join"></block>
+        <block type="text_append">
+            <value name="TEXT">
+                <shadow type="text"></shadow>
+            </value>
+        </block>
+        <block type="text_length"></block>
+        <block type="text_isEmpty"></block>
+        <block type="text_indexOf"></block>
+        <block type="text_charAt"></block>
+        <block type="text_getSubstring"></block>
+        <block type="text_changeCase"></block>
+        <block type="text_trim"></block>
+        <block type="text_print"></block>
+    </category>
+
+    <!-- 6. Lists -->
+    <category name="%{BKY_CAT_LISTS}" colour="%{BKY_LISTS_HUE}">
+        <block type="lists_create_empty"></block>
+        <block type="lists_create_with"></block>
+        <block type="lists_repeat">
+            <value name="NUM">
+                <shadow type="math_number">
+                    <field name="NUM">5</field>
+                </shadow>
+            </value>
+        </block>
+        <block type="lists_length"></block>
+        <block type="lists_isEmpty"></block>
+        <block type="lists_indexOf"></block>
+        <block type="lists_getIndex"></block>
+        <block type="lists_setIndex"></block>
+        <block type="lists_getSublist"></block>
+        <block type="lists_sort"></block>
+        <block type="lists_split"></block>
+        <block type="lists_reverse"></block>
+    </category>
+
+    <sep></sep>
+
+    <!-- 7. Variables -->
+    <category name="%{BKY_CAT_VARIABLES}" colour="%{BKY_VARIABLES_HUE}" custom="VARIABLE"></category>
+
+    <!-- 8. Functions -->
+    <category name="%{BKY_CAT_FUNCTIONS}" colour="%{BKY_FUNCTIONS_HUE}" custom="PROCEDURE"></category>
+
+    <sep></sep>
+
+    <!-- 9. Visuals -->
     <category name="%{BKY_CAT_VISUAL}" colour="%{BKY_VISUAL_HUE}">
         <block type="visual_stage_setup"></block>
         <block type="visual_stage_set_color">
@@ -49,7 +171,22 @@
         </block>
         <block type="visual_constant"></block>
     </category>
+
+    <!-- 10. Audio (Minim) -->
     <category name="%{BKY_CAT_AUDIO}" colour="%{BKY_AUDIO_HUE}">
+        <block type="audio_play_note">
+            <value name="PITCH">
+                <shadow type="variables_get"><field name="VAR">pitch</field></shadow>
+            </value>
+            <value name="VELOCITY">
+                <shadow type="math_number"><field name="NUM">100</field></shadow>
+            </value>
+        </block>
+        <block type="audio_stop_note">
+            <value name="PITCH">
+                <shadow type="variables_get"><field name="VAR">pitch</field></shadow>
+            </value>
+        </block>
         <block type="audio_minim_init"></block>
         <block type="audio_load_sample"></block>
         <block type="audio_trigger_sample">
@@ -60,41 +197,23 @@
         <block type="audio_sample_property"></block>
         <block type="audio_sample_mix_get"></block>
     </category>
-    <category name="%{BKY_CAT_MIDI}" colour="#5B67E7">
+
+    <!-- 11. Serial (Arduino) -->
+    <category name="%{BKY_CAT_SERIAL}" colour="%{BKY_SERIAL_HUE}">
+        <!-- Future blocks will be added here -->
+    </category>
+
+    <!-- 12. MIDI -->
+    <category name="%{BKY_CAT_MIDI}" colour="%{BKY_MIDI_HUE}">
         <block type="midi_init"></block>
         <block type="midi_on_note"></block>
+        <block type="midi_off_note"></block>
     </category>
-    <category name="%{BKY_CAT_UI}" colour="#FFB300">
+
+    <!-- 13. UI (ControlP5) -->
+    <category name="%{BKY_CAT_UI}" colour="%{BKY_UI_HUE}">
         <block type="ui_init"></block>
         <block type="ui_add_slider"></block>
         <block type="ui_add_toggle"></block>
     </category>
-    <category name="%{BKY_CAT_LOGIC}" colour="%{BKY_LOGIC_HUE}">
-        <block type="controls_if"></block>
-        <block type="logic_compare"></block>
-    </category>
-    <category name="%{BKY_CAT_LOOPS}" colour="%{BKY_LOOPS_HUE}">
-        <block type="controls_for">
-            <value name="FROM">
-                <shadow type="math_number"><field name="NUM">0</field></shadow>
-            </value>
-            <value name="TO">
-                <shadow type="math_number"><field name="NUM">10</field></shadow>
-            </value>
-            <value name="BY">
-                <shadow type="math_number"><field name="NUM">1</field></shadow>
-            </value>
-        </block>
-    </category>
-    <category name="%{BKY_CAT_MATH}" colour="%{BKY_MATH_HUE}">
-        <block type="math_number"></block>
-        <block type="math_arithmetic"></block>
-        <block type="math_map">
-            <value name="FROM_LOW"><shadow type="math_number"><field name="NUM">0</field></shadow></value>
-            <value name="FROM_HIGH"><shadow type="math_number"><field name="NUM">127</field></shadow></value>
-            <value name="TO_LOW"><shadow type="math_number"><field name="NUM">0</field></shadow></value>
-            <value name="TO_HIGH"><shadow type="math_number"><field name="NUM">800</field></shadow></value>
-        </block>
-    </category>
-    <category name="%{BKY_CAT_VARIABLES}" colour="%{BKY_VARIABLES_HUE}" custom="VARIABLE"></category>
 </xml>

@@ -10,9 +10,7 @@
   "categories": [
     "Other"
   ],
-  "activationEvents": [
-    "onCommand:synthblockly-stage.openBlockly"
-  ],
+  "activationEvents": [],
   "main": "./out/extension.js",
   "contributes": {
     "commands": [
@@ -24,13 +22,19 @@
       {
         "command": "synthblockly-stage.runSketch",
         "title": "SynthBlockly Stage: Run Sketch",
-        "icon": "$(play)",
+        "icon": {
+          "light": "media/icons/run_blocks_24dp_75FB4C.png",
+          "dark": "media/icons/run_blocks_24dp_75FB4C.png"
+        },
         "category": "SynthBlockly Stage"
       },
       {
         "command": "synthblockly-stage.stopSketch",
         "title": "SynthBlockly Stage: Stop Sketch",
-        "icon": "$(primitive-square)",
+        "icon": {
+          "light": "media/icons/stop_24dp_EA3323.png",
+          "dark": "media/icons/stop_24dp_EA3323.png"
+        },
         "category": "SynthBlockly Stage"
       }
     ],

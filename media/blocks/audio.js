@@ -95,6 +95,29 @@ Blockly.defineBlocksWithJsonArray([
     "colour": "#E74C3C"
   },
   {
+    "type": "audio_play_note",
+    "message0": "%{BKY_AUDIO_PLAY_NOTE}",
+    "args0": [
+      { "type": "input_value", "name": "PITCH", "check": "Number" },
+      { "type": "input_value", "name": "VELOCITY", "check": "Number" }
+    ],
+    "previousStatement": null,
+    "nextStatement": null,
+    "colour": "#E74C3C",
+    "tooltip": "開始播放一個持續音，需搭配 MIDI Note Off 停止。"
+  },
+  {
+    "type": "audio_stop_note",
+    "message0": "%{BKY_AUDIO_STOP_NOTE}",
+    "args0": [
+      { "type": "input_value", "name": "PITCH", "check": "Number" }
+    ],
+    "previousStatement": null,
+    "nextStatement": null,
+    "colour": "#E74C3C",
+    "tooltip": "觸發 ADSR 的 Release 階段並停止發聲。"
+  },
+  {
     "type": "audio_current_sample_mix_get",
     "message0": "目前繪圖樣本的聲道數據 索引 %1",
     "args0": [

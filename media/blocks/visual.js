@@ -22,11 +22,9 @@ Blockly.defineBlocksWithJsonArray([
   },
   {
     "type": "visual_background",
-    "message0": "設定背景顏色 R/灰 %1 G %2 B %3",
+    "message0": "設定背景顏色 %1",
     "args0": [
-      { "type": "input_value", "name": "R" },
-      { "type": "input_value", "name": "G" },
-      { "type": "input_value", "name": "B" }
+      { "type": "input_value", "name": "COLOR" }
     ],
     "inputsInline": true,
     "previousStatement": null,
@@ -64,26 +62,21 @@ Blockly.defineBlocksWithJsonArray([
   },
   {
     "type": "visual_fill",
-    "message0": "設定填充顏色 R/灰 %1 G %2 B %3 透明度 %4",
+    "message0": "設定填充顏色 %1",
     "args0": [
-      { "type": "input_value", "name": "R" },
-      { "type": "input_value", "name": "G" },
-      { "type": "input_value", "name": "B" },
-      { "type": "input_value", "name": "A" }
+      { "type": "input_value", "name": "COLOR" }
     ],
     "inputsInline": true,
     "previousStatement": null,
     "nextStatement": null,
     "colour": "#3498DB",
-    "tooltip": "設定填充顏色。如果只填第一個 R/灰，則為灰階。"
+    "tooltip": "設定填充顏色。"
   },
   {
     "type": "visual_stroke",
-    "message0": "設定邊框顏色 R/灰 %1 G %2 B %3",
+    "message0": "設定邊框顏色 %1",
     "args0": [
-      { "type": "input_value", "name": "R" },
-      { "type": "input_value", "name": "G" },
-      { "type": "input_value", "name": "B" }
+      { "type": "input_value", "name": "COLOR" }
     ],
     "inputsInline": true,
     "previousStatement": null,
@@ -144,27 +137,6 @@ Blockly.defineBlocksWithJsonArray([
     "tooltip": "自動根據螢幕密度調整繪圖解析度。建議放在 setup 中。"
   },
   {
-    "type": "visual_stage_setup",
-    "message0": "%{BKY_VISUAL_STAGE_SETUP}",
-    "args0": [
-      { "type": "input_dummy" },
-      { "type": "field_number", "name": "W", "value": 1000 },
-      { "type": "field_number", "name": "H", "value": 400 },
-      { "type": "input_dummy" },
-      { "type": "field_colour", "name": "BG_COLOR", "colour": "#000000" },
-      { "type": "field_colour", "name": "WAVE_COLOR", "colour": "#FF0096" },
-      { "type": "input_dummy" },
-      { "type": "field_checkbox", "name": "SHOW_WAVE", "checked": true },
-      { "type": "field_checkbox", "name": "SHOW_SPEC", "checked": false },
-      { "type": "field_checkbox", "name": "SHOW_LOG", "checked": true },
-      { "type": "field_input", "name": "MIDI_IN", "text": "0" }
-    ],
-    "previousStatement": null,
-    "nextStatement": null,
-    "colour": "#2C3E50",
-    "tooltip": "一鍵建立完整的表演環境，包含畫布、音訊引擎、MIDI 與自動視覺化效果。"
-  }
-  {
     "type": "visual_stage_set_color",
     "message0": "%{BKY_VISUAL_STAGE_SET_COLOR}",
     "args0": [
@@ -194,3 +166,29 @@ Blockly.defineBlocksWithJsonArray([
     "tooltip": "選取一個顏色數值。"
   }
 ]);
+
+// Manually define visual_stage_setup to ensure vertical layout using JS API
+Blockly.Blocks['visual_stage_setup'] = {
+  init: function() {
+    this.jsonInit({
+      "message0": "%{BKY_VISUAL_STAGE_SETUP_TITLE}",
+      "args0": [],
+      "message1": "%{BKY_VISUAL_STAGE_SETUP_DIMENSIONS}",
+      "args1": [
+        { "type": "field_number", "name": "W", "value": 1200 },
+        { "type": "field_number", "name": "H", "value": 400 }
+      ],
+      "message2": "%{BKY_VISUAL_STAGE_SETUP_APPEARANCE}",
+      "args2": [
+        { "type": "field_colour", "name": "BG_COLOR", "colour": "#000000" },
+        { "type": "field_colour", "name": "FG_COLOR", "colour": "#FF0096" }
+      ],
+      "previousStatement": null,
+      "nextStatement": null,
+      "colour": "#2C3E50",
+      "tooltip": "一鍵建立完整的表演環境，包含畫布、音訊引擎與自動視覺化效果。"
+    });
+    // Explicitly force vertical layout
+    this.setInputsInline(false);
+  }
+};
