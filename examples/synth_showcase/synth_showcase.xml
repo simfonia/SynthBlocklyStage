@@ -1,0 +1,77 @@
+<xml xmlns="https://developers.google.com/blockly/xml">
+  <block type="processing_setup" id="setup" x="20" y="20">
+    <statement name="DO">
+      <block type="audio_minim_init" id="init_minim">
+        <next>
+          <block type="visual_stage_setup" id="super_stage">
+            <field name="W">1200</field>
+            <field name="H">400</field>
+            <field name="BG_COLOR">#000000</field>
+            <field name="FG_COLOR">#75FB4C</field>
+            <next>
+              <block type="audio_create_harmonic_synth" id="create_organ">
+                <mutation items="4"></mutation>
+                <field name="NAME">Organ</field>
+                <value name="PARTIAL1"><block type="math_number"><field name="NUM">1</field></block></value>
+                <value name="PARTIAL2"><block type="math_number"><field name="NUM">0.5</field></block></value>
+                <value name="PARTIAL3"><block type="math_number"><field name="NUM">0.3</field></block></value>
+                <value name="PARTIAL4"><block type="math_number"><field name="NUM">0.2</field></block></value>
+                <next>
+                  <block type="audio_create_additive_synth" id="create_bell">
+                    <mutation items="3"></mutation>
+                    <field name="NAME">Bell</field>
+                    <field name="WAVE1">SINE</field>
+                    <field name="RATIO1">1</field>
+                    <field name="AMP1">0.8</field>
+                    <field name="WAVE2">TRIANGLE</field>
+                    <field name="RATIO2">2.76</field>
+                    <field name="AMP2">0.4</field>
+                    <field name="WAVE3">SQUARE</field>
+                    <field name="RATIO3">5.4</field>
+                    <field name="AMP3">0.2</field>
+                    <next>
+                      <block type="audio_select_instrument" id="select_init">
+                        <field name="NAME">Organ</field>
+                      </block>
+                    </next>
+                  </block>
+                </next>
+              </block>
+            </next>
+          </block>
+        </next>
+      </block>
+    </statement>
+  </block>
+
+  <block type="processing_draw" id="draw" x="500" y="20">
+    <statement name="DO">
+      <block type="sb_comment" id="guide">
+        <field name="TEXT">進階合成器測試說明：&#10;1. 點擊「執行」啟動。&#10;2. Organ：諧波合成，聽感厚實。&#10;3. Bell：加法合成，聽感有金屬碰撞味。&#10;4. 按下「左/右方向鍵」切換樂器。&#10;5. 使用鍵盤 Q-U 演奏。</field>
+      </block>
+    </statement>
+  </block>
+
+  <block type="midi_on_note" id="midi_on" x="20" y="550">
+    <field name="CHANNEL">channel</field>
+    <field name="PITCH">pitch</field>
+    <field name="VELOCITY">velocity</field>
+    <statement name="DO">
+      <block type="audio_play_note" id="play">
+        <value name="PITCH"><block type="variables_get"><field name="VAR">pitch</field></block></value>
+        <value name="VELOCITY"><block type="variables_get"><field name="VAR">velocity</field></block></value>
+      </block>
+    </statement>
+  </block>
+
+  <block type="midi_off_note" id="midi_off" x="400" y="550">
+    <field name="CHANNEL">channel</field>
+    <field name="PITCH">pitch</field>
+    <field name="VELOCITY">velocity</field>
+    <statement name="DO">
+      <block type="audio_stop_note" id="stop">
+        <value name="PITCH"><block type="variables_get"><field name="VAR">pitch</field></block></value>
+      </block>
+    </statement>
+  </block>
+</xml>

@@ -107,8 +107,14 @@ class SynthBlocklyPanel {
                 case 'openProject':
                     this._handleOpenProject(message.isDirty);
                     return;
+                case 'openHelp':
+                    this._handleOpenHelp(message.url, message.fileName);
+                    return;
                 case 'saveProject':
                     this._handleSaveProject(message.xml, message.code);
+                    return;
+                case 'setProcessingPath':
+                    this._handleSetProcessingPath();
                     return;
                 case 'autoSaveProject':
                     this._handleAutoSave(message.xml, message.code);
@@ -124,6 +130,39 @@ class SynthBlocklyPanel {
     }
     runSketch() {
         this._panel.webview.postMessage({ command: 'generateCode' });
+    }
+    async _handleOpenHelp(url, fileName) {
+        try {
+            let targetUri;
+            if (fileName) {
+                // Construct absolute path to the local doc file
+                const filePath = path.join(this._extensionUri.fsPath, 'media', 'docs', fileName);
+                targetUri = vscode.Uri.file(filePath);
+            }
+            else if (url) {
+                targetUri = vscode.Uri.parse(url);
+            }
+            else {
+                return;
+            }
+            await vscode.env.openExternal(targetUri);
+        }
+        catch (e) {
+            vscode.window.showErrorMessage(`Failed to open help: ${e}`);
+        }
+    }
+    async _handleSetProcessingPath() {
+        const options = {
+            canSelectMany: false,
+            openLabel: 'Select processing-java.exe',
+            filters: { 'Executable': ['exe', 'app', 'bin'] }
+        };
+        const fileUri = await vscode.window.showOpenDialog(options);
+        if (fileUri && fileUri[0]) {
+            const config = vscode.workspace.getConfiguration('synthblockly-stage');
+            await config.update('processingPath', fileUri[0].fsPath, vscode.ConfigurationTarget.Global);
+            vscode.window.showInformationMessage(`Processing path updated: ${fileUri[0].fsPath}`);
+        }
     }
     async _handleNewProject(isDirty) {
         if (isDirty) {
@@ -249,10 +288,17 @@ class SynthBlocklyPanel {
             if (fs.existsSync(wsData))
                 sourceDataDir = wsData;
         }
+        // 1. Try Local Data (next to XML)
         if (!sourceDataDir && this._currentXmlPath) {
-            const xmlData = path.join(path.dirname(this._currentXmlPath), 'data');
-            if (fs.existsSync(xmlData))
-                sourceDataDir = xmlData;
+            const localData = path.join(path.dirname(this._currentXmlPath), 'data');
+            if (fs.existsSync(localData))
+                sourceDataDir = localData;
+        }
+        // 2. Try Global Shared Data (in extension examples/data)
+        if (!sourceDataDir) {
+            const globalData = path.join(this._extensionUri.fsPath, 'examples', 'data');
+            if (fs.existsSync(globalData))
+                sourceDataDir = globalData;
         }
         if (sourceDataDir) {
             const targetDataDir = path.join(sketchDir, 'data');
@@ -273,14 +319,26 @@ class SynthBlocklyPanel {
         const config = vscode.workspace.getConfiguration('synthblockly-stage');
         let processingPath = config.get('processingPath');
         if (!processingPath) {
-            const bundledPath = path.join(this._extensionUri.fsPath, 'processing-3.5.4', 'processing-java.exe');
+            const bundledPath = path.join(this._extensionUri.fsPath, 'processing-java.exe'); // Check root if bundled
             if (fs.existsSync(bundledPath)) {
                 processingPath = bundledPath;
             }
             else {
-                vscode.window.showErrorMessage('processing-java.exe not found. Please set the path in settings.');
+                vscode.window.showWarningMessage('processing-java.exe not found. Please select its location.', 'Select Path').then(selection => {
+                    if (selection === 'Select Path') {
+                        this._handleSetProcessingPath();
+                    }
+                });
                 return;
             }
+        }
+        if (!fs.existsSync(processingPath)) {
+            vscode.window.showWarningMessage(`The path ${processingPath} does not exist. Please re-set it.`, 'Select Path').then(selection => {
+                if (selection === 'Select Path') {
+                    this._handleSetProcessingPath();
+                }
+            });
+            return;
         }
         const outputChannel = vscode.window.createOutputChannel('SynthBlockly Stage Output');
         outputChannel.show();
@@ -338,6 +396,7 @@ class SynthBlocklyPanel {
         <img id="newButton" class="toolbar-button" src="${iconUri}/new_24dp_1F1F1F.png" title="New Project">
         <img id="openButton" class="toolbar-button" src="${iconUri}/load_project_24dp_1F1F1F.png" title="Open Project">
         <img id="saveButton" class="toolbar-button" src="${iconUri}/save_as_24dp_1F1F1F.png" title="Save As">
+        <img id="setPathButton" class="toolbar-button" src="${iconUri}/settings_24dp_1F1F1F.png" title="Set Processing Path">
         <span id="projectName" class="project-name"></span>
         <span id="saveStatus" class="status-label"></span>
     </div>
@@ -346,15 +405,16 @@ class SynthBlocklyPanel {
     <script id="toolbox-xml" type="text/xml" style="display: none;">${toolboxXml}</script>
 
     <script nonce="${nonce}" src="${blocklyUri}/blockly.js"></script>
-    <script nonce="${nonce}" src="${langUri}"></script>
-    <script nonce="${nonce}" src="${mediaUri}/generators/_core.js"></script>
     <script nonce="${nonce}" src="${blocklyUri}/field-multilineinput.js"></script>
     <script nonce="${nonce}" src="${blocklyUri}/field-colour.js"></script>
+    
+    <script nonce="${nonce}" src="${langUri}"></script>
+    <script nonce="${nonce}" src="${mediaUri}/generators/_core.js"></script>
 
     <script nonce="${nonce}">
         window.coreExtensionManifestUri = "${coreManifestUri}";
         window.blocklyMediaUri = "${blocklyMediaUri}/";
-        window.isAngelMode = true;
+        window.docsBaseUri = "${mediaUri}/docs/";
     </script>
 
     <script nonce="${nonce}" type="module" src="${mediaUri}/main.js"></script>

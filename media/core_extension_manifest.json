@@ -4,14 +4,27 @@
     { "name": "Structure Blocks", "url": "blocks/structure.js" },
     { "name": "Visual Blocks", "url": "blocks/visual.js" },
     { "name": "Audio Blocks", "url": "blocks/audio.js" },
+    { "name": "Custom Audio Blocks", "url": "blocks/audio_custom.js" },
+    { "name": "Live Show Blocks", "url": "blocks/live_show.js" },
     { "name": "MIDI Blocks", "url": "blocks/midi.js" },
+    { "name": "Serial Blocks", "url": "blocks/serial.js" },
     { "name": "UI Blocks", "url": "blocks/ui.js" },
     { "name": "Math Blocks", "url": "blocks/math.js" },
     { "name": "Structure Generators", "url": "generators/structure.js", "type": "generator" },
     { "name": "Visual Generators", "url": "generators/visual.js", "type": "generator" },
     { "name": "Audio Generators", "url": "generators/audio.js", "type": "generator" },
+    { "name": "Live Show Generators", "url": "generators/live_show.js", "type": "generator" },
     { "name": "MIDI Generators", "url": "generators/midi.js", "type": "generator" },
+    { "name": "Serial Generators", "url": "generators/serial.js", "type": "generator" },
     { "name": "UI Generators", "url": "generators/ui.js", "type": "generator" },
-    { "name": "Math Generators", "url": "generators/math.js", "type": "generator" }
+    { "name": "Math Generators", "url": "generators/math.js", "type": "generator" },
+    { "name": "Logic Generators", "url": "generators/logic.js", "type": "generator" },
+    { "name": "Loop Generators", "url": "generators/loops.js", "type": "generator" },
+    { "name": "List Generators", "url": "generators/lists.js", "type": "generator" },
+    { "name": "Text Generators", "url": "generators/text.js", "type": "generator" },
+    { "name": "Function Generators", "url": "generators/functions.js", "type": "generator" },
+    { "name": "Tool Blocks", "url": "blocks/tools.js" },
+    { "name": "Tool Generators", "url": "generators/tools.js", "type": "generator" },
+    { "name": "Variable Generators", "url": "generators/variables.js", "type": "generator" }
   ]
 }

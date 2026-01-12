@@ -9,13 +9,8 @@
 
 Blockly.Blocks['processing_setup'] = {
   init: function() {
-    // Determine message based on global theme state
-    const msg = (window.isAngelMode) ? 
-                Blockly.Msg['BKY_PROCESSING_SETUP_MSG_ANGEL'] : 
-                Blockly.Msg['BKY_PROCESSING_SETUP_MSG_ENGINEER'];
-    
     this.appendDummyInput()
-        .appendField(msg);
+        .appendField(Blockly.Msg['BKY_PROCESSING_SETUP_MSG_ANGEL'] || "當程式啟動時 (setup)");
     this.appendStatementInput('DO')
         .appendField(Blockly.Msg['BKY_CONTROLS_DO']);
     this.setColour(Blockly.Msg['STRUCTURE_HUE'] || '#16A085');
@@ -26,12 +21,8 @@ Blockly.Blocks['processing_setup'] = {
 
 Blockly.Blocks['processing_draw'] = {
   init: function() {
-    const msg = (window.isAngelMode) ? 
-                Blockly.Msg['BKY_PROCESSING_DRAW_MSG_ANGEL'] : 
-                Blockly.Msg['BKY_PROCESSING_DRAW_MSG_ENGINEER'];
-
     this.appendDummyInput()
-        .appendField(msg);
+        .appendField(Blockly.Msg['BKY_PROCESSING_DRAW_MSG_ANGEL'] || "重複執行 (draw)");
     this.appendStatementInput('DO')
         .appendField(Blockly.Msg['BKY_CONTROLS_DO']);
     this.setColour(Blockly.Msg['STRUCTURE_HUE'] || '#16A085');

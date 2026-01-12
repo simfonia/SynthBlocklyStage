@@ -37,7 +37,10 @@ Blockly.Processing.init = function(workspace) {
   Blockly.Processing.global_vars_ = Object.create(null);
   Blockly.Processing.definitions_ = Object.create(null); 
   Blockly.Processing.setups_ = Object.create(null);
-  Blockly.Processing.draws_ = Object.create(null); // 新增 draw 籃子
+  Blockly.Processing.draws_ = Object.create(null); 
+
+  // Standard Imports for Lists and Utils
+  Blockly.Processing.addImport("import java.util.*;");
 
   if (!Blockly.Processing.nameDB_) {
     Blockly.Processing.nameDB_ = new Blockly.Names(Blockly.Processing.RESERVED_WORDS_);
@@ -45,6 +48,18 @@ Blockly.Processing.init = function(workspace) {
     Blockly.Processing.nameDB_.reset();
   }
   Blockly.Processing.nameDB_.setVariableMap(workspace.getVariableMap());
+};
+
+/**
+ * 輔助函數：計算相對索引 (0-based)
+ */
+Blockly.Processing.getRelativeIndex = function(block, name) {
+  const at = Blockly.Processing.valueToCode(block, name, Blockly.Processing.ORDER_ADDITION) || '1';
+  // Use native JS check for numeric string
+  if (!isNaN(parseFloat(at)) && isFinite(at)) {
+    return String(Number(at) - 1);
+  }
+  return at + ' - 1';
 };
 
 /**
@@ -151,128 +166,4 @@ Blockly.Processing.scrub_ = function(block, code) {
   var nextBlock = block.nextConnection && block.nextConnection.targetBlock();
   var nextCode = Blockly.Processing.blockToCode(nextBlock);
   return code + nextCode;
-};
-
-// =============================================================================
-// BUILT-IN COMMON GENERATORS
-// =============================================================================
-
-Blockly.Processing.forBlock['math_number'] = function(block) {
-  const code = parseFloat(block.getFieldValue('NUM'));
-  const order = code >= 0 ? Blockly.Processing.ORDER_ATOMIC : Blockly.Processing.ORDER_UNARY_NEGATION;
-  return [String(code), order];
-};
-
-Blockly.Processing.forBlock['math_arithmetic'] = function(block) {
-  const OPERATORS = {
-    'ADD': [' + ', Blockly.Processing.ORDER_ADDITION],
-    'MINUS': [' - ', Blockly.Processing.ORDER_SUBTRACTION],
-    'MULTIPLY': [' * ', Blockly.Processing.ORDER_MULTIPLICATION],
-    'DIVIDE': [' / ', Blockly.Processing.ORDER_DIVISION]
-  };
-  const tuple = OPERATORS[block.getFieldValue('OP')];
-  const operator = tuple[0];
-  const order = tuple[1];
-  const argument0 = Blockly.Processing.valueToCode(block, 'A', order) || '0';
-  const argument1 = Blockly.Processing.valueToCode(block, 'B', order) || '0';
-  return [argument0 + operator + argument1, order];
-};
-
-Blockly.Processing.forBlock['logic_compare'] = function(block) {
-  const operator = { 'EQ': '==', 'NEQ': '!=', 'LT': '<', 'LTE': '<=', 'GT': '>', 'GTE': '>=' }[block.getFieldValue('OP')];
-  const order = Blockly.Processing.ORDER_RELATIONAL;
-  const argument0 = Blockly.Processing.valueToCode(block, 'A', order) || '0';
-  const argument1 = Blockly.Processing.valueToCode(block, 'B', order) || '0';
-  return [argument0 + ' ' + operator + ' ' + argument1, order];
-};
-
-Blockly.Processing.forBlock['variables_get'] = function(block) {
-  const varId = block.getFieldValue('VAR');
-  let varName = Blockly.Processing.nameDB_.getName(varId, Blockly.Variables.NAME_TYPE);
-  
-  // FORCE LITERAL NAMES & TYPES
-  const forceNames = ['waveScale', 'masterGain', 'pitch', 'velocity', 'channel', 'isMidiMode', 'trailAlpha', 'stageBgColor', 'stageFgColor'];
-  const intVars = ['stageBgColor', 'stageFgColor', 'pitch', 'velocity', 'channel'];
-  
-  const actualName = block.workspace.getVariableMap().getVariableById(varId)?.name;
-  if (actualName && forceNames.includes(actualName)) {
-      varName = actualName;
-  }
-
-  if (!Blockly.Processing.global_vars_[varName]) {
-      const type = intVars.includes(varName) ? "int" : "float";
-      Blockly.Processing.global_vars_[varName] = type + " " + varName + ";";
-  }
-  
-  return [varName, Blockly.Processing.ORDER_ATOMIC];
-};
-
-Blockly.Processing.forBlock['variables_set'] = function(block) {
-  const argument0 = Blockly.Processing.valueToCode(block, 'VALUE', Blockly.Processing.ORDER_ASSIGNMENT) || '0';
-  const varId = block.getFieldValue('VAR');
-  let varName = Blockly.Processing.nameDB_.getName(varId, Blockly.Variables.NAME_TYPE);
-
-  const forceNames = ['waveScale', 'masterGain', 'pitch', 'velocity', 'channel', 'isMidiMode', 'trailAlpha', 'stageBgColor', 'stageFgColor'];
-  const intVars = ['stageBgColor', 'stageFgColor', 'pitch', 'velocity', 'channel'];
-  
-  const actualName = block.workspace.getVariableMap().getVariableById(varId)?.name;
-  if (actualName && forceNames.includes(actualName)) {
-      varName = actualName;
-  }
-  
-  if (!Blockly.Processing.global_vars_[varName] || !Blockly.Processing.global_vars_[varName].includes('=')) {
-      const type = intVars.includes(varName) ? "int" : "float";
-      Blockly.Processing.global_vars_[varName] = type + " " + varName + " = 0;"; 
-  }
-  return varName + ' = ' + argument0 + ';\n';
-};
-
-// Control For Loop
-Blockly.Processing.forBlock['controls_for'] = function(block) {
-  const variable0 = Blockly.Processing.nameDB_.getName(block.getFieldValue('VAR'), Blockly.Variables.NAME_TYPE);
-  const argument0 = Blockly.Processing.valueToCode(block, 'FROM', Blockly.Processing.ORDER_ASSIGNMENT) || '0';
-  const argument1 = Blockly.Processing.valueToCode(block, 'TO', Blockly.Processing.ORDER_ASSIGNMENT) || '0';
-  const increment = Blockly.Processing.valueToCode(block, 'BY', Blockly.Processing.ORDER_ASSIGNMENT) || '1';
-  let branch = Blockly.Processing.statementToCode(block, 'DO');
-  branch = Blockly.Processing.addLoopTrap(branch, block);
-  let code;
-  
-  const isNumber = (val) => !isNaN(parseFloat(val)) && isFinite(val);
-
-  if (isNumber(argument0) && isNumber(argument1) && isNumber(increment)) {
-    // All numeric constants
-    const up = Number(argument0) <= Number(argument1);
-    code = 'for (int ' + variable0 + ' = ' + argument0 + '; ' +
-        variable0 + (up ? ' <= ' : ' >= ') + argument1 + '; ' +
-        variable0;
-    const step = Math.abs(Number(increment));
-    if (step === 1) {
-      code += up ? '++' : '--';
-    } else {
-      code += (up ? ' += ' : ' -= ') + step;
-    }
-    code += ') {\n' + branch + '}\n';
-  } else {
-    // Dynamic values
-    code = 'for (int ' + variable0 + ' = ' + argument0 + '; ' +
-        variable0 + ' <= ' + argument1 + '; ' +
-        variable0 + ' += ' + increment + ') {\n' + branch + '}\n';
-  }
-  return code;
-};
-
-// Control If (already exists, but adding for context reference)
-Blockly.Processing.forBlock['controls_if'] = function(block) {
-  let n = 0;
-  let code = '';
-  do {
-    const conditionCode = Blockly.Processing.valueToCode(block, 'IF' + n, Blockly.Processing.ORDER_NONE) || 'false';
-    const branchCode = Blockly.Processing.statementToCode(block, 'DO' + n);
-    code += (n > 0 ? ' else ' : '') + 'if (' + conditionCode + ') {\n' + branchCode + '}';
-    n++;
-  } while (block.getInput('IF' + n));
-  if (block.getInput('ELSE')) {
-    code += ' else {\n' + Blockly.Processing.statementToCode(block, 'ELSE') + '}';
-  }
-  return code + '\n';
 };

@@ -6,6 +6,24 @@
 import { loadModules } from './module_loader.js';
 
 const vscode = acquireVsCodeApi();
+
+// --- 攔截所有 window.open 呼叫並轉交給 VS Code (解決沙盒限制) ---
+window.open = function(url) {
+    if (url) {
+        console.log('[Help] Attempting to open:', url);
+        // 如果網址包含 vscode-resource，代表是本地說明檔
+        if (url.indexOf('vscode-resource') !== -1 || url.indexOf('http') !== 0) {
+            const parts = url.split('/');
+            const filename = parts[parts.length - 1];
+            vscode.postMessage({ command: 'openHelp', fileName: filename });
+        } else {
+            // 一般外部網址 (http/https)
+            vscode.postMessage({ command: 'openHelp', url: url });
+        }
+    }
+    return null;
+};
+
 let workspace = null;
 let isDirty = false;
 let hasPath = false; // Tracks if the current project has a file location
@@ -29,28 +47,33 @@ function updateStatusUI() {
 /**
  * Initializes the Blockly workspace.
  */
+// 0. 強化插件註冊 (必須在載入 Manifest 與 Inject 之前)
 async function init() {
-    // 0. 強化插件註冊 (參考 piBlockly 成功經驗)
-    const FieldColour = window.FieldColour || (window.Blockly && window.Blockly.FieldColour);
-    if (FieldColour) {
-        try {
-            Blockly.registry.register('field', 'field_colour', FieldColour);
-            console.log('[Registry] field_colour registered.');
-        } catch (e) {
-            console.log('[Registry] field_colour already registered.');
+    // Override showHelp to use VS Code message passing
+    Blockly.Block.prototype.showHelp = function() {
+        const url = (typeof this.helpUrl === 'function') ? this.helpUrl() : this.helpUrl;
+        if (url) {
+            vscode.postMessage({
+                command: 'openHelp',
+                url: url
+            });
         }
-    } else {
-        console.warn('[Warning] FieldColour class not found.');
-    }
+    };
 
     const FieldMultilineInput = window.FieldMultilineInput || (window.Blockly && window.Blockly.FieldMultilineInput);
     if (FieldMultilineInput) {
         try {
-            Blockly.registry.register('field', 'field_multilineinput', FieldMultilineInput);
-            console.log('[Registry] field_multilineinput registered.');
-        } catch (e) {
-            console.log('[Registry] field_multilineinput already registered.');
-        }
+            Blockly.fieldRegistry.register('field_multilinetext', FieldMultilineInput);
+            console.log('[Registry] field_multilinetext manually registered.');
+        } catch (e) {} 
+    }
+
+    const FieldColour = window.FieldColour || (window.Blockly && window.Blockly.FieldColour);
+    if (FieldColour) {
+        try {
+            Blockly.fieldRegistry.register('field_colour', FieldColour);
+            console.log('[Registry] field_colour manually registered.');
+        } catch (e) {}
     }
 
     // 1. Get the container
@@ -163,7 +186,11 @@ async function init() {
         });
     };
 
-    ['newButton', 'openButton', 'saveButton'].forEach(setupButtonHover);
+    ['newButton', 'openButton', 'saveButton', 'setPathButton'].forEach(setupButtonHover);
+
+    document.getElementById('setPathButton')?.addEventListener('click', () => {
+        vscode.postMessage({ command: 'setProcessingPath' });
+    });
 
     document.getElementById('openButton')?.addEventListener('click', () => {
         vscode.postMessage({ command: 'openProject', isDirty: isDirty });

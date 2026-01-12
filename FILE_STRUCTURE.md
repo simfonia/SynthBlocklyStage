@@ -3,15 +3,16 @@
 ## 核心目錄
 - `src/`: VS Code 擴充功能 TypeScript 原始碼
     - `extension.ts`: 擴充功能進入點與 Webview 管理 (已實作路徑記憶)
-- `media/`: Webview 資源
-    - `main.js`: Blockly 初始化與訊息處理
-    - `module_loader.js`: 模組載入器
-    - `style.css`: 介面樣式
+    - `media/`: Webview 資源
+        - `main.js`: Blockly 初始化與訊息處理
+        - `docs/`: 積木說明文件 (HTML 格式)
+        - `module_loader.js`: 模組載入器    - `style.css`: 介面樣式
     - `toolbox.xml`: 工具箱配置 (已新增合成器與 MIDI Off 積木)
     - `zh-hant.js`: 繁體中文語系 (已補齊所有新鍵值)
     - `en.js`: 英文語系
     - `blocks/`: 積木定義
         - `audio.js`: 音訊積木 (已更新 Note On/Off 分離架構)
+        - `audio_custom.js`: 進階合成器積木 (諧波/加法合成)
         - `visual.js`: 視覺積木 (已更新超級舞台 JS 定義)
         - `midi.js`: MIDI 積木 (已新增 midi_off_note)
         - `structure.js`: 程式結構積木
@@ -19,10 +20,11 @@
         - `math.js`: 數學運算積木
     - `generators/`: Processing (Java) 產生器
         - `_core.js`: 產生器核心邏輯與變數管理
+        - `logic.js`, `loops.js`, `math.js`, `text.js`, `lists.js`, `variables.js`, `functions.js` (核心積木產生器)
         - `audio.js`: 實作 Sampler/ADSR 訊號鏈與 Note 管理
         - `visual.js`: 實作動態分割、超級控制面板與雙層日誌系統
         - `midi.js`: 實作 MIDI 事件監聽與 Log 串接
-        - `structure.js`, `ui.js`, `math.js`
+        - `structure.js`, `ui.js`
 - `examples/`: XML 範例專案
     - `drum/drum.xml`: 升級版音鼓與合成器連動範例
 - `log/`: 開發紀錄

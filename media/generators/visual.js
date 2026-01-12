@@ -62,10 +62,13 @@ Blockly.Processing.forBlock['visual_stage_setup'] = function (block) {
   Blockly.Processing.addImport("import ddf.minim.analysis.*");
   Blockly.Processing.addImport("import controlP5.*");
   Blockly.Processing.addImport("import themidibus.*");
+  Blockly.Processing.addImport("import processing.serial.*;");
   Blockly.Processing.addImport("import java.util.Collections;");
   Blockly.Processing.addImport("import java.util.List;");
   Blockly.Processing.addImport("import java.util.Arrays;");
   Blockly.Processing.addImport("import java.util.HashMap;");
+  Blockly.Processing.addImport("import java.awt.Toolkit;");
+  Blockly.Processing.addImport("import java.awt.datatransfer.*;");
 
   // Global Variables
   var g = Blockly.Processing.global_vars_;
@@ -75,6 +78,12 @@ Blockly.Processing.forBlock['visual_stage_setup'] = function (block) {
   g['cp5'] = "ControlP5 cp5;";
   g['myBus'] = "MidiBus myBus;";
   g['activeNotes'] = "HashMap<Integer, ADSR> activeNotes = new HashMap<Integer, ADSR>();";
+  g['instrumentMap'] = "HashMap<String, String> instrumentMap = new HashMap<String, String>();";
+  g['harmonicPartials'] = "HashMap<String, float[]> harmonicPartials = new HashMap<String, float[]>();";
+  g['additiveConfigs'] = "HashMap<String, List<SynthComponent>> additiveConfigs = new HashMap<String, List<SynthComponent>>();";
+  g['currentInstrument'] = "String currentInstrument = \"Default\";";
+  g['serialBaud'] = "int serialBaud = 115200;";
+  g['serialPortVar'] = "Serial myPort;";
 
   g['stageBgColor'] = "int stageBgColor;";
   g['stageFgColor'] = "int stageFgColor;";
@@ -106,8 +115,13 @@ Blockly.Processing.forBlock['visual_stage_setup'] = function (block) {
   g['adsrState'] = "int adsrState = 0;"; // 0:Idle, 1:ADSR, 2:Release
   g['pitchTranspose'] = "int pitchTranspose = 0;"; // Global Transpose
 
-  // Define Log Helper in Definitions
+  // Define Log Helper and Synth Classes in Definitions
   var helpersDef = `
+  class SynthComponent {
+    String waveType; float ratio; float amp;
+    SynthComponent(String w, float r, float a) { waveType = w; ratio = r; amp = a; }
+  }
+
   void logToScreen(String msg, int type) {
     Textarea target = (type >= 1) ? cp5.get(Textarea.class, "alertsArea") : cp5.get(Textarea.class, "consoleArea");
     if (target != null) {
@@ -119,7 +133,66 @@ Blockly.Processing.forBlock['visual_stage_setup'] = function (block) {
   }
 
   float mtof(float note) {
-    return 440.0 * pow(2.0, (note + (float)pitchTranspose - 69.0) / 12.0);
+    return 440.0f * (float)Math.pow(2.0, (double)((note + (float)pitchTranspose - 69.0f) / 12.0f));
+  }
+
+  Wavetable getWaveform(String type) {
+    if (type.equals("SINE")) return Waves.SINE;
+    if (type.equals("SQUARE")) return Waves.SQUARE;
+    if (type.equals("SAW")) return Waves.SAW;
+    return Waves.TRIANGLE;
+  }
+
+  void playNoteInternal(int p, float vel) {
+    if (activeNotes.containsKey(p)) return;
+    
+    float masterAmp = map(vel, 0, 127, 0, 0.6f);
+    float baseFreq = mtof((float)p);
+    ADSR adsr = new ADSR(1.0, adsrA, adsrD, adsrS, adsrR);
+    Summer mixer = new Summer(); // Used to mix multiple oscillators
+    String type = instrumentMap.getOrDefault(currentInstrument, "TRIANGLE");
+    
+    println("Playing " + currentInstrument + " (Type: " + type + ") at Pitch " + p);
+
+    if (type.equals("HARMONIC")) {
+      float[] partials = harmonicPartials.get(currentInstrument);
+      if (partials != null) {
+        for (int i = 0; i < partials.length; i++) {
+          if (partials[i] > 0) {
+            Oscil osc = new Oscil(baseFreq * (i + 1), partials[i] * masterAmp, Waves.SINE);
+            osc.patch(mixer); // Patch to mixer instead of adsr
+          }
+        }
+      }
+      mixer.patch(adsr);
+    } else if (type.equals("ADDITIVE")) {
+      List<SynthComponent> configs = additiveConfigs.get(currentInstrument);
+      if (configs != null) {
+        for (SynthComponent comp : configs) {
+          Oscil osc = new Oscil(baseFreq * comp.ratio, comp.amp * masterAmp, getWaveform(comp.waveType));
+          osc.patch(mixer); // Patch to mixer
+        }
+      }
+      mixer.patch(adsr);
+    } else {
+      Oscil wave = new Oscil(baseFreq, masterAmp, getWaveform(type));
+      wave.patch(adsr);
+    }
+    
+    adsr.patch(out);
+    adsr.noteOn();
+    activeNotes.put(p, adsr);
+    adsrTimer = millis(); adsrState = 1;
+  }
+
+  void stopNoteInternal(int p) {
+    ADSR adsr = activeNotes.get(p);
+    if (adsr != null) {
+      adsr.unpatchAfterRelease(out);
+      adsr.noteOff();
+      activeNotes.remove(p);
+      adsrTimer = millis(); adsrState = 2;
+    }
   }
 
   void midiInputDevice(int n) {
@@ -128,6 +201,19 @@ Blockly.Processing.forBlock['visual_stage_setup'] = function (block) {
       myBus.clearInputs();
       myBus.addInput(n);
       logToScreen("MIDI Connected: " + inputs[n], 1);
+    }
+  }
+
+  void serialInputDevice(int n) {
+    String[] ports = Serial.list();
+    if (n >= 0 && n < ports.length) {
+      if (myPort != null) { myPort.stop(); }
+      try {
+        myPort = new Serial(this, ports[n], serialBaud);
+        logToScreen("Serial Connected: " + ports[n], 1);
+      } catch (Exception e) {
+        logToScreen("Serial Error: Port Busy or Unavailable", 3);
+      }
     }
   }
 
@@ -148,6 +234,26 @@ Blockly.Processing.forBlock['visual_stage_setup'] = function (block) {
         logToScreen("Tip: If device not found, try plugging it in BEFORE starting.", 2);
       }
     }
+  }
+
+  void copyLogs() {
+    Textarea console = cp5.get(Textarea.class, "consoleArea");
+    Textarea alerts = cp5.get(Textarea.class, "alertsArea");
+    String content = "--- ALERTS ---\\n" + (alerts != null ? alerts.getText() : "") + 
+                     "\\n\\n--- CONSOLE ---\\n" + (console != null ? console.getText() : "");
+    
+    StringSelection selection = new StringSelection(content);
+    Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+    clipboard.setContents(selection, selection);
+    logToScreen("Logs copied to clipboard.", 1);
+  }
+
+  void clearLogs() {
+    Textarea console = cp5.get(Textarea.class, "consoleArea");
+    Textarea alerts = cp5.get(Textarea.class, "alertsArea");
+    if (console != null) console.clear();
+    if (alerts != null) alerts.clear();
+    logToScreen("Logs cleared.", 1);
   }
 
   void keyPressed() {
@@ -174,23 +280,25 @@ Blockly.Processing.forBlock['visual_stage_setup'] = function (block) {
     else if (key == (char)92) p = 81;
 
     if (p != -1) {
-      if (!activeNotes.containsKey(p)) {
-        float frequency = mtof((float)p);
-        // Using TRIANGLE wave for better audibility on low notes
-        Oscil wave = new Oscil(frequency, 0.6f, Waves.TRIANGLE);
-        ADSR adsr = new ADSR(1.0, adsrA, adsrD, adsrS, adsrR);
-        wave.patch(adsr).patch(out);
-        adsr.noteOn();
-        activeNotes.put(p, adsr);
-        adsrTimer = millis(); adsrState = 1;
-        logToScreen("Keyboard ON: MIDI " + p + " (" + nf(frequency, 0, 1) + " Hz)", 0);
-      }
+      playNoteInternal(p, 100);
+      logToScreen("Keyboard ON: MIDI " + p, 0);
     }
 
     // Transposition Controls
     if (key == CODED) {
       if (keyCode == UP) { pitchTranspose += 12; logToScreen("Octave UP: " + (pitchTranspose/12), 1); }
       else if (keyCode == DOWN) { pitchTranspose -= 12; logToScreen("Octave DOWN: " + (pitchTranspose/12), 1); }
+      else if (keyCode == LEFT || keyCode == RIGHT) {
+        Object[] names = instrumentMap.keySet().toArray();
+        if (names.length > 0) {
+          int idx = -1;
+          for(int i=0; i<names.length; i++) { if(names[i].toString().equals(currentInstrument)) { idx = i; break; } }
+          if (keyCode == RIGHT) idx = (idx + 1) % names.length;
+          else idx = (idx - 1 + names.length) % names.length;
+          currentInstrument = names[idx].toString();
+          logToScreen("Instrument: " + currentInstrument + " (" + instrumentMap.get(currentInstrument) + ")", 1);
+        }
+      }
     } else if (key == '=' || key == '+') { pitchTranspose += 1; logToScreen("Transpose: " + pitchTranspose, 1); }
     else if (key == '-') { pitchTranspose -= 1; logToScreen("Transpose: " + pitchTranspose, 1); }
     else if (key == BACKSPACE) { pitchTranspose = 0; logToScreen("Transpose Reset", 1); }
@@ -224,14 +332,8 @@ Blockly.Processing.forBlock['visual_stage_setup'] = function (block) {
     else if (key == (char)92) p = 81;
 
     if (p != -1) {
-      ADSR adsr = activeNotes.get(p);
-      if (adsr != null) {
-        adsr.unpatchAfterRelease(out);
-        adsr.noteOff();
-        activeNotes.remove(p);
-        adsrTimer = millis(); adsrState = 2;
-        logToScreen("Keyboard OFF: MIDI " + p, 0);
-      }
+      stopNoteInternal(p);
+      logToScreen("Keyboard OFF: MIDI " + p, 0);
     }
   }
   `;
@@ -349,13 +451,41 @@ Blockly.Processing.forBlock['visual_stage_setup'] = function (block) {
     "if (startInputs.length > 0) {\n" +
     "  sl.setValue(0); // This will show the device name and trigger connection\n" +
     "}\n" +
-    "sl.close();\n";
+    "sl.close();\n" +
+    "\n" +
+    "// 7. Serial Port Selection\n" +
+    "String[] serialPorts = Serial.list();\n" +
+    "ScrollableList ssl = cp5.addScrollableList(\"serialInputDevice\")\n" +
+    "   .setPosition(" + uiX + ", " + (uiY + 40) + ")\n" +
+    "   .setSize(300, 150)\n" +
+    "   .setBarHeight(30)\n" +
+    "   .setItemHeight(25)\n" +
+    "   .setCaptionLabel(\"SERIAL PORT\");\n" +
+    "for (int i = 0; i < serialPorts.length; i++) {\n" +
+    "  ssl.addItem(serialPorts[i], i);\n" +
+    "}\n" +
+    "ssl.getCaptionLabel().toUpperCase(false).getStyle().setMarginTop(4);\n" +
+    "ssl.getCaptionLabel().setPaddingX(10);\n" +
+    "ssl.close();\n";
 
   setupCode += "cp5.addButton(\"scanMidi\")\n" +
     "   .setPosition(" + (uiX + 310) + ", " + uiY + ")\n" +
     "   .setSize(50, 30)\n" +
     "   .setCaptionLabel(\"SCAN\")\n" +
     "   .getCaptionLabel().toUpperCase(false).getStyle().setMarginTop(4);\n";
+
+  // Log Controls (Positioned at the top right header of the log area)
+  setupCode += "cp5.addButton(\"copyLogs\")\n" +
+    "   .setPosition(" + (totalW - 195) + ", 5)\n" +
+    "   .setSize(90, 25)\n" +
+    "   .setCaptionLabel(\"COPY LOG\")\n" +
+    "   .getCaptionLabel().toUpperCase(false).getStyle().setMarginTop(2);\n";
+
+  setupCode += "cp5.addButton(\"clearLogs\")\n" +
+    "   .setPosition(" + (totalW - 100) + ", 5)\n" +
+    "   .setSize(90, 25)\n" +
+    "   .setCaptionLabel(\"CLEAR LOG\")\n" +
+    "   .getCaptionLabel().toUpperCase(false).getStyle().setMarginTop(2);\n";
 
   // Initial Log Message
   setupCode += "logToScreen(\"System Initialized.\", 0);\n";
@@ -398,12 +528,13 @@ Blockly.Processing.forBlock['visual_stage_setup'] = function (block) {
   drawCode += "  if (showWave) {\n" +
     "    pushMatrix();\n" +
     "    translate(currentX, 0);\n" +
+    "    stroke(stageFgColor);\n" + // Original Hue
     "    for(int i = 0; i < out.bufferSize() - 1; i++) {\n" +
     "      float x1 = map(i, 0, out.bufferSize(), 0, viewW);\n" +
     "      float x2 = map(i+1, 0, out.bufferSize(), 0, viewW);\n" +
     "      line(x1, " + h + "/2 + out.mix.get(i) * waveScale * 100, x2, " + h + "/2 + out.mix.get(i+1) * waveScale * 100);\n" +
     "    }\n" +
-    "    stroke(50); line(viewW, 0, viewW, " + h + "); stroke(stageFgColor);\n" +
+    "    stroke(50); line(viewW, 0, viewW, " + h + ");\n" +
     "    popMatrix();\n" +
     "    currentX += viewW;\n" +
     "  }\n";
@@ -412,6 +543,10 @@ Blockly.Processing.forBlock['visual_stage_setup'] = function (block) {
   drawCode += "  if (showADSR) {\n" +
     "    pushMatrix();\n" +
     "    translate(currentX, 0);\n" +
+    "    pushStyle();\n" +
+    "    colorMode(HSB, 255);\n" +
+    "    int adsrColor = color((fgHue + 40) % 255, 200, 255);\n" + // Offset Hue for ADSR
+    "    stroke(adsrColor);\n" +
     "    float totalTime = adsrA + adsrD + adsrR + 0.5;\n" +
     "    float xA = map(adsrA, 0, totalTime, 0, viewW);\n" +
     "    float xD = map(adsrA + adsrD, 0, totalTime, 0, viewW);\n" +
@@ -420,7 +555,6 @@ Blockly.Processing.forBlock['visual_stage_setup'] = function (block) {
     "    float yPeak = " + h + " * 0.2;\n" +
     "    float ySus = " + h + " - (adsrS * " + h + " * 0.8);\n" +
     "    float yBase = " + h + " * 0.9;\n" +
-    "    stroke(stageFgColor);\n" +
     "    beginShape();\n" +
     "    vertex(0, yBase);\n" +
     "    vertex(xA, yPeak);\n" +
@@ -440,7 +574,6 @@ Blockly.Processing.forBlock['visual_stage_setup'] = function (block) {
     "        dotX = map(elapsed, adsrA, adsrA + adsrD, xA, xD);\n" +
     "        dotY = map(elapsed, adsrA, adsrA + adsrD, yPeak, ySus);\n" +
     "      } else {\n" +
-    "        // Pulsing Sustain: move between xD and xS\n" +
     "        float sPhase = (sin(millis() * 0.005) + 1) / 2.0;\n" +
     "        dotX = lerp(xD, xS, sPhase);\n" +
     "        dotY = ySus;\n" +
@@ -455,15 +588,14 @@ Blockly.Processing.forBlock['visual_stage_setup'] = function (block) {
     "      }\n" +
     "    }\n" +
     "    \n" +
-    "    // Glow Layers (Neon Effect)\n" +
     "    if (adsrState > 0) {\n" +
     "      noStroke();\n" +
     "      for(int j=8; j>0; j--) {\n" +
-    "        fill(stageFgColor, 15); ellipse(dotX, dotY, j*5, j*5);\n" +
+    "        fill(adsrColor, 15); ellipse(dotX, dotY, j*5, j*5);\n" + // Use shifted glow
     "      }\n" +
     "      fill(255); ellipse(dotX, dotY, 8, 8);\n" +
     "    }\n" +
-    "    \n" +
+    "    popStyle();\n" +
     "    stroke(50); line(viewW, 0, viewW, " + h + "); \n" +
     "    popMatrix();\n" +
     "    currentX += viewW;\n" +
@@ -473,13 +605,18 @@ Blockly.Processing.forBlock['visual_stage_setup'] = function (block) {
   drawCode += "  if (showSpec) {\n" +
     "    pushMatrix();\n" +
     "    translate(currentX, 0);\n" +
-    "    stroke(stageFgColor); // Fix color\n" +
+    "    pushStyle();\n" +
+    "    colorMode(HSB, 255);\n" +
     "    fft.forward(out.mix);\n" +
     "    for(int i = 0; i < fft.specSize(); i++) {\n" +
     "      float x = map(i, 0, fft.specSize(), 0, viewW);\n" +
     "      float y = map(fft.getBand(i), 0, 50, " + h + ", " + h + "*0.2);\n" +
+    "      // Dynamic Gradient based on frequency index i\n" +
+    "      float hValue = (fgHue + map(i, 0, fft.specSize(), 0, 80)) % 255;\n" +
+    "      stroke(hValue, 200, 255);\n" +
     "      line(x, " + h + ", x, y);\n" +
     "    }\n" +
+    "    popStyle();\n" +
     "    popMatrix();\n" +
     "  }\n";
   drawCode += "}\n";
@@ -487,10 +624,14 @@ Blockly.Processing.forBlock['visual_stage_setup'] = function (block) {
   // 4. Log Panel Logic (Component Show/Hide)
   drawCode += "Textarea areaAlerts = cp5.get(Textarea.class, \"alertsArea\");\n" +
     "Textarea areaConsole = cp5.get(Textarea.class, \"consoleArea\");\n" +
+    "Button btnCopy = (Button)cp5.getController(\"copyLogs\");\n" +
+    "Button btnClear = (Button)cp5.getController(\"clearLogs\");\n" +
     "if (areaAlerts != null && areaConsole != null) {\n" +
     "  if (showLog) {\n" +
     "    areaAlerts.show();\n" +
     "    areaConsole.show();\n" +
+    "    if(btnCopy != null) btnCopy.show();\n" +
+    "    if(btnClear != null) btnClear.show();\n" +
     "    pushMatrix();\n" +
     "    translate(" + w + ", 0);\n" +
     "    float splitH = height / 2.0;\n" +
@@ -504,6 +645,8 @@ Blockly.Processing.forBlock['visual_stage_setup'] = function (block) {
     "  } else {\n" +
     "    areaAlerts.hide();\n" +
     "    areaConsole.hide();\n" +
+    "    if(btnCopy != null) btnCopy.hide();\n" +
+    "    if(btnClear != null) btnClear.hide();\n" +
     "  }\n" +
     "}\n";
 

@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <title>表演舞台與即時控制說明</title>
+    <style>
+        body { font-family: sans-serif; line-height: 1.6; padding: 20px; color: #333; }
+        h1 { color: #2C3E50; border-bottom: 3px solid #2C3E50; padding-bottom: 10px; }
+        h2 { color: #444; border-bottom: 2px solid #eee; padding-bottom: 5px; margin-top: 30px; }
+        .feature-grid { display: flex; flex-wrap: wrap; gap: 15px; margin-top: 20px; }
+        .feature-item { flex: 1; min-width: 250px; padding: 15px; background: #f4f6f7; border-radius: 8px; border-top: 4px solid #2C3E50; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; background: white; }
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+        th { background-color: #2C3E50; color: white; }
+        tr:nth-child(even) { background-color: #f9f9f9; }
+        strong { color: #2980B9; }
+        .code-var { font-family: monospace; font-weight: bold; color: #e74c3c; }
+    </style>
+</head>
+<body>
+    <h1>建立表演舞台 (Super Stage)</h1>
+    <p>「建立表演舞台」是本專案的靈魂積木。它不僅建立一個互動畫布，更提供了一套可透過程式即時操控的「全域變數系統」。</p>
+
+    <h2>可程式化控制變數</h2>
+    <p>你可以透過「即時表演」分類中的積木（或透過 Serial/MIDI 輸入）來改變以下變數，達到動態視覺與音效回饋：</p>
+    
+    <table>
+        <thead>
+            <tr>
+                <th>變數名稱</th>
+                <th>類型</th>
+                <th>功能說明</th>
+                <th>建議範圍</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><span class="code-var">waveScale</span></td>
+                <td>float</td>
+                <td>控制波形跳動的高度幅度。</td>
+                <td>0.5 ~ 10.0</td>
+            </tr>
+            <tr>
+                <td><span class="code-var">trailAlpha</span></td>
+                <td>float</td>
+                <td>控制背景殘影（餘暉）。數值越低殘影越長。</td>
+                <td>0 ~ 255</td>
+            </tr>
+            <tr>
+                <td><span class="code-var">fgHue</span></td>
+                <td>float</td>
+                <td>控制前景（波形與文字）的色相 (Hue)。</td>
+                <td>0 ~ 255</td>
+            </tr>
+            <tr>
+                <td><span class="code-var">masterGain</span></td>
+                <td>float</td>
+                <td>總輸出音量（分貝）。</td>
+                <td>-40 ~ 15</td>
+            </tr>
+            <tr>
+                <td><span class="code-var">pitchTranspose</span></td>
+                <td>int</td>
+                <td>全域移調。增加 12 代表升一個八度。</td>
+                <td>-24 ~ 24</td>
+            </tr>
+            <tr>
+                <td><span class="code-var">adsrA / D / S / R</span></td>
+                <td>float</td>
+                <td>即時調整合成器的包絡線時間。</td>
+                <td>0.01 ~ 2.0</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h2>控制面板快捷鍵</h2>
+    <p>在舞台啟動後，除了透過積木控制，也支援以下鍵盤操作：</p>
+    <ul>
+        <li><strong>[ Q - U ] / [ I - \ ]</strong>：演奏鋼琴音階。</li>
+        <li><strong>[ ↑ / ↓ ]</strong>：調整八度移調。</li>
+        <li><strong>[ + / - ]</strong>：微調半音移調。</li>
+        <li><strong>[ ← / → ]</strong>：<strong>切換目前所選樂器</strong>。</li>
+        <li><strong>[ Backspace ]</strong>：重設移調為 0。</li>
+    </ul>
+
+    <div style="background: #e8f6f3; padding: 15px; border-radius: 8px; margin-top: 20px; border-left: 5px solid #1abc9c;">
+        <strong>專家提示：</strong> 嘗試使用 Arduino 的可變電阻 (Potentiometer) 透過 Serial 傳送數值來控制 <code>fgHue</code>，可以讓你在表演時用手旋轉出彩虹般的波形顏色！
+    </div>
+</body>
+</html>

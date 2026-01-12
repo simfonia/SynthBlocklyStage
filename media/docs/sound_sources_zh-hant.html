@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <title>音源建立積木說明</title>
+    <style>
+        body { font-family: sans-serif; line-height: 1.6; padding: 20px; color: #333; }
+        h1 { color: #E74C3C; border-bottom: 3px solid #E74C3C; padding-bottom: 10px; }
+        h2 { color: #444; border-bottom: 2px solid #eee; padding-bottom: 5px; margin-top: 30px; }
+        .type-box { margin-bottom: 20px; padding: 15px; background: #fdf2f2; border-radius: 8px; border-left: 5px solid #E74C3C; }
+        code { background: #eee; padding: 2px 4px; border-radius: 4px; font-family: monospace; }
+        .important { background-color: #fffbe6; border-left: 4px solid #ffc107; padding: 15px; margin: 15px 0; border-radius: 0 8px 8px 0; }
+        ul { padding-left: 20px; }
+    </style>
+</head>
+<body>
+    <h1>音源建立積木說明</h1>
+    <p>在 SynthBlockly Stage 中，一切聲音的起點都在「音源建立」分類。你可以透過這些積木初始化音訊引擎、載入樣本或建立虛擬合成器。</p>
+
+    <div class="important">
+        <strong>核心規則：</strong> 必須先放入「啟動 Minim 音訊引擎」積木（通常放在 <code>setup</code> 區塊的最上方），其他的音訊功能才能運作。
+    </div>
+
+    <div class="type-box">
+        <h2>1. 啟動 Minim 音訊引擎</h2>
+        <p><strong>功能</strong>：喚醒 Processing 的底層音訊系統。</p>
+        <p>這就像是幫音響接上電源。它會自動準備好 <code>AudioOutput</code>，讓所有的合成器與樣本能發出聲音。</p>
+    </div>
+
+    <div class="type-box">
+        <h2>2. 載入音訊樣本 (Sampler)</h2>
+        <p><strong>功能</strong>：將 <code>.wav</code> 或 <code>.mp3</code> 檔案載入記憶體。</p>
+        <ul>
+            <li><strong>名稱</strong>：給這個聲音起個名字（如 "kick"）。</li>
+            <li><strong>檔案路徑</strong>：檔案必須放在專案資料夾下的 <code>data/</code> 目錄中。</li>
+        </ul>
+        <p>載入後，你可以使用演奏分類中的「觸發音訊播放」積木來播放它。</p>
+    </div>
+
+    <div class="type-box">
+        <h2>3. 建立合成器樂器</h2>
+        <p><strong>功能</strong>：建立一個具有特定波形特徵的虛擬樂器。</p>
+        <ul>
+            <li><strong>名稱</strong>：自訂名稱（如 "Lead"）。</li>
+            <li><strong>類型</strong>：可選擇 <code>Triangle</code> (三角波)、<code>Sine</code> (正弦波)、<code>Square</code> (方波) 或 <code>Saw</code> (鋸齒波)。</li>
+        </ul>
+        <p>建立後，需搭配「選取目前樂器」積木來切換到該音色進行演奏。</p>
+    </div>
+
+    <h2>波形與聽感小知識</h2>
+    <ul>
+        <li><strong>弦波 (Sine)</strong>：最純淨、柔和，像笛聲。</li>
+        <li><strong>三角波 (Triangle)</strong>：溫暖且帶有少量泛音，適合做為大部分合成器的基礎。</li>
+        <li><strong>方波 (Square)</strong>：中空、帶鼻音，適合 8-bit 電玩音效。</li>
+        <li><strong>鋸齒波 (Saw)</strong>：銳利、明亮，穿透力最強，適合 Bass 或強力的主奏。</li>
+    </ul>
+</body>
+</html>

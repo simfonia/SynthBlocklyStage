@@ -6,7 +6,6 @@
 ## 開發核心規範 (沿用成功經驗)
 - **來自 piBlockly**: 
     - 動態模組載入架構 (`module_loader.js` + `manifest.json`)。
-    - 雙風格主題切換 (Code 模式 vs. Block 模式)。
     - 嚴格的檔案生命週期管理 (.xml 為源頭，.pde 為產物)。
 - **來自 SynthBlockly**:
     - 即時音訊視覺化連動邏輯。
@@ -21,65 +20,56 @@
 
 ### 階段一：核心架構與 MVP (最小可行性產品)
 - [x] **1-1. 專案環境初始化**
-    - 建立 VS Code Extension 骨架 (TS/Node.js)。
-    - 配置編譯與偵錯環境 (`launch.json`, `tasks.json`)。
 - [x] **1-2. Webview 與 Blockly 核心整合**
-    - 建立 `media` 資料夾，導入 `blockly.js` 與 `module_loader.js`。
-    - 實作 `src/extension.ts` 動態生成 Webview HTML 與 CSP 處理。
 - [x] **1-3. 實作 Processing (Java) 產生器核心**
-    - 定義 `Blockly.Processing` 產生器。
-    - 實作基礎積木產生邏輯 (數字, 邏輯, 變數, 迴圈)。
-    - **關鍵修復**: 實作變數自動宣告機制與禁止 ID 混淆機制。
+    - [x] 定義 `Blockly.Processing` 產生器。
+    - [x] 實作基礎積木產生邏輯 (數字, 邏輯, 變數, 迴圈, 文字, 列表, 函式)。
+    - [x] **關鍵修復**: 實作變數自動宣告機制、索引 1-based 轉換。
 - [x] **1-4. 開發執行引擎 (Execution Engine)**
-    - 實作 `child_process` 調用 `processing-java.exe`。
-    - 處理 Windows 平台下的程序樹強制關閉 (`taskkill`)。
-    - 支援自動連結 `data` 資料夾以載入音訊樣本。
 - [x] **1-5. 完成 drum 範例測試**
-    - 實作 Minim 樣本載入與觸發積木。
-    - 實作基礎繪圖與 Math Map 積木。
-    - 驗證 MIDI 裝置連線與波形繪製。
 
-### 階段二：介面優化與教學功能 (進行中)
-- [ ] **2-0. 檔案架構優化 (Refactoring)**
-    - 拆分 `src/extension.ts`：建立 `ProcessingManager.ts` 與 `WebviewManager.ts`。
-    - 整理 `media` 目錄：建立 `media/js/` 存放 `main.js` 與 `module_loader.js`。
-    - 模組化語言包：按功能拆分 `zh-hant.js`（如 `audio_zh.js`, `visual_zh.js`）。
-- [ ] **2-1. 實作「範例系統」**
-    - 在工具列新增「範例」按鈕。
-    - 點擊後列出 `examples` 目錄下的 XML，選取後自動載入。
-- [ ] **2-2. 整合多行註解模組**
-    - 導入 `field-multilineinput` 插件。
-    - 實作「工具/註解」積木，不產生程式碼，方便 PBL 筆記。
-- [ ] **2-3. 完善檔案管理**
-    - 實作「另存新檔」功能。
-    - 實作「髒狀態 (Dirty State)」檢查，關閉前提醒存檔。
-- [ ] **2-4. 強化日誌系統**
-    - 在 Webview 中加入分類日誌視窗（參考 SynthBlockly 經驗）。
-    - 將 Processing 的 `stdout/stderr` 即時回傳並顯示於介面上。
+### 階段二：介面優化與專案管理
+- [x] **2-1. 重構工具列 UI**
+    - [x] 全面替換為 PNG 圖示並實作動態 Hover 變色。
+    - [x] 更新 VS Code 工作列 Run/Stop 圖示。
+- [x] **2-2. 完善檔案管理系統**
+    - [x] 實作「另存新檔」：自動建立同名資料夾並同步存入 .xml 與 .pde。
+    - [x] 實作「髒狀態 (Dirty State)」監控：精確偵測變動並於工具列顯示狀態。
+    - [x] 實作「原生安全檢查」：解決 Webview 沙盒限制，使用 VS Code 視窗進行存檔確認。
+    - [x] 實作「自動存檔」：2 秒防抖背景備份。
+    - [x] 實作「專案名稱顯示」：工具列顯示檔名，懸停顯示完整路徑。
+- [x] **2-3. 強化日誌系統**
+    - [x] 在舞台 (Processing) 端實作雙層分類日誌 (Alerts/Console)。
+    - [x] 實作執行期 MIDI SCAN 與動態裝置切換選單。
+- [x] **2-4. 架構清理**
+    - [x] 移除雙風格模式，統一為直覺的「Angel 風格」標籤。
+    - [x] 產生器模組化，清理 _core.js 中的冗餘代碼。
 
-### 階段三：進階影音積木開發
-- [ ] **3-1. 繪圖積木擴充**
-    - 增加：圓形、多邊形、旋轉 (`rotate`)、座標轉換 (`push/popMatrix`)。
-    - 增加：顏色選取器 (整合 `field-colour`)。
-- [ ] **3-2. 音訊合成器 (Minim 深度整合)**
-    - 實作：`Oscillator` (波形、頻率、振幅控制)。
-    - 實作：`ADSR Envelope` 在 Minim 中的對應控制。
-    - 實作：常用效果器（`Delay`, `Reverb`）。
-- [ ] **3-3. MIDI 深度支援**
-    - 增加：Note Off 監聽。
-    - **[新增] 實作控制變更 (Control Change, CC) 監聽，用以對接實體旋鈕控制舞台變數。**
+### 階段三：進階影音積木與功能對齊 (進行中)
+- [ ] **3-1. 實作「多樂器管理系統」** (對齊 SynthBlockly)
+    - [ ] 新增「建立合成器」積木，支援自訂名稱與波形。
+    - [ ] 新增「選取目前樂器」積木。
+    - [ ] 實作 Java 端的 `HashMap` 樂器存簿。
+- [ ] **3-2. 字串演奏解析器 (String Parser)** (對齊 SynthBlockly)
+    - [ ] 實作 `sb_play_melody`：解析 `C4Q, E4Q, G4H` 字串。
+    - [ ] 實作 `sb_rhythm_sequence`：解析 `x---x---` 節奏字串。
+- [ ] **3-3. 時序系統與節拍控制 (Transport)**
+    - [ ] 實作 `sb_transport_set_bpm`。
+    - [ ] 實作基於音樂時值的 `Loop` 積木（而非 Frame）。
+- [ ] **3-4. 繪圖積木擴充**
+    - [ ] 增加：圓形、多邊形、旋轉 (`rotate`)、座標轉換。
+    - [ ] 整合 `field-colour` 顏色選取器。
 
-### 階段四：互動與通訊 (未來展望)
-- [ ] **4-1. Serial (Arduino) 串接**
-    - 研究 Processing Serial 庫的積木封裝。
-    - 實作：`Serial.list()`, `Serial.readString()`。
-    - **範例：LDR 或超音波感測器控制 `waveScale` 或 `trailAlpha` 達到實體互動感。**
+### 階段四：互動與通訊
+- [ ] **4-1. MIDI 深度支援**
+    - [ ] 增加：控制變更 (Control Change, CC) 監聽，用以對接實體旋鈕。
+- [ ] **4-2. Serial (Arduino) 串接**
+    - [ ] 實作：`Serial.list()`, `Serial.readString()`。
+    - [ ] 實作 bitmask 檢查積木 (對齊 SynthBlockly)。
 
 ### 階段五：教學導向 (PBL) 整理
-- [ ] **5-1. 撰寫開發教學文件**
-    - 將開發過程中的錯誤與解決方案整理成知識庫。
-- [ ] **5-2. 錄製/撰寫積木使用指南**
-    - 針對每個分類製作「互動式說明」 (HelpUrl)。
+- [ ] **5-1. 實作「範例載入系統」** (工具列按鈕與選單)。
+- [ ] **5-2. 撰寫積木使用指南 (HelpUrl)**。
 
 ---
 

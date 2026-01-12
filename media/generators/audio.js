@@ -58,33 +58,52 @@ Blockly.Processing.forBlock['audio_sample_mix_get'] = function(block) {
   return [`0`, Blockly.Processing.ORDER_ATOMIC];
 };
 
+Blockly.Processing.forBlock['audio_create_synth_instrument'] = function(block) {
+  const name = block.getFieldValue('NAME');
+  const type = block.getFieldValue('TYPE');
+  return `instrumentMap.put("${name}", "${type}");\n`;
+};
+
+Blockly.Processing.forBlock['audio_select_instrument'] = function(block) {
+  const name = block.getFieldValue('NAME');
+  return `currentInstrument = "${name}";\n`;
+};
+
+Blockly.Processing.forBlock['audio_create_harmonic_synth'] = function(block) {
+  const name = block.getFieldValue('NAME');
+  const partials = [];
+  for (let i = 1; i <= block.itemCount_; i++) {
+    const val = Blockly.Processing.valueToCode(block, 'PARTIAL' + i, Blockly.Processing.ORDER_ATOMIC) || '0';
+    // Ensure float format for Java array
+    partials.push(`${val}f`);
+  }
+  return `instrumentMap.put("${name}", "HARMONIC");\n` +
+         `harmonicPartials.put("${name}", new float[]{${partials.join(', ')}});\n`;
+};
+
+Blockly.Processing.forBlock['audio_create_additive_synth'] = function(block) {
+  const name = block.getFieldValue('NAME');
+  const components = [];
+  for (let i = 1; i <= block.itemCount_; i++) {
+    const wave = block.getFieldValue('WAVE' + i);
+    const ratio = Number(block.getFieldValue('RATIO' + i)) || 1.0;
+    const amp = Number(block.getFieldValue('AMP' + i)) || 0.0;
+    components.push(`new SynthComponent("${wave}", ${ratio}f, ${amp}f)`);
+  }
+  
+  return `instrumentMap.put("${name}", "ADDITIVE");\n` +
+         `additiveConfigs.put("${name}", Arrays.asList(${components.join(', ')}));\n`;
+};
+
 Blockly.Processing.forBlock['audio_play_note'] = function(block) {
   const pitch = Blockly.Processing.valueToCode(block, 'PITCH', Blockly.Processing.ORDER_ATOMIC) || '60';
   const velocity = Blockly.Processing.valueToCode(block, 'VELOCITY', Blockly.Processing.ORDER_ATOMIC) || '100';
-  
-  return `{\n` +
-         `  float amp = map(${velocity}, 0, 127, 0, 0.6f);\n` +
-         `  Oscil wave = new Oscil(mtof(${pitch}), amp, Waves.TRIANGLE);\n` +
-         `  ADSR adsr = new ADSR(1.0, adsrA, adsrD, adsrS, adsrR);\n` +
-         `  wave.patch(adsr).patch(out);\n` +
-         `  adsr.noteOn();\n` +
-         `  activeNotes.put(${pitch}, adsr);\n` +
-         `  adsrTimer = millis(); adsrState = 1; // Visual Trigger\n` +
-         `}\n`;
+  return `playNoteInternal((int)${pitch}, (float)${velocity});\n`;
 };
 
 Blockly.Processing.forBlock['audio_stop_note'] = function(block) {
   const pitch = Blockly.Processing.valueToCode(block, 'PITCH', Blockly.Processing.ORDER_ATOMIC) || '60';
-  
-  return `{\n` +
-         `  ADSR adsr = activeNotes.get(${pitch});\n` +
-         `  if (adsr != null) {\n` +
-         `    adsr.unpatchAfterRelease(out);\n` +
-         `    adsr.noteOff();\n` +
-         `    activeNotes.remove(${pitch});\n` +
-         `    adsrTimer = millis(); adsrState = 2; // Visual Release\n` +
-         `  }\n` +
-         `}\n`;
+  return `stopNoteInternal((int)${pitch});\n`;
 };
 
 Blockly.Processing.forBlock['audio_set_current_sample'] = function(block) {

@@ -1,0 +1,17 @@
+.vscode/**
+.git/**
+.gitignore
+.vscode-test/**
+out/test/**
+src/**
+node_modules/**
+processing-3.5.4/**
+tsconfig.json
+package-lock.json
+*.vsix
+vsc-extension-quickstart.md
+
+# 務必保留 (不要寫在下面):
+# media/**
+# examples/**
+# out/extension.js (這是執行檔)

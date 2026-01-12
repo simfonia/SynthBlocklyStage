@@ -2,19 +2,31 @@ import controlP5.*;
 import ddf.minim.*;
 import ddf.minim.analysis.*;
 import ddf.minim.ugens.*;
+import java.awt.Toolkit;
+import java.awt.datatransfer.*;
+import java.util.*;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import processing.serial.*;
 import themidibus.*;
 
 AudioOutput out;
 ControlP5 cp5;
 FFT fft;
+Gain kick_gain;
 HashMap<Integer, ADSR> activeNotes = new HashMap<Integer, ADSR>();
+HashMap<String, List<SynthComponent>> additiveConfigs = new HashMap<String, List<SynthComponent>>();
+HashMap<String, String> instrumentMap = new HashMap<String, String>();
+HashMap<String, float[]> harmonicPartials = new HashMap<String, float[]>();
 MidiBus myBus;
 Minim minim;
 Sampler currentSample;
+Sampler kick;
+Serial myPort;
+String _2GPUj8zwRaYWDBB__gm = "";
+String currentInstrument = "Default";
 boolean isMidiMode = false;
 boolean showADSR = true;
 boolean showLog = true;
@@ -24,17 +36,23 @@ float adsrA = 0.01;
 float adsrD = 0.1;
 float adsrR = 0.5;
 float adsrS = 0.5;
-float fgHue = 230.0;
+float fgHue = 4.0;
 float masterGain = -5.0;
 float trailAlpha = 100.0;
 float waveScale = 2.5;
 int adsrState = 0;
 int adsrTimer = 0;
 int pitchTranspose = 0;
+int serialBaud = 115200;
 int stageBgColor;
 int stageFgColor;
 
-void logToScreen(String msg, int type) {
+class SynthComponent {
+    String waveType; float ratio; float amp;
+    SynthComponent(String w, float r, float a) { waveType = w; ratio = r; amp = a; }
+  }
+
+  void logToScreen(String msg, int type) {
     Textarea target = (type >= 1) ? cp5.get(Textarea.class, "alertsArea") : cp5.get(Textarea.class, "consoleArea");
     if (target != null) {
       String prefix = (type == 3) ? "[ERR] " : (type == 2) ? "[WARN] " : (type == 1) ? "[!] " : "[INFO] ";
@@ -45,7 +63,66 @@ void logToScreen(String msg, int type) {
   }
 
   float mtof(float note) {
-    return 440.0 * pow(2.0, (note + (float)pitchTranspose - 69.0) / 12.0);
+    return 440.0f * (float)Math.pow(2.0, (double)((note + (float)pitchTranspose - 69.0f) / 12.0f));
+  }
+
+  Wavetable getWaveform(String type) {
+    if (type.equals("SINE")) return Waves.SINE;
+    if (type.equals("SQUARE")) return Waves.SQUARE;
+    if (type.equals("SAW")) return Waves.SAW;
+    return Waves.TRIANGLE;
+  }
+
+  void playNoteInternal(int p, float vel) {
+    if (activeNotes.containsKey(p)) return;
+    
+    float masterAmp = map(vel, 0, 127, 0, 0.6f);
+    float baseFreq = mtof((float)p);
+    ADSR adsr = new ADSR(1.0, adsrA, adsrD, adsrS, adsrR);
+    Summer mixer = new Summer(); // Used to mix multiple oscillators
+    String type = instrumentMap.getOrDefault(currentInstrument, "TRIANGLE");
+    
+    println("Playing " + currentInstrument + " (Type: " + type + ") at Pitch " + p);
+
+    if (type.equals("HARMONIC")) {
+      float[] partials = harmonicPartials.get(currentInstrument);
+      if (partials != null) {
+        for (int i = 0; i < partials.length; i++) {
+          if (partials[i] > 0) {
+            Oscil osc = new Oscil(baseFreq * (i + 1), partials[i] * masterAmp, Waves.SINE);
+            osc.patch(mixer); // Patch to mixer instead of adsr
+          }
+        }
+      }
+      mixer.patch(adsr);
+    } else if (type.equals("ADDITIVE")) {
+      List<SynthComponent> configs = additiveConfigs.get(currentInstrument);
+      if (configs != null) {
+        for (SynthComponent comp : configs) {
+          Oscil osc = new Oscil(baseFreq * comp.ratio, comp.amp * masterAmp, getWaveform(comp.waveType));
+          osc.patch(mixer); // Patch to mixer
+        }
+      }
+      mixer.patch(adsr);
+    } else {
+      Oscil wave = new Oscil(baseFreq, masterAmp, getWaveform(type));
+      wave.patch(adsr);
+    }
+    
+    adsr.patch(out);
+    adsr.noteOn();
+    activeNotes.put(p, adsr);
+    adsrTimer = millis(); adsrState = 1;
+  }
+
+  void stopNoteInternal(int p) {
+    ADSR adsr = activeNotes.get(p);
+    if (adsr != null) {
+      adsr.unpatchAfterRelease(out);
+      adsr.noteOff();
+      activeNotes.remove(p);
+      adsrTimer = millis(); adsrState = 2;
+    }
   }
 
   void midiInputDevice(int n) {
@@ -54,6 +131,19 @@ void logToScreen(String msg, int type) {
       myBus.clearInputs();
       myBus.addInput(n);
       logToScreen("MIDI Connected: " + inputs[n], 1);
+    }
+  }
+
+  void serialInputDevice(int n) {
+    String[] ports = Serial.list();
+    if (n >= 0 && n < ports.length) {
+      if (myPort != null) { myPort.stop(); }
+      try {
+        myPort = new Serial(this, ports[n], serialBaud);
+        logToScreen("Serial Connected: " + ports[n], 1);
+      } catch (Exception e) {
+        logToScreen("Serial Error: Port Busy or Unavailable", 3);
+      }
     }
   }
 
@@ -74,6 +164,26 @@ void logToScreen(String msg, int type) {
         logToScreen("Tip: If device not found, try plugging it in BEFORE starting.", 2);
       }
     }
+  }
+
+  void copyLogs() {
+    Textarea console = cp5.get(Textarea.class, "consoleArea");
+    Textarea alerts = cp5.get(Textarea.class, "alertsArea");
+    String content = "--- ALERTS ---\n" + (alerts != null ? alerts.getText() : "") + 
+                     "\n\n--- CONSOLE ---\n" + (console != null ? console.getText() : "");
+    
+    StringSelection selection = new StringSelection(content);
+    Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+    clipboard.setContents(selection, selection);
+    logToScreen("Logs copied to clipboard.", 1);
+  }
+
+  void clearLogs() {
+    Textarea console = cp5.get(Textarea.class, "consoleArea");
+    Textarea alerts = cp5.get(Textarea.class, "alertsArea");
+    if (console != null) console.clear();
+    if (alerts != null) alerts.clear();
+    logToScreen("Logs cleared.", 1);
   }
 
   void keyPressed() {
@@ -100,23 +210,25 @@ void logToScreen(String msg, int type) {
     else if (key == (char)92) p = 81;
 
     if (p != -1) {
-      if (!activeNotes.containsKey(p)) {
-        float frequency = mtof((float)p);
-        // Using TRIANGLE wave for better audibility on low notes
-        Oscil wave = new Oscil(frequency, 0.6f, Waves.TRIANGLE);
-        ADSR adsr = new ADSR(1.0, adsrA, adsrD, adsrS, adsrR);
-        wave.patch(adsr).patch(out);
-        adsr.noteOn();
-        activeNotes.put(p, adsr);
-        adsrTimer = millis(); adsrState = 1;
-        logToScreen("Keyboard ON: MIDI " + p + " (" + nf(frequency, 0, 1) + " Hz)", 0);
-      }
+      playNoteInternal(p, 100);
+      logToScreen("Keyboard ON: MIDI " + p, 0);
     }
 
     // Transposition Controls
     if (key == CODED) {
       if (keyCode == UP) { pitchTranspose += 12; logToScreen("Octave UP: " + (pitchTranspose/12), 1); }
       else if (keyCode == DOWN) { pitchTranspose -= 12; logToScreen("Octave DOWN: " + (pitchTranspose/12), 1); }
+      else if (keyCode == LEFT || keyCode == RIGHT) {
+        Object[] names = instrumentMap.keySet().toArray();
+        if (names.length > 0) {
+          int idx = -1;
+          for(int i=0; i<names.length; i++) { if(names[i].toString().equals(currentInstrument)) { idx = i; break; } }
+          if (keyCode == RIGHT) idx = (idx + 1) % names.length;
+          else idx = (idx - 1 + names.length) % names.length;
+          currentInstrument = names[idx].toString();
+          logToScreen("Instrument: " + currentInstrument + " (" + instrumentMap.get(currentInstrument) + ")", 1);
+        }
+      }
     } else if (key == '=' || key == '+') { pitchTranspose += 1; logToScreen("Transpose: " + pitchTranspose, 1); }
     else if (key == '-') { pitchTranspose -= 1; logToScreen("Transpose: " + pitchTranspose, 1); }
     else if (key == BACKSPACE) { pitchTranspose = 0; logToScreen("Transpose Reset", 1); }
@@ -150,22 +262,32 @@ void logToScreen(String msg, int type) {
     else if (key == (char)92) p = 81;
 
     if (p != -1) {
-      ADSR adsr = activeNotes.get(p);
-      if (adsr != null) {
-        adsr.unpatchAfterRelease(out);
-        adsr.noteOff();
-        activeNotes.remove(p);
-        adsrTimer = millis(); adsrState = 2;
-        logToScreen("Keyboard OFF: MIDI " + p, 0);
-      }
+      stopNoteInternal(p);
+      logToScreen("Keyboard OFF: MIDI " + p, 0);
     }
   }
+
+void serialEvent(Serial p) {
+  _2GPUj8zwRaYWDBB__gm = p.readStringUntil('\n');
+  if (_2GPUj8zwRaYWDBB__gm != null) {
+    _2GPUj8zwRaYWDBB__gm = _2GPUj8zwRaYWDBB__gm.trim();
+    println("[Serial] Received: " + _2GPUj8zwRaYWDBB__gm);
+    logToScreen("Serial In: " + _2GPUj8zwRaYWDBB__gm, 0);
+      if (_2GPUj8zwRaYWDBB__gm.equals("KICK")) {
+    if (kick != null) {
+      kick_gain.setValue(map(120, 0, 127, -40, 0));
+      kick.trigger();
+    }
+  }
+
+  }
+}
 
 void setup() {
   size(1600, 600);
   pixelDensity(displayDensity());
   stageBgColor = color(0, 0, 0);
-  stageFgColor = color(255, 0, 150);
+  stageFgColor = color(231, 76, 60);
   minim = new Minim(this);
   out = minim.getLineOut();
   fft = new FFT(out.bufferSize(), out.sampleRate());
@@ -199,7 +321,7 @@ void setup() {
   cp5.addToggle("showLog").setPosition(230, 430).setSize(40, 20).setCaptionLabel("LOG");
   cp5.addSlider("trailAlpha").setPosition(20, 495).setSize(150, 15).setRange(0, 255).setCaptionLabel("TRAIL");
   cp5.addSlider("waveScale").setPosition(20, 525).setSize(150, 15).setRange(0.1, 10).setCaptionLabel("SCALE");
-  cp5.addSlider("fgHue").setPosition(20, 555).setSize(150, 15).setRange(0, 255).setValue(230.0).setCaptionLabel("FG COLOR");
+  cp5.addSlider("fgHue").setPosition(20, 555).setSize(150, 15).setRange(0, 255).setValue(4.0).setCaptionLabel("FG COLOR");
   cp5.addSlider("adsrA").setPosition(320, 485).setSize(15, 80).setRange(0, 2).setCaptionLabel("A").getCaptionLabel().align(ControlP5.CENTER, ControlP5.BOTTOM_OUTSIDE).setPaddingX(0);
   cp5.addSlider("adsrD").setPosition(380, 485).setSize(15, 80).setRange(0, 1).setCaptionLabel("D").getCaptionLabel().align(ControlP5.CENTER, ControlP5.BOTTOM_OUTSIDE).setPaddingX(0);
   cp5.addSlider("adsrS").setPosition(440, 485).setSize(15, 80).setRange(0, 1).setCaptionLabel("S").getCaptionLabel().align(ControlP5.CENTER, ControlP5.BOTTOM_OUTSIDE).setPaddingX(0);
@@ -223,13 +345,49 @@ void setup() {
     sl.setValue(0); // This will show the device name and trigger connection
   }
   sl.close();
+  
+  // 7. Serial Port Selection
+  String[] serialPorts = Serial.list();
+  ScrollableList ssl = cp5.addScrollableList("serialInputDevice")
+     .setPosition(680, 470)
+     .setSize(300, 150)
+     .setBarHeight(30)
+     .setItemHeight(25)
+     .setCaptionLabel("SERIAL PORT");
+  for (int i = 0; i < serialPorts.length; i++) {
+    ssl.addItem(serialPorts[i], i);
+  }
+  ssl.getCaptionLabel().toUpperCase(false).getStyle().setMarginTop(4);
+  ssl.getCaptionLabel().setPaddingX(10);
+  ssl.close();
   cp5.addButton("scanMidi")
      .setPosition(990, 430)
      .setSize(50, 30)
      .setCaptionLabel("SCAN")
      .getCaptionLabel().toUpperCase(false).getStyle().setMarginTop(4);
+  cp5.addButton("copyLogs")
+     .setPosition(1405, 5)
+     .setSize(90, 25)
+     .setCaptionLabel("COPY LOG")
+     .getCaptionLabel().toUpperCase(false).getStyle().setMarginTop(2);
+  cp5.addButton("clearLogs")
+     .setPosition(1500, 5)
+     .setSize(90, 25)
+     .setCaptionLabel("CLEAR LOG")
+     .getCaptionLabel().toUpperCase(false).getStyle().setMarginTop(2);
   logToScreen("System Initialized.", 0);
-    stageBgColor = color(255, 0, 0);
+    minim = new Minim(this);
+    kick = new Sampler("kick.wav", 4, minim);
+    kick_gain = new Gain(0.f);
+    kick.patch(kick_gain).patch(out);
+    println("--- Available Serial Ports ---");
+    println(Serial.list());
+    serialBaud = 115200;
+    try {
+      myPort = new Serial(this, Serial.list()[0], serialBaud);
+    } catch (Exception e) {
+      println("Serial Init Failed: " + e.getMessage());
+    }
 }
 
 
@@ -262,18 +420,23 @@ void draw() {
     if (showWave) {
       pushMatrix();
       translate(currentX, 0);
+      stroke(stageFgColor);
       for(int i = 0; i < out.bufferSize() - 1; i++) {
         float x1 = map(i, 0, out.bufferSize(), 0, viewW);
         float x2 = map(i+1, 0, out.bufferSize(), 0, viewW);
         line(x1, 400/2 + out.mix.get(i) * waveScale * 100, x2, 400/2 + out.mix.get(i+1) * waveScale * 100);
       }
-      stroke(50); line(viewW, 0, viewW, 400); stroke(stageFgColor);
+      stroke(50); line(viewW, 0, viewW, 400);
       popMatrix();
       currentX += viewW;
     }
     if (showADSR) {
       pushMatrix();
       translate(currentX, 0);
+      pushStyle();
+      colorMode(HSB, 255);
+      int adsrColor = color((fgHue + 40) % 255, 200, 255);
+      stroke(adsrColor);
       float totalTime = adsrA + adsrD + adsrR + 0.5;
       float xA = map(adsrA, 0, totalTime, 0, viewW);
       float xD = map(adsrA + adsrD, 0, totalTime, 0, viewW);
@@ -282,7 +445,6 @@ void draw() {
       float yPeak = 400 * 0.2;
       float ySus = 400 - (adsrS * 400 * 0.8);
       float yBase = 400 * 0.9;
-      stroke(stageFgColor);
       beginShape();
       vertex(0, yBase);
       vertex(xA, yPeak);
@@ -302,7 +464,6 @@ void draw() {
           dotX = map(elapsed, adsrA, adsrA + adsrD, xA, xD);
           dotY = map(elapsed, adsrA, adsrA + adsrD, yPeak, ySus);
         } else {
-          // Pulsing Sustain: move between xD and xS
           float sPhase = (sin(millis() * 0.005) + 1) / 2.0;
           dotX = lerp(xD, xS, sPhase);
           dotY = ySus;
@@ -317,15 +478,14 @@ void draw() {
         }
       }
       
-      // Glow Layers (Neon Effect)
       if (adsrState > 0) {
         noStroke();
         for(int j=8; j>0; j--) {
-          fill(stageFgColor, 15); ellipse(dotX, dotY, j*5, j*5);
+          fill(adsrColor, 15); ellipse(dotX, dotY, j*5, j*5);
         }
         fill(255); ellipse(dotX, dotY, 8, 8);
       }
-      
+      popStyle();
       stroke(50); line(viewW, 0, viewW, 400); 
       popMatrix();
       currentX += viewW;
@@ -333,22 +493,31 @@ void draw() {
     if (showSpec) {
       pushMatrix();
       translate(currentX, 0);
-      stroke(stageFgColor); // Fix color
+      pushStyle();
+      colorMode(HSB, 255);
       fft.forward(out.mix);
       for(int i = 0; i < fft.specSize(); i++) {
         float x = map(i, 0, fft.specSize(), 0, viewW);
         float y = map(fft.getBand(i), 0, 50, 400, 400*0.2);
+        // Dynamic Gradient based on frequency index i
+        float hValue = (fgHue + map(i, 0, fft.specSize(), 0, 80)) % 255;
+        stroke(hValue, 200, 255);
         line(x, 400, x, y);
       }
+      popStyle();
       popMatrix();
     }
   }
   Textarea areaAlerts = cp5.get(Textarea.class, "alertsArea");
   Textarea areaConsole = cp5.get(Textarea.class, "consoleArea");
+  Button btnCopy = (Button)cp5.getController("copyLogs");
+  Button btnClear = (Button)cp5.getController("clearLogs");
   if (areaAlerts != null && areaConsole != null) {
     if (showLog) {
       areaAlerts.show();
       areaConsole.show();
+      if(btnCopy != null) btnCopy.show();
+      if(btnClear != null) btnClear.show();
       pushMatrix();
       translate(1200, 0);
       float splitH = height / 2.0;
@@ -362,6 +531,8 @@ void draw() {
     } else {
       areaAlerts.hide();
       areaConsole.hide();
+      if(btnCopy != null) btnCopy.hide();
+      if(btnClear != null) btnClear.hide();
     }
   }
 }

@@ -1,5 +1,5 @@
 <xml>
-    <!-- 1. Processing Structure (Stage Specific) -->
+    <!-- 1. Processing Structure -->
     <category name="%{BKY_CAT_STRUCTURE}" colour="%{BKY_STRUCTURE_HUE}">
         <block type="processing_setup"></block>
         <block type="processing_draw"></block>
@@ -23,22 +23,14 @@
     <category name="%{BKY_CAT_LOOPS}" colour="%{BKY_LOOPS_HUE}">
         <block type="controls_repeat_ext">
             <value name="TIMES">
-                <shadow type="math_number">
-                    <field name="NUM">10</field>
-                </shadow>
+                <shadow type="math_number"><field name="NUM">10</field></shadow>
             </value>
         </block>
         <block type="controls_whileUntil"></block>
         <block type="controls_for">
-            <value name="FROM">
-                <shadow type="math_number"><field name="NUM">1</field></shadow>
-            </value>
-            <value name="TO">
-                <shadow type="math_number"><field name="NUM">10</field></shadow>
-            </value>
-            <value name="BY">
-                <shadow type="math_number"><field name="NUM">1</field></shadow>
-            </value>
+            <value name="FROM"><shadow type="math_number"><field name="NUM">1</field></shadow></value>
+            <value name="TO"><shadow type="math_number"><field name="NUM">10</field></shadow></value>
+            <value name="BY"><shadow type="math_number"><field name="NUM">1</field></shadow></value>
         </block>
         <block type="controls_forEach"></block>
         <block type="controls_flow_statements"></block>
@@ -48,19 +40,14 @@
     <category name="%{BKY_CAT_MATH}" colour="%{BKY_MATH_HUE}">
         <block type="math_number"></block>
         <block type="math_arithmetic">
-            <value name="A">
-                <shadow type="math_number"><field name="NUM">1</field></shadow>
-            </value>
-            <value name="B">
-                <shadow type="math_number"><field name="NUM">1</field></shadow>
-            </value>
+            <value name="A"><shadow type="math_number"><field name="NUM">1</field></shadow></value>
+            <value name="B"><shadow type="math_number"><field name="NUM">1</field></shadow></value>
         </block>
         <block type="math_single"></block>
         <block type="math_trig"></block>
         <block type="math_constant"></block>
         <block type="math_number_property"></block>
         <block type="math_round"></block>
-        <block type="math_on_list"></block>
         <block type="math_modulo"></block>
         <block type="math_map">
             <value name="FROM_LOW"><shadow type="math_number"><field name="NUM">0</field></shadow></value>
@@ -78,18 +65,10 @@
     <category name="%{BKY_CAT_TEXT}" colour="%{BKY_TEXT_HUE}">
         <block type="text"></block>
         <block type="text_join"></block>
-        <block type="text_append">
-            <value name="TEXT">
-                <shadow type="text"></shadow>
-            </value>
-        </block>
+        <block type="text_append"><value name="TEXT"><shadow type="text"></shadow></value></block>
         <block type="text_length"></block>
         <block type="text_isEmpty"></block>
-        <block type="text_indexOf"></block>
         <block type="text_charAt"></block>
-        <block type="text_getSubstring"></block>
-        <block type="text_changeCase"></block>
-        <block type="text_trim"></block>
         <block type="text_print"></block>
     </category>
 
@@ -97,64 +76,74 @@
     <category name="%{BKY_CAT_LISTS}" colour="%{BKY_LISTS_HUE}">
         <block type="lists_create_empty"></block>
         <block type="lists_create_with"></block>
-        <block type="lists_repeat">
-            <value name="NUM">
-                <shadow type="math_number">
-                    <field name="NUM">5</field>
-                </shadow>
-            </value>
-        </block>
         <block type="lists_length"></block>
         <block type="lists_isEmpty"></block>
-        <block type="lists_indexOf"></block>
         <block type="lists_getIndex"></block>
         <block type="lists_setIndex"></block>
-        <block type="lists_getSublist"></block>
-        <block type="lists_sort"></block>
-        <block type="lists_split"></block>
-        <block type="lists_reverse"></block>
     </category>
 
     <sep></sep>
 
-    <!-- 7. Variables -->
+    <!-- 7. Variables & Functions -->
     <category name="%{BKY_CAT_VARIABLES}" colour="%{BKY_VARIABLES_HUE}" custom="VARIABLE"></category>
-
-    <!-- 8. Functions -->
     <category name="%{BKY_CAT_FUNCTIONS}" colour="%{BKY_FUNCTIONS_HUE}" custom="PROCEDURE"></category>
+    <category name="%{BKY_CAT_TOOLS}" colour="%{BKY_TOOLS_HUE}">
+        <block type="sb_comment"></block>
+    </category>
 
     <sep></sep>
 
-    <!-- 9. Visuals -->
-    <category name="%{BKY_CAT_VISUAL}" colour="%{BKY_VISUAL_HUE}">
+    <!-- 8. Live Show (Management) -->
+    <category name="%{BKY_CAT_LIVE_SHOW}" colour="%{BKY_LIVE_SHOW_HUE}">
         <block type="visual_stage_setup"></block>
         <block type="visual_stage_set_color">
-            <value name="COLOR">
-                <shadow type="visual_color_picker"></shadow>
-            </value>
+            <value name="COLOR"><shadow type="visual_color_picker"></shadow></value>
         </block>
+        <block type="live_set_param">
+            <value name="VALUE"><shadow type="math_number"><field name="NUM">1</field></shadow></value>
+        </block>
+        <block type="live_get_param"></block>
+    </category>
+
+    <!-- 9. Sound Sources -->
+    <category name="%{BKY_CAT_SOUND_SOURCES}" colour="%{BKY_SOUND_SOURCES_HUE}">
+        <block type="audio_minim_init"></block>
+        <block type="audio_create_synth_instrument"></block>
+        <block type="audio_create_harmonic_synth"></block>
+        <block type="audio_create_additive_synth"></block>
+        <block type="audio_load_sample"></block>
+    </category>
+
+    <!-- 10. Instrument Control -->
+    <category name="%{BKY_CAT_INSTRUMENT_CONTROL}" colour="%{BKY_INSTRUMENT_CONTROL_HUE}">
+        <block type="audio_select_instrument"></block>
+        <block type="audio_set_current_sample"></block>
+    </category>
+
+    <!-- 11. Performance -->
+    <category name="%{BKY_CAT_PERFORMANCE}" colour="%{BKY_PERFORMANCE_HUE}">
+        <block type="audio_play_note">
+            <value name="PITCH"><shadow type="variables_get"><field name="VAR">pitch</field></shadow></value>
+            <value name="VELOCITY"><shadow type="math_number"><field name="NUM">100</field></shadow></value>
+        </block>
+        <block type="audio_stop_note">
+            <value name="PITCH"><shadow type="variables_get"><field name="VAR">pitch</field></shadow></value>
+        </block>
+        <block type="audio_trigger_sample">
+            <value name="VELOCITY"><shadow type="math_number"><field name="NUM">100</field></shadow></value>
+        </block>
+    </category>
+
+    <sep></sep>
+
+    <!-- 12. Visuals (Drawing) -->
+    <category name="%{BKY_CAT_VISUAL}" colour="%{BKY_VISUAL_HUE}">
         <block type="visual_color_picker"></block>
         <block type="visual_size"></block>
-        <block type="visual_background">
-            <value name="COLOR">
-                <shadow type="math_number"><field name="NUM">0</field></shadow>
-            </value>
-        </block>
-        <block type="visual_fill">
-            <value name="COLOR">
-                <shadow type="math_number"><field name="NUM">255</field></shadow>
-            </value>
-        </block>
-        <block type="visual_stroke">
-            <value name="COLOR">
-                <shadow type="math_number"><field name="NUM">255</field></shadow>
-            </value>
-        </block>
-        <block type="visual_stroke_weight">
-            <value name="WEIGHT">
-                <shadow type="math_number"><field name="NUM">1</field></shadow>
-            </value>
-        </block>
+        <block type="visual_background"></block>
+        <block type="visual_fill"></block>
+        <block type="visual_stroke"></block>
+        <block type="visual_stroke_weight"><value name="WEIGHT"><shadow type="math_number"><field name="NUM">1</field></shadow></value></block>
         <block type="visual_no_stroke"></block>
         <block type="visual_no_fill"></block>
         <block type="visual_rect">
@@ -169,48 +158,25 @@
             <value name="X2"><shadow type="math_number"><field name="NUM">100</field></shadow></value>
             <value name="Y2"><shadow type="math_number"><field name="NUM">100</field></shadow></value>
         </block>
-        <block type="visual_constant"></block>
     </category>
 
-    <!-- 10. Audio (Minim) -->
-    <category name="%{BKY_CAT_AUDIO}" colour="%{BKY_AUDIO_HUE}">
-        <block type="audio_play_note">
-            <value name="PITCH">
-                <shadow type="variables_get"><field name="VAR">pitch</field></shadow>
-            </value>
-            <value name="VELOCITY">
-                <shadow type="math_number"><field name="NUM">100</field></shadow>
-            </value>
-        </block>
-        <block type="audio_stop_note">
-            <value name="PITCH">
-                <shadow type="variables_get"><field name="VAR">pitch</field></shadow>
-            </value>
-        </block>
-        <block type="audio_minim_init"></block>
-        <block type="audio_load_sample"></block>
-        <block type="audio_trigger_sample">
-            <value name="VELOCITY">
-                <shadow type="math_number"><field name="NUM">100</field></shadow>
-            </value>
-        </block>
-        <block type="audio_sample_property"></block>
-        <block type="audio_sample_mix_get"></block>
-    </category>
-
-    <!-- 11. Serial (Arduino) -->
+    <!-- 13. Serial (Arduino) -->
     <category name="%{BKY_CAT_SERIAL}" colour="%{BKY_SERIAL_HUE}">
-        <!-- Future blocks will be added here -->
+        <block type="sb_serial_data_received"></block>
+        <block type="serial_init"></block>
+        <block type="serial_available"></block>
+        <block type="serial_read_string"></block>
+        <block type="serial_check_mask"></block>
     </category>
 
-    <!-- 12. MIDI -->
+    <!-- 14. MIDI -->
     <category name="%{BKY_CAT_MIDI}" colour="%{BKY_MIDI_HUE}">
         <block type="midi_init"></block>
         <block type="midi_on_note"></block>
         <block type="midi_off_note"></block>
     </category>
 
-    <!-- 13. UI (ControlP5) -->
+    <!-- 15. UI Control -->
     <category name="%{BKY_CAT_UI}" colour="%{BKY_UI_HUE}">
         <block type="ui_init"></block>
         <block type="ui_add_slider"></block>

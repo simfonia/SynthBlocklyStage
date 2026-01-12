@@ -2,6 +2,7 @@ import controlP5.*;
 import ddf.minim.*;
 import ddf.minim.analysis.*;
 import ddf.minim.ugens.*;
+import java.util.*;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -12,9 +13,13 @@ AudioOutput out;
 ControlP5 cp5;
 FFT fft;
 HashMap<Integer, ADSR> activeNotes = new HashMap<Integer, ADSR>();
+HashMap<String, List<SynthComponent>> additiveConfigs = new HashMap<String, List<SynthComponent>>();
+HashMap<String, String> instrumentMap = new HashMap<String, String>();
+HashMap<String, float[]> harmonicPartials = new HashMap<String, float[]>();
 MidiBus myBus;
 Minim minim;
 Sampler currentSample;
+String currentInstrument = "Default";
 boolean isMidiMode = false;
 boolean showADSR = true;
 boolean showLog = true;
@@ -30,11 +35,18 @@ float trailAlpha = 100.0;
 float waveScale = 2.5;
 int adsrState = 0;
 int adsrTimer = 0;
+int pitch;
 int pitchTranspose = 0;
 int stageBgColor;
 int stageFgColor;
+int velocity;
 
-void logToScreen(String msg, int type) {
+class SynthComponent {
+    String waveType; float ratio; float amp;
+    SynthComponent(String w, float r, float a) { waveType = w; ratio = r; amp = a; }
+  }
+
+  void logToScreen(String msg, int type) {
     Textarea target = (type >= 1) ? cp5.get(Textarea.class, "alertsArea") : cp5.get(Textarea.class, "consoleArea");
     if (target != null) {
       String prefix = (type == 3) ? "[ERR] " : (type == 2) ? "[WARN] " : (type == 1) ? "[!] " : "[INFO] ";
@@ -45,7 +57,65 @@ void logToScreen(String msg, int type) {
   }
 
   float mtof(float note) {
-    return 440.0 * pow(2.0, (note + (float)pitchTranspose - 69.0) / 12.0);
+    return 440.0f * (float)Math.pow(2.0, (double)((note + (float)pitchTranspose - 69.0f) / 12.0f));
+  }
+
+  Wavetable getWaveform(String type) {
+    if (type.equals("SINE")) return Waves.SINE;
+    if (type.equals("SQUARE")) return Waves.SQUARE;
+    if (type.equals("SAW")) return Waves.SAW;
+    return Waves.TRIANGLE;
+  }
+
+  void playNoteInternal(int p, float vel) {
+    if (activeNotes.containsKey(p)) return;
+    
+    float masterAmp = map(vel, 0, 127, 0, 0.6f);
+    float baseFreq = mtof((float)p);
+    ADSR adsr = new ADSR(1.0, adsrA, adsrD, adsrS, adsrR);
+    String type = instrumentMap.getOrDefault(currentInstrument, "TRIANGLE");
+    
+    println("Playing " + currentInstrument + " (Type: " + type + ") at Pitch " + p);
+
+    if (type.equals("HARMONIC")) {
+      float[] partials = harmonicPartials.get(currentInstrument);
+      if (partials != null) {
+        for (int i = 0; i < partials.length; i++) {
+          if (partials[i] > 0) {
+            Oscil osc = new Oscil(baseFreq * (i + 1), partials[i] * masterAmp, Waves.SINE);
+            osc.patch(adsr);
+          }
+        }
+      }
+    } else if (type.equals("ADDITIVE")) {
+      List<SynthComponent> configs = additiveConfigs.get(currentInstrument);
+      if (configs != null) {
+        for (SynthComponent comp : configs) {
+          Oscil osc = new Oscil(baseFreq * comp.ratio, comp.amp * masterAmp, getWaveform(comp.waveType));
+          osc.patch(adsr);
+        }
+      } else {
+        println("Warning: Additive config not found for " + currentInstrument);
+      }
+    } else {
+      Oscil wave = new Oscil(baseFreq, masterAmp, getWaveform(type));
+      wave.patch(adsr);
+    }
+    
+    adsr.patch(out);
+    adsr.noteOn();
+    activeNotes.put(p, adsr);
+    adsrTimer = millis(); adsrState = 1;
+  }
+
+  void stopNoteInternal(int p) {
+    ADSR adsr = activeNotes.get(p);
+    if (adsr != null) {
+      adsr.unpatchAfterRelease(out);
+      adsr.noteOff();
+      activeNotes.remove(p);
+      adsrTimer = millis(); adsrState = 2;
+    }
   }
 
   void midiInputDevice(int n) {
@@ -100,23 +170,25 @@ void logToScreen(String msg, int type) {
     else if (key == (char)92) p = 81;
 
     if (p != -1) {
-      if (!activeNotes.containsKey(p)) {
-        float frequency = mtof((float)p);
-        // Using TRIANGLE wave for better audibility on low notes
-        Oscil wave = new Oscil(frequency, 0.6f, Waves.TRIANGLE);
-        ADSR adsr = new ADSR(1.0, adsrA, adsrD, adsrS, adsrR);
-        wave.patch(adsr).patch(out);
-        adsr.noteOn();
-        activeNotes.put(p, adsr);
-        adsrTimer = millis(); adsrState = 1;
-        logToScreen("Keyboard ON: MIDI " + p + " (" + nf(frequency, 0, 1) + " Hz)", 0);
-      }
+      playNoteInternal(p, 100);
+      logToScreen("Keyboard ON: MIDI " + p, 0);
     }
 
     // Transposition Controls
     if (key == CODED) {
       if (keyCode == UP) { pitchTranspose += 12; logToScreen("Octave UP: " + (pitchTranspose/12), 1); }
       else if (keyCode == DOWN) { pitchTranspose -= 12; logToScreen("Octave DOWN: " + (pitchTranspose/12), 1); }
+      else if (keyCode == LEFT || keyCode == RIGHT) {
+        Object[] names = instrumentMap.keySet().toArray();
+        if (names.length > 0) {
+          int idx = -1;
+          for(int i=0; i<names.length; i++) { if(names[i].toString().equals(currentInstrument)) { idx = i; break; } }
+          if (keyCode == RIGHT) idx = (idx + 1) % names.length;
+          else idx = (idx - 1 + names.length) % names.length;
+          currentInstrument = names[idx].toString();
+          logToScreen("Instrument: " + currentInstrument + " (" + instrumentMap.get(currentInstrument) + ")", 1);
+        }
+      }
     } else if (key == '=' || key == '+') { pitchTranspose += 1; logToScreen("Transpose: " + pitchTranspose, 1); }
     else if (key == '-') { pitchTranspose -= 1; logToScreen("Transpose: " + pitchTranspose, 1); }
     else if (key == BACKSPACE) { pitchTranspose = 0; logToScreen("Transpose Reset", 1); }
@@ -150,16 +222,22 @@ void logToScreen(String msg, int type) {
     else if (key == (char)92) p = 81;
 
     if (p != -1) {
-      ADSR adsr = activeNotes.get(p);
-      if (adsr != null) {
-        adsr.unpatchAfterRelease(out);
-        adsr.noteOff();
-        activeNotes.remove(p);
-        adsrTimer = millis(); adsrState = 2;
-        logToScreen("Keyboard OFF: MIDI " + p, 0);
-      }
+      stopNoteInternal(p);
+      logToScreen("Keyboard OFF: MIDI " + p, 0);
     }
   }
+
+void noteOn(int channel, int pitch, int velocity) {
+  logToScreen("Note ON - Pitch: " + pitch + " Vel: " + velocity, 0);
+    playNoteInternal((int)pitch, (float)velocity);
+
+}
+
+void noteOff(int channel, int pitch, int velocity) {
+  logToScreen("Note OFF - Pitch: " + pitch, 0);
+    stopNoteInternal((int)pitch);
+
+}
 
 void setup() {
   size(1600, 600);
@@ -229,7 +307,10 @@ void setup() {
      .setCaptionLabel("SCAN")
      .getCaptionLabel().toUpperCase(false).getStyle().setMarginTop(4);
   logToScreen("System Initialized.", 0);
-    stageBgColor = color(255, 0, 0);
+    minim = new Minim(this);
+    instrumentMap.put("test", "ADDITIVE");
+    additiveConfigs.put("test", Arrays.asList(new SynthComponent("TRIANGLE", 1f, 1f), new SynthComponent("SINE", 1.12f, 0.5f), new SynthComponent("TRIANGLE", 0.7f, 0.2f), new SynthComponent("TRIANGLE", 1.7f, 0.3f), new SynthComponent("TRIANGLE", 1f, 0.5f)));
+    currentInstrument = "test";
 }
 
 

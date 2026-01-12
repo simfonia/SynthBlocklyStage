@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <title>音樂演奏積木說明</title>
+    <style>
+        body { font-family: sans-serif; line-height: 1.6; padding: 20px; color: #333; }
+        h1 { color: #E67E22; border-bottom: 3px solid #E67E22; padding-bottom: 10px; }
+        h2 { color: #444; border-bottom: 2px solid #eee; padding-bottom: 5px; margin-top: 30px; }
+        .type-box { margin-bottom: 20px; padding: 15px; background: #fff5eb; border-radius: 8px; border-left: 5px solid #E67E22; }
+        code { background: #eee; padding: 2px 4px; border-radius: 4px; font-family: monospace; }
+        .performance-note { font-style: italic; color: #666; font-size: 0.9em; margin-top: 5px; }
+    </style>
+</head>
+<body>
+    <h1>音樂演奏：讓合成器發聲</h1>
+    <p>「音樂演奏」積木負責將音訊引擎產生的聲音「推」向舞台。本專案採用 **Note On/Off** 架構，能精確對接實體 MIDI 鍵盤的演奏邏輯。</p>
+
+    <div class="type-box">
+        <h2>1. 合成器開始發聲 (Note On)</h2>
+        <p><strong>參數</strong>：音高 (MIDI)、力度 (0-127)</p>
+        <p>此積木會立即啟動振盪器並套用 **ADSR 包絡線** 的 Attack 階段。聲音會一直持續直到收到對應的「停止發聲」指令。</p>
+        <div class="performance-note">提示：通常放在 MIDI Note ON 或是鍵盤按下事件中。</div>
+    </div>
+
+    <div class="type-box">
+        <h2>2. 合成器停止發聲 (Note Off)</h2>
+        <p><strong>參數</strong>：音高 (MIDI)</p>
+        <p>當呼叫此積木時，合成器會進入 ADSR 的 **Release (釋放)** 階段。聲音不會瞬間消失，而是會緩慢衰減（取決於 Release 時間設定），完成後自動回收音訊資源。</p>
+    </div>
+
+    <div class="type-box">
+        <h2>3. 觸發音訊播放 (Sampler Trigger)</h2>
+        <p><strong>參數</strong>：樣本名稱、力度</p>
+        <p>專為「敲擊樂」或「音效」設計。與持續音不同，它會完整播放一次載入的音檔。您不需要手動停止它，它播完就會自動結束。</p>
+    </div>
+
+    <h2>關於「音高」與「移調」</h2>
+    <p>SynthBlockly Stage 使用標準 MIDI 鍵號 (0-127)：</p>
+    <ul>
+        <li><code>60</code> 代表中央 C (C4)。</li>
+        <li><code>72</code> 代表高八度 C (C5)。</li>
+    </ul>
+    <p>您可以透過超級舞台上的 **Transpose** 快捷鍵（+/-）進行即時移調，積木內部的頻率計算會自動完成轉換。</p>
+</body>
+</html>

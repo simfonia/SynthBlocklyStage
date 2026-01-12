@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <title>進階合成技術：諧波與加法合成</title>
+    <style>
+        body { font-family: sans-serif; line-height: 1.6; padding: 20px; color: #333; }
+        h1 { color: #E74C3C; border-bottom: 3px solid #E74C3C; padding-bottom: 10px; }
+        h2 { color: #444; border-bottom: 2px solid #eee; padding-bottom: 5px; margin-top: 30px; }
+        .math-box { text-align: center; font-size: 1.2em; background: #fdf2f2; padding: 15px; border-radius: 8px; margin: 20px 0; font-family: 'Courier New', Courier, monospace; color: #c0392b; }
+        .concept-card { padding: 15px; background: #f9f9f9; border-radius: 8px; border-left: 5px solid #E74C3C; margin-bottom: 15px; }
+        strong { color: #E74C3C; }
+    </style>
+</head>
+<body>
+    <h1>進階音色設計：加法合成原理</h1>
+    <p>除了基礎波形，SynthBlockly Stage 讓你能夠使用「傅立葉級數」的概念來手工打造音色。這稱為 **加法合成 (Additive Synthesis)**。</p>
+
+    <div class="concept-card">
+        <h2>1. 諧波合成 (Harmonic Synth)</h2>
+        <p>這是一種依照整數倍頻率疊加的方式。這也是自然界中弦樂、管樂發聲的基礎。</p>
+        <ul>
+            <li><strong>1倍頻 (基頻)</strong>：決定你聽到的音高。</li>
+            <li><strong>2, 3, 4倍頻 (泛音)</strong>：決定聲音的「厚度」或「質感」。</li>
+        </ul>
+        <p>點擊積木上的齒輪可以增加層級，每一層代表對應倍數頻率的強弱。</p>
+    </div>
+
+    <div class="concept-card">
+        <h2>2. 自訂加法合成器 (Free Additive)</h2>
+        <p>這讓你跳脫整數倍的限制。你可以自由設定每個振盪器的波形與 **頻率倍率**。</p>
+        <ul>
+            <li><strong>整數倍率</strong>：產生和諧、像管風琴或銅管的聲音。</li>
+            <li><strong>非整數倍率</strong>：例如 1.414 或 2.718，這會產生不和諧、金屬感、鐘聲或工業噪音般的質感。</li>
+        </ul>
+    </div>
+
+    <h2>數學物理意義</h2>
+    <p>我們實際上是用數學公式在「繪製」空氣的振動：</p>
+    <div class="math-box">
+        y(t) = A₁·sin(2πf₁t) + A₂·sin(2πf₂t) + ...
+    </div>
+    <p>在積木中：</p>
+    <ul>
+        <li><strong>倍率 (Ratio)</strong>：對應物理上的 **音高 (Pitch)** 關係。</li>
+        <li><strong>振幅 (Amplitude)</strong>：對應物理上的 **能量 (Energy)**，即我們聽到的音量大小。</li>
+    </ul>
+
+    <div style="background: #fffbe6; padding: 15px; border-radius: 8px; margin-top: 20px;">
+        <strong>性能提示：</strong> 每增加一個項目，Processing 都會多建立一個振盪器。建議單一音色不要超過 16 層，以維持演奏的流暢度。
+    </div>
+</body>
+</html>

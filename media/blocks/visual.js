@@ -186,7 +186,8 @@ Blockly.Blocks['visual_stage_setup'] = {
       "previousStatement": null,
       "nextStatement": null,
       "colour": "#2C3E50",
-      "tooltip": "一鍵建立完整的表演環境，包含畫布、音訊引擎與自動視覺化效果。"
+      "tooltip": "初始化超級表演舞台（包含自動波形與 FFT）。按右鍵選擇「說明」取得操作手冊。",
+      "helpUrl": window.docsBaseUri + "visual_stage_zh-hant.html"
     });
     // Explicitly force vertical layout
     this.setInputsInline(false);
