@@ -7,6 +7,21 @@
  * UI blocks for Processing (ControlP5 library).
  */
 
+Blockly.Blocks['ui_key_event'] = {
+  init: function() {
+    this.appendDummyInput()
+        .appendField("當按下鍵盤")
+        .appendField(new Blockly.FieldDropdown(() => window.getAvailableKeys(this)), "KEY")
+        .appendField("鍵")
+        .appendField(new Blockly.FieldLabel(""), "CONFLICT_LABEL");
+    this.appendStatementInput("DO")
+        .setCheck(null)
+        .appendField("執行");
+    this.setColour("#2c3e50");
+    this.setTooltip("當偵測到特定按鍵被按下時執行動作。鋼琴音階鍵在舞台啟動時無法自訂。");
+  }
+};
+
 Blockly.defineBlocksWithJsonArray([
   {
     "type": "ui_init",

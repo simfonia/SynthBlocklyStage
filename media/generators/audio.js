@@ -7,14 +7,105 @@
  * Audio generators for Processing (Minim).
  */
 
+/**
+ * 內部函式：注入音訊核心支援代碼 (Java)
+ */
+Blockly.Processing.injectAudioCore = function() {
+  if (Blockly.Processing.definitions_['AudioCore']) return;
+
+  // Add global variables
+  var g = Blockly.Processing.global_vars_;
+  g['minim'] = "Minim minim;";
+  g['out'] = "AudioOutput out;";
+  g['instrumentMap'] = "HashMap<String, String> instrumentMap = new HashMap<String, String>();";
+  g['currentInstrument'] = 'String currentInstrument = "default";';
+  g['activeNotes'] = "HashMap<Integer, ADSR> activeNotes = new HashMap<Integer, ADSR>();";
+  g['harmonicPartials'] = "HashMap<String, float[]> harmonicPartials = new HashMap<String, float[]>();";
+  g['additiveConfigs'] = "HashMap<String, List<SynthComponent>> additiveConfigs = new HashMap<String, List<SynthComponent>>();";
+
+  // Global Audio Params (Shared with Live Show category)
+  g['masterGain'] = "float masterGain = -5.0;";
+  g['pitchTranspose'] = "int pitchTranspose = 0;";
+  g['adsrA'] = "float adsrA = 0.01;";
+  g['adsrD'] = "float adsrD = 0.1;";
+  g['adsrS'] = "float adsrS = 0.5;";
+  g['adsrR'] = "float adsrR = 0.5;";
+
+  // Core Classes and Methods
+  Blockly.Processing.definitions_['AudioCore'] = `
+  class SynthComponent {
+    String waveType; float ratio; float amp;
+    SynthComponent(String w, float r, float a) { waveType = w; ratio = r; amp = a; }
+  }
+
+  float mtof(float note) {
+    return 440.0f * (float)Math.pow(2.0, (double)((note + (float)pitchTranspose - 69.0f) / 12.0f));
+  }
+
+  Wavetable getWaveform(String type) {
+    if (type.equals("SINE")) return Waves.SINE;
+    if (type.equals("SQUARE")) return Waves.SQUARE;
+    if (type.equals("SAW")) return Waves.SAW;
+    return Waves.TRIANGLE;
+  }
+
+  void playNoteInternal(int p, float vel) {
+    if (activeNotes.containsKey(p)) return;
+    
+    float masterAmp = map(vel, 0, 127, 0, 0.6f);
+    float baseFreq = mtof((float)p);
+    ADSR adsr = new ADSR(1.0, adsrA, adsrD, adsrS, adsrR);
+    Summer mixer = new Summer(); 
+    String type = instrumentMap.getOrDefault(currentInstrument, "TRIANGLE");
+    
+    if (type.equals("HARMONIC")) {
+      float[] partials = harmonicPartials.get(currentInstrument);
+      if (partials != null) {
+        for (int i = 0; i < partials.length; i++) {
+          if (partials[i] > 0) {
+            Oscil osc = new Oscil(baseFreq * (i + 1), partials[i] * masterAmp, Waves.SINE);
+            osc.patch(mixer);
+          }
+        }
+      }
+      mixer.patch(adsr);
+    } else if (type.equals("ADDITIVE")) {
+      List<SynthComponent> configs = additiveConfigs.get(currentInstrument);
+      if (configs != null) {
+        for (SynthComponent comp : configs) {
+          Oscil osc = new Oscil(baseFreq * comp.ratio, comp.amp * masterAmp, getWaveform(comp.waveType));
+          osc.patch(mixer);
+        }
+      }
+      mixer.patch(adsr);
+    } else {
+      Oscil wave = new Oscil(baseFreq, masterAmp, getWaveform(type));
+      wave.patch(adsr);
+    }
+    
+    adsr.patch(out);
+    adsr.noteOn();
+    activeNotes.put(p, adsr);
+  }
+
+  void stopNoteInternal(int p) {
+    ADSR adsr = activeNotes.get(p);
+    if (adsr != null) {
+      adsr.unpatchAfterRelease(out);
+      adsr.noteOff();
+      activeNotes.remove(p);
+    }
+  }
+  `;
+};
+
 Blockly.Processing.forBlock['audio_minim_init'] = function(block) {
-  // Add required import
+  Blockly.Processing.injectAudioCore();
   Blockly.Processing.imports_['minim'] = 'import ddf.minim.*;';
   Blockly.Processing.imports_['minim_ugens'] = 'import ddf.minim.ugens.*;';
-  // Add global variable
-  Blockly.Processing.global_vars_['minim'] = 'Minim minim;';
-  // Add setup instruction
-  return 'minim = new Minim(this);\n';
+  
+  Blockly.Processing.provideSetup('minim = new Minim(this);\nout = minim.getLineOut();\ninstrumentMap.put("default", "SINE");');
+  return '';
 };
 
 Blockly.Processing.forBlock['audio_load_sample'] = function(block) {

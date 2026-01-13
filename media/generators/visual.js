@@ -77,11 +77,6 @@ Blockly.Processing.forBlock['visual_stage_setup'] = function (block) {
   g['fft'] = "FFT fft;";
   g['cp5'] = "ControlP5 cp5;";
   g['myBus'] = "MidiBus myBus;";
-  g['activeNotes'] = "HashMap<Integer, ADSR> activeNotes = new HashMap<Integer, ADSR>();";
-  g['instrumentMap'] = "HashMap<String, String> instrumentMap = new HashMap<String, String>();";
-  g['harmonicPartials'] = "HashMap<String, float[]> harmonicPartials = new HashMap<String, float[]>();";
-  g['additiveConfigs'] = "HashMap<String, List<SynthComponent>> additiveConfigs = new HashMap<String, List<SynthComponent>>();";
-  g['currentInstrument'] = "String currentInstrument = \"Default\";";
   g['serialBaud'] = "int serialBaud = 115200;";
   g['serialPortVar'] = "Serial myPort;";
 
@@ -91,9 +86,8 @@ Blockly.Processing.forBlock['visual_stage_setup'] = function (block) {
 
   // UI Control Variables
   g['waveScale'] = "float waveScale = 2.5;";
-  g['masterGain'] = "float masterGain = -5.0;"; // Increased default volume
+  g['masterGain'] = "float masterGain = -5.0;"; 
   g['trailAlpha'] = "float trailAlpha = 100.0;";
-  // Calculate initial Hue from FG_COLOR
   var initHue = Blockly.Processing.hexToHue(fgColorHex);
   g['fgHue'] = "float fgHue = " + initHue + ";";
 
@@ -101,27 +95,15 @@ Blockly.Processing.forBlock['visual_stage_setup'] = function (block) {
   g['showWave'] = "boolean showWave = true;";
   g['showSpec'] = "boolean showSpec = true;";
   g['showADSR'] = "boolean showADSR = true;";
-  g['showLog'] = "boolean showLog = true;"; // Default Log On
+  g['showLog'] = "boolean showLog = true;";
   g['isMidiMode'] = "boolean isMidiMode = false;";
-
-  // ADSR Variables
-  g['adsrA'] = "float adsrA = 0.01;";
-  g['adsrD'] = "float adsrD = 0.1;";
-  g['adsrS'] = "float adsrS = 0.5;";
-  g['adsrR'] = "float adsrR = 0.5;";
 
   // ADSR Visual State Machine
   g['adsrTimer'] = "int adsrTimer = 0;";
   g['adsrState'] = "int adsrState = 0;"; // 0:Idle, 1:ADSR, 2:Release
-  g['pitchTranspose'] = "int pitchTranspose = 0;"; // Global Transpose
 
-  // Define Log Helper and Synth Classes in Definitions
+  // Define Log Helper and Event Handlers in Definitions
   var helpersDef = `
-  class SynthComponent {
-    String waveType; float ratio; float amp;
-    SynthComponent(String w, float r, float a) { waveType = w; ratio = r; amp = a; }
-  }
-
   void logToScreen(String msg, int type) {
     Textarea target = (type >= 1) ? cp5.get(Textarea.class, "alertsArea") : cp5.get(Textarea.class, "consoleArea");
     if (target != null) {
@@ -130,69 +112,6 @@ Blockly.Processing.forBlock['visual_stage_setup'] = function (block) {
       target.scroll(1.0); // Always scroll to bottom
     }
     println((type==3?"[ERR] ":type==2?"[WARN] ":"[INFO] ") + msg);
-  }
-
-  float mtof(float note) {
-    return 440.0f * (float)Math.pow(2.0, (double)((note + (float)pitchTranspose - 69.0f) / 12.0f));
-  }
-
-  Wavetable getWaveform(String type) {
-    if (type.equals("SINE")) return Waves.SINE;
-    if (type.equals("SQUARE")) return Waves.SQUARE;
-    if (type.equals("SAW")) return Waves.SAW;
-    return Waves.TRIANGLE;
-  }
-
-  void playNoteInternal(int p, float vel) {
-    if (activeNotes.containsKey(p)) return;
-    
-    float masterAmp = map(vel, 0, 127, 0, 0.6f);
-    float baseFreq = mtof((float)p);
-    ADSR adsr = new ADSR(1.0, adsrA, adsrD, adsrS, adsrR);
-    Summer mixer = new Summer(); // Used to mix multiple oscillators
-    String type = instrumentMap.getOrDefault(currentInstrument, "TRIANGLE");
-    
-    println("Playing " + currentInstrument + " (Type: " + type + ") at Pitch " + p);
-
-    if (type.equals("HARMONIC")) {
-      float[] partials = harmonicPartials.get(currentInstrument);
-      if (partials != null) {
-        for (int i = 0; i < partials.length; i++) {
-          if (partials[i] > 0) {
-            Oscil osc = new Oscil(baseFreq * (i + 1), partials[i] * masterAmp, Waves.SINE);
-            osc.patch(mixer); // Patch to mixer instead of adsr
-          }
-        }
-      }
-      mixer.patch(adsr);
-    } else if (type.equals("ADDITIVE")) {
-      List<SynthComponent> configs = additiveConfigs.get(currentInstrument);
-      if (configs != null) {
-        for (SynthComponent comp : configs) {
-          Oscil osc = new Oscil(baseFreq * comp.ratio, comp.amp * masterAmp, getWaveform(comp.waveType));
-          osc.patch(mixer); // Patch to mixer
-        }
-      }
-      mixer.patch(adsr);
-    } else {
-      Oscil wave = new Oscil(baseFreq, masterAmp, getWaveform(type));
-      wave.patch(adsr);
-    }
-    
-    adsr.patch(out);
-    adsr.noteOn();
-    activeNotes.put(p, adsr);
-    adsrTimer = millis(); adsrState = 1;
-  }
-
-  void stopNoteInternal(int p) {
-    ADSR adsr = activeNotes.get(p);
-    if (adsr != null) {
-      adsr.unpatchAfterRelease(out);
-      adsr.noteOff();
-      activeNotes.remove(p);
-      adsrTimer = millis(); adsrState = 2;
-    }
   }
 
   void midiInputDevice(int n) {
@@ -227,12 +146,8 @@ Blockly.Processing.forBlock['visual_stage_setup'] = function (block) {
         sl.addItem(inputs[i], i);
         println("[" + i + "] " + inputs[i]);
       }
-      // Refresh UI state and alignment
       sl.getCaptionLabel().align(ControlP5.LEFT, ControlP5.CENTER).setPaddingX(10);
       logToScreen("MIDI Scanned: " + inputs.length + " devices found.", 1);
-      if (inputs.length <= 1) {
-        logToScreen("Tip: If device not found, try plugging it in BEFORE starting.", 2);
-      }
     }
   }
 
@@ -257,34 +172,7 @@ Blockly.Processing.forBlock['visual_stage_setup'] = function (block) {
   }
 
   void keyPressed() {
-    int p = -1;
-    if (key == 'q' || key == 'Q') p = 60; // C4
-    else if (key == '2') p = 61;
-    else if (key == 'w' || key == 'W') p = 62;
-    else if (key == '3') p = 63;
-    else if (key == 'e' || key == 'E') p = 64;
-    else if (key == 'r' || key == 'R') p = 65;
-    else if (key == '5') p = 66;
-    else if (key == 't' || key == 'T') p = 67;
-    else if (key == '6') p = 68;
-    else if (key == 'y' || key == 'Y') p = 69;
-    else if (key == '7') p = 70;
-    else if (key == 'u' || key == 'U') p = 71;
-    else if (key == 'i' || key == 'I') p = 72; // C5
-    else if (key == '9') p = 73;
-    else if (key == 'o' || key == 'O') p = 74;
-    else if (key == '0') p = 75;
-    else if (key == 'p' || key == 'P') p = 76;
-    else if (key == '[') p = 77;
-    else if (key == ']') p = 79; 
-    else if (key == (char)92) p = 81;
-
-    if (p != -1) {
-      playNoteInternal(p, 100);
-      logToScreen("Keyboard ON: MIDI " + p, 0);
-    }
-
-    // Transposition Controls
+    // 1. System Keys (Always Active)
     if (key == CODED) {
       if (keyCode == UP) { pitchTranspose += 12; logToScreen("Octave UP: " + (pitchTranspose/12), 1); }
       else if (keyCode == DOWN) { pitchTranspose -= 12; logToScreen("Octave DOWN: " + (pitchTranspose/12), 1); }
@@ -302,41 +190,69 @@ Blockly.Processing.forBlock['visual_stage_setup'] = function (block) {
     } else if (key == '=' || key == '+') { pitchTranspose += 1; logToScreen("Transpose: " + pitchTranspose, 1); }
     else if (key == '-') { pitchTranspose -= 1; logToScreen("Transpose: " + pitchTranspose, 1); }
     else if (key == BACKSPACE) { pitchTranspose = 0; logToScreen("Transpose Reset", 1); }
-    
-    if (p != -1 || key == CODED || key == '+' || key == '-' || key == BACKSPACE) {
-       println("Key: " + key + " p: " + p + " Trans: " + pitchTranspose);
+
+    // 2. Built-in Piano Keys (Only if Stage Block exists)
+    int p = -1;
+    char k = Character.toLowerCase(key);
+    if (k == 'q') p = 60;
+    else if (k == '2') p = 61;
+    else if (k == 'w') p = 62;
+    else if (k == '3') p = 63;
+    else if (k == 'e') p = 64;
+    else if (k == 'r') p = 65;
+    else if (k == '5') p = 66;
+    else if (k == 't') p = 67;
+    else if (k == '6') p = 68;
+    else if (k == 'y') p = 69;
+    else if (k == '7') p = 70;
+    else if (k == 'u') p = 71;
+    else if (k == 'i') p = 72;
+    else if (k == '9') p = 73;
+    else if (k == 'o') p = 74;
+    else if (k == '0') p = 75;
+    else if (k == 'p') p = 76;
+    else p = -1;
+
+    if (p != -1) {
+      playNoteInternal(p, 100);
+      logToScreen("Keyboard ON: MIDI " + p, 0);
     }
+    
+    // 3. Custom Event Injection Placeholder
+    {{KEY_PRESSED_EVENT_PLACEHOLDER}}
   }
 
   void keyReleased() {
     int p = -1;
-    if (key == 'q' || key == 'Q') p = 60;
-    else if (key == '2') p = 61;
-    else if (key == 'w' || key == 'W') p = 62;
-    else if (key == '3') p = 63;
-    else if (key == 'e' || key == 'E') p = 64;
-    else if (key == 'r' || key == 'R') p = 65;
-    else if (key == '5') p = 66;
-    else if (key == 't' || key == 'T') p = 67;
-    else if (key == '6') p = 68;
-    else if (key == 'y' || key == 'Y') p = 69;
-    else if (key == '7') p = 70;
-    else if (key == 'u' || key == 'U') p = 71;
-    else if (key == 'i' || key == 'I') p = 72;
-    else if (key == '9') p = 73;
-    else if (key == 'o' || key == 'O') p = 74;
-    else if (key == '0') p = 75;
-    else if (key == 'p' || key == 'P') p = 76;
-    else if (key == '[') p = 77;
-    else if (key == ']') p = 79;
-    else if (key == (char)92) p = 81;
+    char k = Character.toLowerCase(key);
+    if (k == 'q') p = 60;
+    else if (k == '2') p = 61;
+    else if (k == 'w') p = 62;
+    else if (k == '3') p = 63;
+    else if (k == 'e') p = 64;
+    else if (k == 'r') p = 65;
+    else if (k == '5') p = 66;
+    else if (k == 't') p = 67;
+    else if (k == '6') p = 68;
+    else if (k == 'y') p = 69;
+    else if (k == '7') p = 70;
+    else if (k == 'u') p = 71;
+    else if (k == 'i') p = 72;
+    else if (k == '9') p = 73;
+    else if (k == 'o') p = 74;
+    else if (k == '0') p = 75;
+    else if (k == 'p') p = 76;
+    else p = -1;
 
     if (p != -1) {
       stopNoteInternal(p);
       logToScreen("Keyboard OFF: MIDI " + p, 0);
     }
+    
+    {{KEY_RELEASED_EVENT_PLACEHOLDER}}
   }
   `;
+  Blockly.Processing.definitions_['Helpers'] = helpersDef;
   Blockly.Processing.definitions_['Helpers'] = helpersDef;
 
   // Setup Code

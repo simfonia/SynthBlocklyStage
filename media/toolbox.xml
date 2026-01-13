@@ -3,7 +3,6 @@
     <category name="%{BKY_CAT_STRUCTURE}" colour="%{BKY_STRUCTURE_HUE}">
         <block type="processing_setup"></block>
         <block type="processing_draw"></block>
-        <block type="processing_on_key_pressed"></block>
     </category>
 
     <sep></sep>
@@ -170,6 +169,10 @@
     </category>
 
     <!-- 14. MIDI -->
+    <category name="%{BKY_CAT_PC_KEY}" colour="%{BKY_PC_KEY_HUE}">
+        <block type="ui_key_event"></block>
+    </category>
+
     <category name="%{BKY_CAT_MIDI}" colour="%{BKY_MIDI_HUE}">
         <block type="midi_init"></block>
         <block type="midi_on_note"></block>

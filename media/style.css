@@ -39,6 +39,19 @@ body {
     color: #555;
 }
 
+/* Blockly Conflict Glow */
+.blockly-conflict-glow > .blocklyPath {
+  filter: drop-shadow(0px 0px 8px #FFD700) !important;
+  stroke: #FFD700 !important;
+  stroke-width: 3px !important;
+}
+
+/* Conflict Text Label Style */
+.blocklyText.blockly-conflict-text {
+  fill: #FF3333 !important;
+  font-weight: bold !important;
+}
+
 .status-label {
     font-size: 13px;
     margin-left: auto;

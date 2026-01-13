@@ -38,6 +38,7 @@ Blockly.Processing.init = function(workspace) {
   Blockly.Processing.definitions_ = Object.create(null); 
   Blockly.Processing.setups_ = Object.create(null);
   Blockly.Processing.draws_ = Object.create(null); 
+  Blockly.Processing.keyEvents_ = [];
 
   // Standard Imports for Lists and Utils
   Blockly.Processing.addImport("import java.util.*;");
@@ -115,11 +116,25 @@ Blockly.Processing.finish = function(code) {
     .sort()
     .join('\n');
   
-  // 3. 處理定義
-  const definitions = Object.values(Blockly.Processing.definitions_ || {})
+  // 3. 處理定義 (含佔位符替換)
+  let definitionsStr = Object.values(Blockly.Processing.definitions_ || {})
     .map(d => d.trim())
     .filter(d => d !== "")
     .join('\n\n');
+
+  // --- 關鍵：處理鍵盤事件佔位符 ---
+  let pressedEventsCode = "";
+  let releasedEventsCode = "";
+  if (Blockly.Processing.keyEvents_) {
+    Blockly.Processing.keyEvents_.forEach(ev => {
+      pressedEventsCode += `if (k == '${ev.key}') {\n      ${ev.code.replace(/\n/g, '\n      ')}\n    }\n    `;
+    });
+  }
+  
+  // 先定義暫時的變數處理替換，確保 definitionsStr 被更新
+  let finalDefinitions = definitionsStr
+    .replace('{{KEY_PRESSED_EVENT_PLACEHOLDER}}', pressedEventsCode)
+    .replace('{{KEY_RELEASED_EVENT_PLACEHOLDER}}', releasedEventsCode);
 
   // 4. Setup 函式
   const setups = Object.values(Blockly.Processing.setups_ || [])
@@ -138,7 +153,7 @@ Blockly.Processing.finish = function(code) {
   let segments = [];
   if (importsStr) segments.push(importsStr);
   if (globalVars) segments.push(globalVars);
-  if (definitions) segments.push(definitions);
+  if (finalDefinitions) segments.push(finalDefinitions);
   segments.push(setup);
   segments.push(draw);
 

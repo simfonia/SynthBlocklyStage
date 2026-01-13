@@ -5,6 +5,105 @@
 
 import { loadModules } from './module_loader.js';
 
+// --- Key Management System ---
+window.SB_KEYS = {
+  // 系統保留：移調與還原，使用者絕對不能自訂
+  SYSTEM: ['up', 'down', 'left', 'right', '+', '-', 'backspace'],
+  // 鋼琴音階：當舞台積木存在時，這些鍵被佔用
+  PIANO: ['q', '2', 'w', '3', 'e', 'r', '5', 't', '6', 'y', '7', 'u', 'i', '9', 'o', '0', 'p'],
+  // 完整可用清單 (排除系統鍵)
+  ALL: 'abcdefghijklmnopqrstuvwxyz1234567890[]\;,./'.split('')
+};
+
+/**
+ * 動態計算目前可用的按鍵列表
+ * @param {Blockly.Block} currentBlock 當前積木 (用以排除自己佔用的鍵)
+ * @returns {Array} [[label, value], ...]
+ */
+window.getAvailableKeys = function(currentBlock) {
+  const workspace = currentBlock.workspace;
+  const hasStage = workspace.getAllBlocks(false).some(b => b.type === 'visual_stage_setup');
+  
+  // 找出其他積木已經佔用的鍵
+  const occupiedKeys = new Set();
+  workspace.getAllBlocks(false).forEach(b => {
+    if (b !== currentBlock && (b.type === 'ui_key_event' || b.type === 'ui_key_pressed')) {
+      const val = b.getFieldValue('KEY');
+      if (val) occupiedKeys.add(val.toLowerCase());
+    }
+  });
+
+  const options = [];
+  window.SB_KEYS.ALL.forEach(k => {
+    const isPiano = window.SB_KEYS.PIANO.includes(k);
+    const isOccupied = occupiedKeys.has(k);
+    const isSystem = window.SB_KEYS.SYSTEM.includes(k);
+
+    if (isSystem) return; // 系統鍵永不出現
+
+    let label = k.toUpperCase();
+    if (hasStage && isPiano) return; // 有舞台時，鋼琴鍵不出現
+    if (isOccupied) return; // 已被其他積木佔用，不出現
+
+    options.push([label, k]);
+  });
+
+  return options.length > 0 ? options : [['(無可用按鍵)', 'NONE']];
+};
+
+/**
+ * 全域檢查衝突並標記警告
+ */
+window.checkKeyConflicts = function(workspace) {
+  const hasStage = workspace.getAllBlocks(false).some(b => b.type === 'visual_stage_setup');
+  const usedKeys = new Map();
+
+  workspace.getAllBlocks(false).forEach(b => {
+    if (b.type === 'ui_key_event' || b.type === 'ui_key_pressed') {
+      const k = b.getFieldValue('KEY');
+      if (!k) return;
+      
+      const isPiano = window.SB_KEYS.PIANO.includes(k.toLowerCase());
+      
+      if (hasStage && isPiano) {
+        b.setWarningText("此按鍵已分配給「舞台鋼琴」功能，此積木將失效。");
+        b.setFieldValue(" [！已被舞台鋼琴佔用]", "CONFLICT_LABEL");
+        const svg = b.getSvgRoot();
+        if (svg) {
+          svg.classList.add('blockly-conflict-glow');
+          // 嘗試找到 Label 並加上紅色 Class
+          const labelField = b.getField("CONFLICT_LABEL");
+          if (labelField && labelField.getSvgRoot()) {
+            labelField.getSvgRoot().classList.add('blockly-conflict-text');
+          }
+        }
+        if (typeof b.setDisabled === 'function') b.setDisabled(true);
+      } else if (usedKeys.has(k.toLowerCase())) {
+        b.setWarningText("此按鍵已被另一個積木重複定義。");
+        b.setFieldValue(" [！按鍵衝突]", "CONFLICT_LABEL");
+        const svg = b.getSvgRoot();
+        if (svg) {
+          svg.classList.add('blockly-conflict-glow');
+          const labelField = b.getField("CONFLICT_LABEL");
+          if (labelField && labelField.getSvgRoot()) {
+            labelField.getSvgRoot().classList.add('blockly-conflict-text');
+          }
+        }
+        if (typeof b.setDisabled === 'function') b.setDisabled(true);
+      } else {
+        b.setWarningText(null);
+        b.setFieldValue("", "CONFLICT_LABEL");
+        const svg = b.getSvgRoot();
+        if (svg) {
+          svg.classList.remove('blockly-conflict-glow');
+        }
+        if (typeof b.setDisabled === 'function') b.setDisabled(false);
+        usedKeys.set(k.toLowerCase(), b);
+      }
+    }
+  });
+};
+
 const vscode = acquireVsCodeApi();
 
 // --- 攔截所有 window.open 呼叫並轉交給 VS Code (解決沙盒限制) ---
@@ -117,7 +216,8 @@ async function init() {
         media: window.blocklyMediaUri, // Use local media assets
         grid: { spacing: 20, length: 3, colour: '#ccc', snap: true },
         zoom: { controls: true, wheel: true, startScale: 1.0 },
-        move: { scrollbars: true, drag: true, wheel: true }
+        move: { scrollbars: true, drag: true, wheel: true },
+        disable: true
     });
 
     let autoSaveTimeout = null;
@@ -167,6 +267,11 @@ async function init() {
                 console.log('[Status] Workspace is now DIRTY');
             }
             triggerAutoSave();
+            
+            // Check for key conflicts whenever workspace changes
+            if (window.checkKeyConflicts) {
+                window.checkKeyConflicts(workspace);
+            }
         }
     });
 
@@ -247,7 +352,7 @@ function generateAndSendCode() {
     // Initialize generator
     Blockly.Processing.init(workspace);
     
-    // Get all top blocks to ensure we visit both setup and draw
+    // Get all top blocks to ensure we visit all independent blocks (setup, draw, event hats)
     const topBlocks = workspace.getTopBlocks(true);
     let drawCode = '';
     
@@ -256,8 +361,8 @@ function generateAndSendCode() {
             // Code from draw blocks will be passed to finish()
             drawCode += Blockly.Processing.blockToCode(block);
         } else {
-            // This will trigger the generator for setup blocks, 
-            // populating Blockly.Processing.setups_
+            // This will trigger the generator for all other top blocks
+            // (e.g., audio_minim_init, ui_key_event, visual_stage_setup)
             Blockly.Processing.blockToCode(block);
         }
     });

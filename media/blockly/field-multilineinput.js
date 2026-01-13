@@ -289,3 +289,6 @@ if (G) {
 
 // Expose to global scope for blocklyManager.js access
 window.FieldMultilineInput = FieldMultilineInput;
+
+// Register the field with Blockly's registry
+Blockly.fieldRegistry.register('field_multilinetext', FieldMultilineInput);

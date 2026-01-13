@@ -2,32 +2,25 @@
 
 ## 核心目錄
 - `src/`: VS Code 擴充功能 TypeScript 原始碼
-    - `extension.ts`: 擴充功能進入點與 Webview 管理 (已實作路徑記憶)
-    - `media/`: Webview 資源
-        - `main.js`: Blockly 初始化與訊息處理
-        - `docs/`: 積木說明文件 (HTML 格式)
-        - `module_loader.js`: 模組載入器    - `style.css`: 介面樣式
-    - `toolbox.xml`: 工具箱配置 (已新增合成器與 MIDI Off 積木)
-    - `zh-hant.js`: 繁體中文語系 (已補齊所有新鍵值)
-    - `en.js`: 英文語系
+    - `extension.ts`: 擴充功能進入點、Webview 管理、Processing 執行控制與資源掛載。
+- `media/`: Webview 資源
+    - `main.js`: Blockly 初始化、按鍵衝突檢查 (Glow/Text)、插件註冊、主題定義與 VS Code 通訊。
+    - `module_loader.js`: 動態載入積木定義與產生器。
+    - `style.css`: 工具列、Webview 版面樣式、以及積木衝突發光效果 (CSS Filter)。
+    - `docs/`: 積木說明文件 (HTML 格式，支援主題色對齊)。
+    - `blockly/`: 第三方 Blockly 套件與插件 (如 field-multilineinput.js)。
+    - `icons/`: 介面圖示 (PNG 格式，支援 1F1F1F/FE2F89 顏色切換)。
     - `blocks/`: 積木定義
-        - `audio.js`: 音訊積木 (已更新 Note On/Off 分離架構)
-        - `audio_custom.js`: 進階合成器積木 (諧波/加法合成)
-        - `visual.js`: 視覺積木 (已更新超級舞台 JS 定義)
-        - `midi.js`: MIDI 積木 (已新增 midi_off_note)
-        - `structure.js`: 程式結構積木
-        - `ui.js`: 基礎 UI 積木
-        - `math.js`: 數學運算積木
+        - `audio.js`, `audio_custom.js`, `live_show.js`, `serial.js`, `visual.js`, `midi.js`, `structure.js`, `ui.js`, `math.js`, `text.js`, `lists.js`, `variables.js`, `tools.js`
     - `generators/`: Processing (Java) 產生器
-        - `_core.js`: 產生器核心邏輯與變數管理
-        - `logic.js`, `loops.js`, `math.js`, `text.js`, `lists.js`, `variables.js`, `functions.js` (核心積木產生器)
-        - `audio.js`: 實作 Sampler/ADSR 訊號鏈與 Note 管理
-        - `visual.js`: 實作動態分割、超級控制面板與雙層日誌系統
-        - `midi.js`: 實作 MIDI 事件監聽與 Log 串接
-        - `structure.js`, `ui.js`
-- `examples/`: XML 範例專案
-    - `drum/drum.xml`: 升級版音鼓與合成器連動範例
+        - `_core.js`: 核心架構、變數宣告、輔助函式以及鍵盤事件佔位符替換。
+        - `audio.js`, `live_show.js`, `serial.js`, `visual.js`, `midi.js`, `structure.js`, `ui.js`, `math.js`, `text.js`, `lists.js`, `variables.js`, `functions.js`, `tools.js`
+- `examples/`: XML 範例專案庫
+    - `data/`: 全域共享音訊樣本與資源。
+    - `08_Serial_KICK/`, `09_wah-wah/` ... 各式功能範例。
 - `log/`: 開發紀錄
-    - `todo.md`: 任務清單
-    - `work/`: 每日工作日誌
-- `processing-3.5.4/`: 內建 Processing 執行環境
+    - `todo.md`: 任務進度清單。
+    - `work/`: 每日詳細開發日誌。
+- `.vscodeignore`: 打包設定檔，已排除大型執行環境以精簡體積。
+- `package.json`: 擴充功能配置與指令定義。
+- `README.md`: 使用者環境安裝與快速上手指南。

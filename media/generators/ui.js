@@ -55,3 +55,35 @@ Blockly.Processing.forBlock['ui_set_font_size'] = function(block) {
   const size = block.getFieldValue('SIZE');
   return `cp5.setFont(createFont("Arial", ${size}));\n`;
 };
+
+Blockly.Processing.forBlock['ui_key_event'] = function(block) {
+  const keyChar = block.getFieldValue('KEY');
+  const branch = Blockly.Processing.statementToCode(block, 'DO');
+  
+  if (!Blockly.Processing.keyEvents_) {
+    Blockly.Processing.keyEvents_ = [];
+  }
+  
+  // Store the event code
+  Blockly.Processing.keyEvents_.push({
+    key: keyChar.toLowerCase(),
+    code: branch
+  });
+
+  // Ensure keyPressed/keyReleased frame exists even without the Stage block
+  if (!Blockly.Processing.definitions_['Helpers']) {
+    Blockly.Processing.definitions_['Helpers'] = `
+void keyPressed() {
+  char k = Character.toLowerCase(key);
+  {{KEY_PRESSED_EVENT_PLACEHOLDER}}
+}
+
+void keyReleased() {
+  char k = Character.toLowerCase(key);
+  {{KEY_RELEASED_EVENT_PLACEHOLDER}}
+}
+    `;
+  }
+  
+  return ""; // Does not output to main flow
+};
