@@ -5,7 +5,17 @@
  */
 
 Blockly.Processing = new Blockly.Generator('Processing');
-Blockly.Processing.forBlock = {}; // Modern Blockly registration point
+Blockly.Processing.forBlock = {}; 
+
+// Proxy forBlock to the generator itself to support both modern and classic Blockly patterns
+// This prevents "does not know how to generate code" errors
+const originalBlockToCode = Blockly.Processing.blockToCode;
+Blockly.Processing.blockToCode = function(block) {
+  if (block && !this.forBlock[block.type] && this[block.type]) {
+    this.forBlock[block.type] = this[block.type];
+  }
+  return originalBlockToCode.call(this, block);
+};
 
 /**
  * List of reserved words for Processing (Java).

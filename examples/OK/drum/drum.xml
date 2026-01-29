@@ -1,0 +1,159 @@
+<xml xmlns="https://developers.google.com/blockly/xml">
+  <variables>
+    <variable id="eQGP;i_VYP!lR;QO=9-]">channel</variable>
+    <variable id="B-GiB~}RZ(N5)|Rb#m79">pitch</variable>
+    <variable id="Jc9%sL{celFx]g(dy1pi">velocity</variable>
+  </variables>
+  <block type="processing_setup" id="setup" x="10" y="10">
+    <statement name="DO">
+      <block type="visual_stage_setup" id="super_stage">
+        <field name="W">1200</field>
+        <field name="H">400</field>
+        <field name="BG_COLOR">#000000</field>
+        <field name="FG_COLOR">#ff0096</field>
+        <next>
+          <block type="sb_load_sample" id="load_kick">
+            <field name="NAME">kick</field>
+            <field name="PATH">kick.wav</field>
+            <next>
+              <block type="sb_load_sample" id="load_snare">
+                <field name="NAME">snare</field>
+                <field name="PATH">snare.wav</field>
+              </block>
+            </next>
+          </block>
+        </next>
+      </block>
+    </statement>
+  </block>
+  <block type="processing_draw" id="draw" x="10" y="210"></block>
+  <block type="midi_on_note" id="midi_on" x="10" y="290">
+    <field name="CHANNEL" id="eQGP;i_VYP!lR;QO=9-]">channel</field>
+    <field name="PITCH" id="B-GiB~}RZ(N5)|Rb#m79">pitch</field>
+    <field name="VELOCITY" id="Jc9%sL{celFx]g(dy1pi">velocity</field>
+    <statement name="DO">
+      <block type="controls_if" id="if_kick">
+        <value name="IF0">
+          <block type="logic_compare" id="_J,FR%4OMHd.7SVyK.V:">
+            <field name="OP">EQ</field>
+            <value name="A">
+              <block type="variables_get" id="V;#U6HP{K~n0ACutsQft">
+                <field name="VAR" id="B-GiB~}RZ(N5)|Rb#m79">pitch</field>
+              </block>
+            </value>
+            <value name="B">
+              <block type="math_number" id="mt4n10!iCkmM@::}3zFg">
+                <field name="NUM">57</field>
+              </block>
+            </value>
+          </block>
+        </value>
+        <statement name="DO0">
+          <block type="sb_trigger_sample" id="trigger_kick">
+            <field name="NAME">kick</field>
+            <value name="VELOCITY">
+              <block type="variables_get" id="6zg[Jx5qe_g@-~~NzgG!">
+                <field name="VAR" id="Jc9%sL{celFx]g(dy1pi">velocity</field>
+              </block>
+            </value>
+          </block>
+        </statement>
+        <next>
+          <block type="controls_if" id="if_snare">
+            <value name="IF0">
+              <block type="logic_compare" id="U;;T$xM%]N$GLBC[eYq2">
+                <field name="OP">EQ</field>
+                <value name="A">
+                  <block type="variables_get" id="UBffo*gV3YyXmi:*!@k|">
+                    <field name="VAR" id="B-GiB~}RZ(N5)|Rb#m79">pitch</field>
+                  </block>
+                </value>
+                <value name="B">
+                  <block type="math_number" id="3Zo{f6p#6t(yF06Q+N=I">
+                    <field name="NUM">59</field>
+                  </block>
+                </value>
+              </block>
+            </value>
+            <statement name="DO0">
+              <block type="sb_trigger_sample" id="trigger_snare">
+                <field name="NAME">snare</field>
+                <value name="VELOCITY">
+                  <block type="variables_get" id="z)B.NS:k7J}R=;[Ln|$h">
+                    <field name="VAR" id="Jc9%sL{celFx]g(dy1pi">velocity</field>
+                  </block>
+                </value>
+              </block>
+            </statement>
+            <next>
+              <block type="controls_if" id="if_synth_on">
+                <value name="IF0">
+                  <block type="logic_compare" id="$sz$R!LXwX.9SxPm;=5|">
+                    <field name="OP">GTE</field>
+                    <value name="A">
+                      <block type="variables_get" id="-wxwr}@V[jcOei7:j$]-">
+                        <field name="VAR" id="B-GiB~}RZ(N5)|Rb#m79">pitch</field>
+                      </block>
+                    </value>
+                    <value name="B">
+                      <block type="math_number" id="nY)1/sYse?=o)CRS}va~">
+                        <field name="NUM">60</field>
+                      </block>
+                    </value>
+                  </block>
+                </value>
+                <statement name="DO0">
+                  <block type="sb_play_note" id="play_synth">
+                    <value name="PITCH">
+                      <block type="variables_get" id="{IjDdj;d/tbp6xIvU!TX">
+                        <field name="VAR" id="B-GiB~}RZ(N5)|Rb#m79">pitch</field>
+                      </block>
+                    </value>
+                    <value name="VELOCITY">
+                      <block type="variables_get" id="LI:-F/wDw[9yieq{Z_!r">
+                        <field name="VAR" id="Jc9%sL{celFx]g(dy1pi">velocity</field>
+                      </block>
+                    </value>
+                  </block>
+                </statement>
+              </block>
+            </next>
+          </block>
+        </next>
+      </block>
+    </statement>
+  </block>
+  <block type="midi_off_note" id="midi_off" x="10" y="670">
+    <field name="CHANNEL" id="eQGP;i_VYP!lR;QO=9-]">channel</field>
+    <field name="PITCH" id="B-GiB~}RZ(N5)|Rb#m79">pitch</field>
+    <field name="VELOCITY" id="Jc9%sL{celFx]g(dy1pi">velocity</field>
+    <statement name="DO">
+      <block type="controls_if" id="if_synth_off">
+        <value name="IF0">
+          <block type="logic_compare" id="m,BWvXg7yOvYL$1w0)yW">
+            <field name="OP">GTE</field>
+            <value name="A">
+              <block type="variables_get" id="1?Yg/0;fVm)%QR#v7}mC">
+                <field name="VAR" id="B-GiB~}RZ(N5)|Rb#m79">pitch</field>
+              </block>
+            </value>
+            <value name="B">
+              <block type="math_number" id="n9?lhMbS0YSvdXSiPjay">
+                <field name="NUM">60</field>
+              </block>
+            </value>
+          </block>
+        </value>
+        <statement name="DO0">
+          <block type="sb_stop_note" id="stop_synth">
+            <value name="PITCH">
+              <block type="variables_get" id="?J*afKX!vtgmQx#2[mky">
+                <field name="VAR" id="B-GiB~}RZ(N5)|Rb#m79">pitch</field>
+              </block>
+            </value>
+          </block>
+        </statement>
+      </block>
+    </statement>
+  </block>
+</xml>

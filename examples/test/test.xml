@@ -1,1 +1,36 @@
-<xml xmlns="https://developers.google.com/blockly/xml"><block type="audio_minim_init" id="i_2Q*?/][9/~:5)Nd5TL" x="70" y="-50"><next><block type="audio_load_sample" id="?j4YJ;aG2-_zt]J6n*%y"><field name="NAME">kick</field><field name="PATH">kick.wav</field></block></next></block><block type="ui_key_event" id=";7i*,;/`+^w=^pb2Rs`]" x="70" y="50"><field name="KEY">b</field><statement name="DO"><block type="audio_trigger_sample" id="rGp%o-Xq;$g+U=bk+reV"><field name="NAME">kick</field><value name="VELOCITY"><shadow type="math_number" id=":YwSpYZN[t/%Ry#BREF0"><field name="NUM">100</field></shadow></value></block></statement></block><block type="ui_key_event" id="30dk=)~:5_$)w^kq(QA^" x="70" y="130"><field name="KEY">q</field><statement name="DO"><block type="audio_trigger_sample" id="6|r*Oa90t9Abr{XARp({"><field name="NAME">kick</field><value name="VELOCITY"><shadow type="math_number" id="+$m}VYztO.RW}AlTC;oL"><field name="NUM">100</field></shadow></value></block></statement></block></xml>
+<xml xmlns="https://developers.google.com/blockly/xml">
+  <block type="sb_minim_init" id="i_2Q*?/][9/~:5)Nd5TL" x="70" y="-50">
+    <next>
+      <block type="sb_load_sample" id="?j4YJ;aG2-_zt]J6n*%y">
+        <field name="NAME">kick</field>
+        <field name="PATH">drum/kick.wav</field>
+      </block>
+    </next>
+  </block>
+  <block type="ui_key_event" id=";7i*,;/`+^w=^pb2Rs`]" x="70" y="50">
+    <field name="KEY">b</field>
+    <statement name="DO">
+      <block type="sb_trigger_sample" id="rGp%o-Xq;$g+U=bk+reV">
+        <field name="NAME">kick</field>
+        <value name="VELOCITY">
+          <shadow type="math_number" id=":YwSpYZN[t/%Ry#BREF0">
+            <field name="NUM">100</field>
+          </shadow>
+        </value>
+      </block>
+    </statement>
+  </block>
+  <block type="ui_key_event" id="30dk=)~:5_$)w^kq(QA^" x="70" y="130">
+    <field name="KEY">q</field>
+    <statement name="DO">
+      <block type="sb_trigger_sample" id="6|r*Oa90t9Abr{XARp({">
+        <field name="NAME">kick</field>
+        <value name="VELOCITY">
+          <shadow type="math_number" id="+$m}VYztO.RW}AlTC;oL">
+            <field name="NUM">100</field>
+          </shadow>
+        </value>
+      </block>
+    </statement>
+  </block>
+</xml>

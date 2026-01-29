@@ -58,8 +58,6 @@ function activate(context) {
 function stopProcessing() {
     if (processingProcess) {
         if (process.platform === 'win32') {
-            // On Windows, processing-java spawns a child Java process. 
-            // We need taskkill /T to kill the entire process tree.
             (0, child_process_1.spawn)('taskkill', ['/F', '/T', '/PID', processingProcess.pid.toString()]);
         }
         else {
@@ -102,7 +100,7 @@ class SynthBlocklyPanel {
         this._panel.webview.onDidReceiveMessage(async (message) => {
             switch (message.command) {
                 case 'executeCode':
-                    this._handleExecuteCode(message.code);
+                    this._handleExecuteCode(message.code, message.xml);
                     return;
                 case 'openProject':
                     this._handleOpenProject(message.isDirty);
@@ -123,10 +121,26 @@ class SynthBlocklyPanel {
                     this._handleNewProject(message.isDirty);
                     return;
                 case 'webviewReady':
+                    this._handleWebviewReady();
                     return;
             }
         }, null, this._disposables);
         vscode.commands.executeCommand('setContext', 'synthblockly-stage.isWebviewOpen', true);
+    }
+    _handleWebviewReady() {
+        const lastXmlPath = this._extensionContext.globalState.get('lastXmlPath');
+        if (lastXmlPath && fs.existsSync(lastXmlPath)) {
+            const fileName = path.basename(lastXmlPath);
+            const xml = fs.readFileSync(lastXmlPath, 'utf8');
+            this._currentXmlPath = lastXmlPath;
+            this._panel.title = `SynthBlockly: ${fileName}`;
+            this._panel.webview.postMessage({
+                command: 'initializeWorkspace',
+                xml: xml,
+                fileName: fileName,
+                fullPath: lastXmlPath
+            });
+        }
     }
     runSketch() {
         this._panel.webview.postMessage({ command: 'generateCode' });
@@ -135,7 +149,6 @@ class SynthBlocklyPanel {
         try {
             let targetUri;
             if (fileName) {
-                // Construct absolute path to the local doc file
                 const filePath = path.join(this._extensionUri.fsPath, 'media', 'docs', fileName);
                 targetUri = vscode.Uri.file(filePath);
             }
@@ -199,8 +212,8 @@ class SynthBlocklyPanel {
         if (fileUri && fileUri[0]) {
             this._currentXmlPath = fileUri[0].fsPath;
             const fileName = path.basename(this._currentXmlPath);
-            // Store the directory of the last opened file
             this._extensionContext.globalState.update('lastPath', path.dirname(this._currentXmlPath));
+            this._extensionContext.globalState.update('lastXmlPath', this._currentXmlPath);
             const xml = fs.readFileSync(this._currentXmlPath, 'utf8');
             this._panel.title = `SynthBlockly: ${fileName}`;
             this._panel.webview.postMessage({
@@ -212,21 +225,32 @@ class SynthBlocklyPanel {
         }
     }
     async _handleAutoSave(xml, code) {
-        if (!this._currentXmlPath) {
-            return; // Skip if no file is currently opened/saved
-        }
+        if (!this._currentXmlPath)
+            return;
         try {
             const xmlPath = this._currentXmlPath;
-            const projectDir = path.dirname(xmlPath);
-            const fileName = path.basename(xmlPath, '.xml');
-            const pdePath = path.join(projectDir, `${fileName}.pde`);
             fs.writeFileSync(xmlPath, xml);
+            const pdePath = path.join(path.dirname(xmlPath), `${path.basename(xmlPath, '.xml')}.pde`);
             fs.writeFileSync(pdePath, code);
-            console.log(`[AutoSave] Success: ${fileName}`);
+            this._extensionContext.globalState.update('lastXmlPath', xmlPath);
         }
         catch (e) {
             console.error('[AutoSave] Failed:', e);
         }
+    }
+    /**
+     * Clean name to be a valid Processing/Java identifier
+     */
+    _sanitizeProjectName(name) {
+        // 1. Remove the .xml extension if present
+        let clean = name.replace(/\.xml$/i, '');
+        // 2. Replace any non-alphanumeric character (including dots and spaces) with underscores
+        clean = clean.replace(/[^a-zA-Z0-9_]/g, '_');
+        // 3. Ensure it doesn't start with a number (Java class naming rule)
+        if (/^[0-9]/.test(clean)) {
+            clean = "SB_" + clean;
+        }
+        return clean;
     }
     async _handleSaveProject(xml, code) {
         const lastPath = this._extensionContext.globalState.get('lastPath');
@@ -238,121 +262,86 @@ class SynthBlocklyPanel {
         };
         const fileUri = await vscode.window.showSaveDialog(options);
         if (fileUri) {
-            const xmlFilePath = fileUri.fsPath;
-            const projectDir = path.dirname(xmlFilePath);
-            const fileName = path.basename(xmlFilePath, '.xml');
-            // Processing Standard: sketch folder must match sketch name
-            const targetFolder = path.join(projectDir, fileName);
-            const finalXmlPath = path.join(targetFolder, `${fileName}.xml`);
-            const finalPdePath = path.join(targetFolder, `${fileName}.pde`);
+            const userChosenPath = fileUri.fsPath;
+            const parentDir = path.dirname(userChosenPath);
+            const rawFileName = path.basename(userChosenPath);
+            // Apply Sanitizer to ensure folder and files are Processing-legal
+            const cleanName = this._sanitizeProjectName(rawFileName);
+            // Final Directory Structure: parent/CleanName/CleanName.xml
+            const targetFolder = path.join(parentDir, cleanName);
+            const finalXmlPath = path.join(targetFolder, `${cleanName}.xml`);
+            const finalPdePath = path.join(targetFolder, `${cleanName}.pde`);
             if (!fs.existsSync(targetFolder)) {
                 fs.mkdirSync(targetFolder, { recursive: true });
             }
             fs.writeFileSync(finalXmlPath, xml);
             fs.writeFileSync(finalPdePath, code);
             this._currentXmlPath = finalXmlPath;
-            const finalName = path.basename(finalXmlPath);
             this._extensionContext.globalState.update('lastPath', targetFolder);
-            this._panel.title = `SynthBlockly: ${finalName}`;
+            this._extensionContext.globalState.update('lastXmlPath', this._currentXmlPath);
+            const displayFileName = `${cleanName}.xml`;
+            this._panel.title = `SynthBlockly: ${displayFileName}`;
             this._panel.webview.postMessage({
                 command: 'initializeWorkspace',
                 xml: xml,
-                fileName: finalName,
+                fileName: displayFileName,
                 fullPath: this._currentXmlPath
             });
-            vscode.window.showInformationMessage(`Project saved to folder: ${fileName}`);
+            vscode.window.showInformationMessage(`Project saved to: ${targetFolder}`);
+            return finalXmlPath;
         }
+        return undefined;
     }
-    _handleExecuteCode(code) {
-        const workspaceFolders = vscode.workspace.workspaceFolders;
-        let baseDir;
-        const isAscii = (str) => /^[\]x00-\x7F]*$/.test(str);
-        if (workspaceFolders && isAscii(workspaceFolders[0].uri.fsPath)) {
-            baseDir = workspaceFolders[0].uri.fsPath;
-        }
-        else {
-            baseDir = path.join(process.env.TEMP || '.', 'SynthBlocklyStage');
-            if (!fs.existsSync(baseDir)) {
-                fs.mkdirSync(baseDir, { recursive: true });
+    async _handleExecuteCode(code, xml) {
+        if (!this._currentXmlPath) {
+            const savedPath = await this._handleSaveProject(xml, code);
+            if (!savedPath) {
+                vscode.window.showWarningMessage("Please save your project before running.");
+                return;
             }
         }
-        const sketchName = 'StageSketch';
-        const sketchDir = path.join(baseDir, sketchName);
-        const sketchFile = path.join(sketchDir, `${sketchName}.pde`);
-        if (!fs.existsSync(sketchDir)) {
-            fs.mkdirSync(sketchDir, { recursive: true });
+        const projectDir = path.dirname(this._currentXmlPath);
+        const fileName = path.basename(this._currentXmlPath, '.xml');
+        const sketchPdePath = path.join(projectDir, `${fileName}.pde`);
+        const targetDataDir = path.join(projectDir, 'data');
+        fs.writeFileSync(sketchPdePath, code);
+        if (!fs.existsSync(targetDataDir)) {
+            fs.mkdirSync(targetDataDir, { recursive: true });
         }
-        let sourceDataDir;
-        if (workspaceFolders) {
-            const wsData = path.join(workspaceFolders[0].uri.fsPath, 'data');
-            if (fs.existsSync(wsData))
-                sourceDataDir = wsData;
-        }
-        // 1. Try Local Data (next to XML)
-        if (!sourceDataDir && this._currentXmlPath) {
-            const localData = path.join(path.dirname(this._currentXmlPath), 'data');
-            if (fs.existsSync(localData))
-                sourceDataDir = localData;
-        }
-        // 2. Try Global Shared Data (in extension examples/data)
-        if (!sourceDataDir) {
-            const globalData = path.join(this._extensionUri.fsPath, 'examples', 'data');
-            if (fs.existsSync(globalData))
-                sourceDataDir = globalData;
-        }
-        if (sourceDataDir) {
-            const targetDataDir = path.join(sketchDir, 'data');
-            if (!fs.existsSync(targetDataDir)) {
-                try {
-                    fs.symlinkSync(sourceDataDir, targetDataDir, 'junction');
+        const builtinSamplesDir = path.join(this._extensionUri.fsPath, 'media', 'samples');
+        if (fs.existsSync(builtinSamplesDir)) {
+            fs.readdirSync(builtinSamplesDir).forEach(cat => {
+                const sourceCat = path.join(builtinSamplesDir, cat);
+                const destCat = path.join(targetDataDir, cat);
+                if (fs.statSync(sourceCat).isDirectory() && !fs.existsSync(destCat)) {
+                    try {
+                        fs.symlinkSync(sourceCat, destCat, 'junction');
+                    }
+                    catch (e) { }
                 }
-                catch (e) {
-                    console.warn('Failed to link data directory:', e);
-                }
-            }
+            });
         }
-        fs.writeFileSync(sketchFile, code);
-        this._startProcessing(sketchDir);
+        this._startProcessing(projectDir);
     }
     _startProcessing(sketchPath) {
         stopProcessing();
         const config = vscode.workspace.getConfiguration('synthblockly-stage');
         let processingPath = config.get('processingPath');
-        if (!processingPath) {
-            const bundledPath = path.join(this._extensionUri.fsPath, 'processing-java.exe'); // Check root if bundled
-            if (fs.existsSync(bundledPath)) {
-                processingPath = bundledPath;
-            }
-            else {
-                vscode.window.showWarningMessage('processing-java.exe not found. Please select its location.', 'Select Path').then(selection => {
-                    if (selection === 'Select Path') {
-                        this._handleSetProcessingPath();
-                    }
-                });
-                return;
-            }
-        }
-        if (!fs.existsSync(processingPath)) {
-            vscode.window.showWarningMessage(`The path ${processingPath} does not exist. Please re-set it.`, 'Select Path').then(selection => {
-                if (selection === 'Select Path') {
+        if (!processingPath || !fs.existsSync(processingPath)) {
+            vscode.window.showWarningMessage('Please set processing-java.exe path.', 'Set Path').then(sel => {
+                if (sel === 'Set Path')
                     this._handleSetProcessingPath();
-                }
             });
             return;
         }
         const outputChannel = vscode.window.createOutputChannel('SynthBlockly Stage Output');
         outputChannel.show();
-        outputChannel.appendLine(`[Log] Using Sketch Path: ${sketchPath}`);
-        outputChannel.appendLine(`[Log] Using Processing: ${processingPath}`);
-        outputChannel.appendLine(`--- Launching Processing Sketch ---`);
-        processingProcess = (0, child_process_1.spawn)(processingPath, [
-            `--sketch=${sketchPath}`,
-            '--run'
-        ]);
+        outputChannel.appendLine(`[Log] Execution Path: ${sketchPath}`);
+        processingProcess = (0, child_process_1.spawn)(processingPath, [`--sketch=${sketchPath}`, '--run']);
         processingProcess.stdout?.on('data', (data) => outputChannel.append(data.toString()));
         processingProcess.stderr?.on('data', (data) => outputChannel.append(`[ERR] ${data.toString()}`));
         processingProcess.on('close', (code) => {
-            outputChannel.appendLine(`--- Sketch finished (Exit code: ${code}) ---`);
+            outputChannel.appendLine(`--- Sketch finished ---`);
             processingProcess = null;
         });
     }
@@ -362,9 +351,8 @@ class SynthBlocklyPanel {
         this._panel.dispose();
         while (this._disposables.length) {
             const x = this._disposables.pop();
-            if (x) {
+            if (x)
                 x.dispose();
-            }
         }
     }
     async _update() {
@@ -377,11 +365,8 @@ class SynthBlocklyPanel {
         const iconUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'media', 'icons'));
         const nonce = this._getNonce();
         const coreManifestUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'media', 'core_extension_manifest.json'));
-        const toolboxPath = path.join(this._extensionUri.fsPath, 'media', 'toolbox.xml');
-        const toolboxXml = fs.readFileSync(toolboxPath, 'utf8');
-        const locale = vscode.env.language;
-        const langFile = locale.startsWith('zh') ? 'zh-hant.js' : 'en.js';
-        const langUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'media', langFile));
+        const toolboxXml = fs.readFileSync(path.join(this._extensionUri.fsPath, 'media', 'toolbox.xml'), 'utf8');
+        const langUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'media', vscode.env.language.startsWith('zh') ? 'zh-hant.js' : 'en.js'));
         return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -401,22 +386,17 @@ class SynthBlocklyPanel {
         <span id="saveStatus" class="status-label"></span>
     </div>
     <div id="blocklyDiv"></div>
-    
     <script id="toolbox-xml" type="text/xml" style="display: none;">${toolboxXml}</script>
-
     <script nonce="${nonce}" src="${blocklyUri}/blockly.js"></script>
     <script nonce="${nonce}" src="${blocklyUri}/field-multilineinput.js"></script>
     <script nonce="${nonce}" src="${blocklyUri}/field-colour.js"></script>
-    
     <script nonce="${nonce}" src="${langUri}"></script>
     <script nonce="${nonce}" src="${mediaUri}/generators/_core.js"></script>
-
     <script nonce="${nonce}">
         window.coreExtensionManifestUri = "${coreManifestUri}";
         window.blocklyMediaUri = "${blocklyMediaUri}/";
         window.docsBaseUri = "${mediaUri}/docs/";
     </script>
-
     <script nonce="${nonce}" type="module" src="${mediaUri}/main.js"></script>
 </body>
 </html>`;
@@ -424,9 +404,8 @@ class SynthBlocklyPanel {
     _getNonce() {
         let text = '';
         const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-        for (let i = 0; i < 32; i++) {
+        for (let i = 0; i < 32; i++)
             text += possible.charAt(Math.floor(Math.random() * possible.length));
-        }
         return text;
     }
 }

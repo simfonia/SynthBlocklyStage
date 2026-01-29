@@ -106,29 +106,29 @@
 
     <!-- 9. Sound Sources -->
     <category name="%{BKY_CAT_SOUND_SOURCES}" colour="%{BKY_SOUND_SOURCES_HUE}">
-        <block type="audio_minim_init"></block>
-        <block type="audio_create_synth_instrument"></block>
+        <block type="sb_minim_init"></block>
+        <block type="sb_create_synth_instrument"></block>
         <block type="audio_create_harmonic_synth"></block>
         <block type="audio_create_additive_synth"></block>
-        <block type="audio_load_sample"></block>
+        <block type="sb_load_sample"></block>
     </category>
 
     <!-- 10. Instrument Control -->
     <category name="%{BKY_CAT_INSTRUMENT_CONTROL}" colour="%{BKY_INSTRUMENT_CONTROL_HUE}">
-        <block type="audio_select_instrument"></block>
+        <block type="sb_select_current_instrument"></block>
         <block type="audio_set_current_sample"></block>
     </category>
 
     <!-- 11. Performance -->
     <category name="%{BKY_CAT_PERFORMANCE}" colour="%{BKY_PERFORMANCE_HUE}">
-        <block type="audio_play_note">
+        <block type="sb_play_note">
             <value name="PITCH"><shadow type="variables_get"><field name="VAR">pitch</field></shadow></value>
             <value name="VELOCITY"><shadow type="math_number"><field name="NUM">100</field></shadow></value>
         </block>
-        <block type="audio_stop_note">
+        <block type="sb_stop_note">
             <value name="PITCH"><shadow type="variables_get"><field name="VAR">pitch</field></shadow></value>
         </block>
-        <block type="audio_trigger_sample">
+        <block type="sb_trigger_sample">
             <value name="VELOCITY"><shadow type="math_number"><field name="NUM">100</field></shadow></value>
         </block>
     </category>

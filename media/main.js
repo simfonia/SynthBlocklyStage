@@ -5,6 +5,23 @@
 
 import { loadModules } from './module_loader.js';
 
+// --- Blockly API Polyfills (v12 to v13 compatibility) ---
+if (Blockly.Workspace.prototype.getAllVariables === undefined) {
+  Blockly.Workspace.prototype.getAllVariables = function() {
+    return this.getVariableMap().getAllVariables();
+  };
+}
+if (Blockly.Workspace.prototype.getVariable === undefined) {
+  Blockly.Workspace.prototype.getVariable = function(name, opt_type) {
+    return this.getVariableMap().getVariable(name, opt_type);
+  };
+}
+if (Blockly.Workspace.prototype.getVariableById === undefined) {
+  Blockly.Workspace.prototype.getVariableById = function(id) {
+    return this.getVariableMap().getVariableById(id);
+  };
+}
+
 // --- Key Management System ---
 window.SB_KEYS = {
   // 系統保留：移調與還原，使用者絕對不能自訂
@@ -225,7 +242,7 @@ async function init() {
         if (autoSaveTimeout) clearTimeout(autoSaveTimeout);
         autoSaveTimeout = setTimeout(() => {
             const xml = Blockly.Xml.workspaceToDom(workspace);
-            const xmlText = Blockly.Xml.domToText(xml);
+            const xmlText = Blockly.Xml.domToPrettyText(xml);
             
             // Generate current code
             Blockly.Processing.init(workspace);
@@ -303,7 +320,7 @@ async function init() {
 
     document.getElementById('saveButton')?.addEventListener('click', () => {
         const xml = Blockly.Xml.workspaceToDom(workspace);
-        const xmlText = Blockly.Xml.domToText(xml);
+        const xmlText = Blockly.Xml.domToPrettyText(xml);
         
         // Generate current code for saving pde alongside xml
         Blockly.Processing.init(workspace);
@@ -352,6 +369,10 @@ function generateAndSendCode() {
     // Initialize generator
     Blockly.Processing.init(workspace);
     
+    // Get the XML content to support force-save on run
+    const xml = Blockly.Xml.workspaceToDom(workspace);
+    const xmlText = Blockly.Xml.domToPrettyText(xml);
+
     // Get all top blocks to ensure we visit all independent blocks (setup, draw, event hats)
     const topBlocks = workspace.getTopBlocks(true);
     let drawCode = '';
@@ -362,7 +383,7 @@ function generateAndSendCode() {
             drawCode += Blockly.Processing.blockToCode(block);
         } else {
             // This will trigger the generator for all other top blocks
-            // (e.g., audio_minim_init, ui_key_event, visual_stage_setup)
+            // (e.g., sb_minim_init, ui_key_event, visual_stage_setup)
             Blockly.Processing.blockToCode(block);
         }
     });
@@ -372,7 +393,8 @@ function generateAndSendCode() {
 
     vscode.postMessage({
         command: 'executeCode',
-        code: finalCode
+        code: finalCode,
+        xml: xmlText
     });
 }
 

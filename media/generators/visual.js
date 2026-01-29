@@ -51,6 +51,11 @@ Blockly.Processing.forBlock["visual_stroke"] = function (block) {
 };
 
 Blockly.Processing.forBlock['visual_stage_setup'] = function (block) {
+  // Ensure Audio Core is injected because the Stage's keyboard logic depends on it
+  if (Blockly.Processing.injectAudioCore) {
+    Blockly.Processing.injectAudioCore();
+  }
+
   var w = block.getFieldValue("W");
   var h = block.getFieldValue("H");
   var bgColorHex = block.getFieldValue("BG_COLOR");

@@ -42,3 +42,25 @@ SynthBlockly Stage 開發交接指令
 - 測試多個自訂按鍵事件的並列產碼是否完全正常。
 - 檢查 `keyReleased` 佔位符是否需要同樣的實作。
 - 考慮將其他「事件型」積木（如 MIDI 事件）也改為帽子積木。
+
+==================================================
+2026-01-29
+
+1. 本次工作重點 (基礎建設標準化與原生化)：
+- **持久化與恢復**：實作 `lastXmlPath` 記憶功能，Webview 啟動時會透過 `webviewReady` 事件自動恢復上一次編輯的專案。
+- **存檔格式優化**：全面改用 `domToPrettyText`，確保 XML 具備良好縮排。
+- **原生執行空間 (Critical)**：
+    - 實作「執行前強制存檔」流程，確保專案有確定基路徑。
+    - 實作 `_sanitizeProjectName`，自動清理檔名與資料夾名（轉為下劃線）。
+    - Processing 改為直接在專案目錄下執行，解決 Windows `Temp` 資料夾連結鎖定問題。
+- **積木 ID 全面對齊**：將 Audio 類積木由 `audio_` 改為 `sb_` 前綴（如 `sb_minim_init`, `sb_play_note`）。
+- **資源管理系統**：實作「專案優先 + 內建 Fallback」掛載邏輯。自動將 `media/samples/` 的分類資料夾（Junction）掛載到專案 `data/` 下。
+- **BUG 修復**：
+    - 修復了 `sb_load_sample` 缺少 `setup()` 初始化代碼的問題。
+    - 修復了 `playNoteInternal` 缺少視覺狀態 (`adsrTimer/State`) 更新的問題。
+    - 加入了 Blockly v12/v13 變數 API Polyfill。
+
+2. 待辦任務 (Next Steps)：
+- 繼續更新剩餘舊範例的 XML（將 `audio_` 取代為 `sb_`），特別是 Serial 相關範例。
+- 實作旋律解析器或加強視覺連動積木。
+- 測試並驗證在完全沒有 `data` 資料夾的新專案中，內建資源掛載是否 100% 穩定。

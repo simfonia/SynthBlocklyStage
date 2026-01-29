@@ -16,9 +16,12 @@ float adsrD = 0.1;
 float adsrR = 0.5;
 float adsrS = 0.5;
 float masterGain = -5.0;
+int adsrState = 0;
+int adsrTimer = 0;
+
 int pitchTranspose = 0;
 
-class SynthComponent {
+  class SynthComponent {
     String waveType; float ratio; float amp;
     SynthComponent(String w, float r, float a) { waveType = w; ratio = r; amp = a; }
   }
@@ -71,6 +74,7 @@ class SynthComponent {
     adsr.patch(out);
     adsr.noteOn();
     activeNotes.put(p, adsr);
+    adsrTimer = millis(); adsrState = 1;
   }
 
   void stopNoteInternal(int p) {
@@ -79,6 +83,7 @@ class SynthComponent {
       adsr.unpatchAfterRelease(out);
       adsr.noteOff();
       activeNotes.remove(p);
+      adsrTimer = millis(); adsrState = 2;
     }
   }
 
@@ -110,6 +115,10 @@ void setup() {
   minim = new Minim(this);
   out = minim.getLineOut();
   instrumentMap.put("default", "SINE");
+  currentInstrument = "default";
+    kick = new Sampler("drum/kick.wav", 4, minim);
+  kick_gain = new Gain(0.f);
+  kick.patch(kick_gain).patch(out);
 }
 
 

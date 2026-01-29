@@ -10,6 +10,7 @@
     - `docs/`: 積木說明文件 (HTML 格式，支援主題色對齊)。
     - `blockly/`: 第三方 Blockly 套件與插件 (如 field-multilineinput.js)。
     - `icons/`: 介面圖示 (PNG 格式，支援 1F1F1F/FE2F89 顏色切換)。
+    - `samples/`: 系統內建音訊取樣庫 (包含 jazzkit, piano, violin, sound 等分類)。
     - `blocks/`: 積木定義
         - `audio.js`, `audio_custom.js`, `live_show.js`, `serial.js`, `visual.js`, `midi.js`, `structure.js`, `ui.js`, `math.js`, `text.js`, `lists.js`, `variables.js`, `tools.js`
     - `generators/`: Processing (Java) 產生器
