@@ -28,3 +28,12 @@ void keyPressed() {
   Blockly.Processing.definitions_['processing_on_key_pressed'] = code;
   return '';
 };
+
+Blockly.Processing.forBlock['processing_exit'] = function(block) {
+  return 'exit();\n';
+};
+
+Blockly.Processing.forBlock['processing_delay'] = function(block) {
+  const ms = Blockly.Processing.valueToCode(block, 'MS', Blockly.Processing.ORDER_ATOMIC) || '1000';
+  return `delay((int)${ms});\n`;
+};

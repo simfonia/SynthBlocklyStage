@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Melody List Guide</title>
+    <style>
+        body { font-family: sans-serif; line-height: 1.6; padding: 20px; color: #333; }
+        h1 { color: #E67E22; }
+        h2 { color: #444; border-bottom: 2px solid #eee; padding-bottom: 5px; }
+        .type-box { margin-bottom: 20px; padding: 15px; background: #f9f9f9; border-radius: 8px; border-left: 5px solid #E67E22; }
+        code { background: #eee; padding: 2px 4px; border-radius: 4px; color: #d35400; font-weight: bold; }
+        .example { background: #fffbe6; padding: 10px; border-left: 4px solid #ffc107; margin: 10px 0; font-family: monospace; white-space: pre; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
+        th, td { text-align: left; padding: 8px; border-bottom: 1px solid #ddd; }
+        th { background-color: #f2f2f2; }
+    </style>
+</head>
+<body>
+    <h1>Melody List Writing Guide</h1>
+    <p>The "Play Melody List" block uses a simplified text format. It supports single notes, chord names, and powerful Tie features.</p>
+
+    <div class="type-box">
+        <h2>1. Duration Codes</h2>
+        <table>
+            <tr><th>Code</th><th>Name</th><th>Beats (4/4)</th></tr>
+            <tr><td><code>W</code></td><td>Whole</td><td>4</td></tr>
+            <tr><td><code>H</code></td><td>Half</td><td>2</td></tr>
+            <tr><td><code>Q</code></td><td>Quarter</td><td>1</td></tr>
+            <tr><td><code>E</code></td><td>Eighth</td><td>0.5</td></tr>
+            <tr><td><code>S</code></td><td>16th</td><td>0.25</td></tr>
+        </table>
+    </div>
+
+    <div class="type-box">
+        <h2>2. Modifiers</h2>
+        <ul>
+            <li><strong>Rest <code>R</code></strong>: e.g., <code>RQ</code> (Wait 1 beat).</li>
+            <li><strong>Dotted <code>.</code></strong>: +50% length. e.g., <code>Q.</code> (1.5 beats).</li>
+            <li><strong>Triplet <code>_T</code></strong>: 2/3 length. e.g., <code>Q_T</code>.</li>
+            <li><strong>Tie <code>+</code></strong>: Sum durations. e.g., <code>H.+E</code> (3.5 beats).</li>
+        </ul>
+    </div>
+
+    <div class="type-box">
+        <h2>3. Sequential Playback</h2>
+        <p>In the desktop version, melody blocks <strong>automatically queue</strong>. If you place multiple blocks, they will play one after another instead of overlapping.</p>
+    </div>
+</body>
+</html>

@@ -261,7 +261,7 @@ Blockly.Blocks['visual_stage_setup'] = {
       "previousStatement": null,
       "nextStatement": null,
       "colour": "#2C3E50",
-      "tooltip": "%{BKY_VISUAL_STAGE_SETUP_TOOLTIP}",
+      "tooltip": "%{BKY_VISUAL_STAGE_SETUP_TOOLTIP}%{BKY_HELP_HINT}",
       "helpUrl": window.docsBaseUri + "visual_stage_zh-hant.html"
     });
     // Explicitly force vertical layout

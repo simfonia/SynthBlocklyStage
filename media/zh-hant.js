@@ -92,9 +92,12 @@
     "AUDIO_ADDITIVE_FIELD": "波形 %1 頻率倍率 %2 振幅 %3",
     "AUDIO_SELECT_INSTRUMENT": "選取目前樂器為 %1",
     "AUDIO_SELECT_INSTRUMENT_TOOLTIP": "從目前工作區已定義的樂器清單中，選取一個作為目前演奏的樂器。",
+    "HELP_LANG_SUFFIX": "_zh-hant.html",
+    "HELP_HINT": "\n按右鍵選擇「說明」了解更多用法。",
     "AUDIO_PLAY_NOTE": "合成器開始發聲 音高 %1 力度 %2",
     "AUDIO_STOP_NOTE": "合成器停止發聲 (MIDI %1)",
-    "AUDIO_PLAY_MELODY": "演奏旋律 %1 樂器 %2",
+    "AUDIO_PLAY_MELODY": "演奏旋律 樂器 %1 %2 內容 %3",
+    "AUDIO_PLAY_MELODY_TOOLTIP": "按照清單順序演奏。支援多行、音符 (C4, D4) 與和弦 (CM7, G7)。",
     "AUDIO_RHYTHM_SEQUENCE": "節奏序列 聲源 %1 樣式 %2 第 %3 小節",
     "AUDIO_SET_BPM": "設定演奏速度 (BPM) %1",
     "AUDIO_DEFINE_CHORD": "定義和弦 名稱 %1 音符列表 %2",
@@ -111,13 +114,12 @@
     "VISUAL_NO_FILL": "不填充顏色",
     "VISUAL_PIXEL_DENSITY": "優化高解析度螢幕顯示 (pixelDensity)",
     "VISUAL_PIXEL_DENSITY_TOOLTIP": "在高解析度螢幕（如 Retina）上開啟 2 倍渲染，讓線條更平滑。",
-    "VISUAL_STAGE_SETUP_TOOLTIP": "初始化超級表演舞台（包含自動波形與 FFT）。按右鍵選擇「說明」取得操作手冊。",
+    "VISUAL_STAGE_SETUP_TOOLTIP": "初始化超級表演舞台（包含自動波形與 FFT）。",
     "MIDI_ON_NOTE_TOOLTIP": "當外部 MIDI 裝置按下琴鍵時執行的動作。",
     "MIDI_OFF_NOTE_TOOLTIP": "當外部 MIDI 裝置放開琴鍵時執行的動作。",
-    "AUDIO_TONE_LOOP": "循環演奏 每隔 %1 %2",
     "AUDIO_TONE_LOOP_TOOLTIP": "持續循環執行內部的積木。INTERVAL 支援 1m, 2n, 4n 等符號。",
-    "AUDIO_CREATE_HARMONIC_SYNTH_TOOLTIP": "設定此樂器為諧波合成器。請使用右鍵設定諧波數量。",
-    "AUDIO_CREATE_ADDITIVE_SYNTH_TOOLTIP": "設定此樂器為加法合成器。請使用右鍵設定振盪器數量。",
+    "AUDIO_CREATE_HARMONIC_SYNTH_TOOLTIP": "設定此樂器為諧波合成器。",
+    "AUDIO_CREATE_ADDITIVE_SYNTH_TOOLTIP": "設定此樂器為加法合成器。",
     "VISUAL_STAGE_BG": "背景",
     "VISUAL_STAGE_WAVE": "波形",
 
@@ -157,6 +159,12 @@
     "MATH_IS_DIVISIBLE_BY": "可被整除",
 
     // Common
+    "VISUAL_EXIT": "結束程式",
+    "VISUAL_EXIT_TOOLTIP": "立即關閉表演舞台並結束程式執行。",
+    "STRUCTURE_DELAY": "等待 %1 毫秒",
+    "STRUCTURE_DELAY_TOOLTIP": "暫停程式執行一段時間。注意：這會讓視覺動畫跟著停頓。",
+    "AUDIO_IS_PLAYING": "是否有旋律在播放？",
+    "AUDIO_IS_PLAYING_TOOLTIP": "檢查背景旋律播放器是否仍在運作中。",
     "BKY_CONTROLS_DO": "執行",
   });
 })(Blockly);

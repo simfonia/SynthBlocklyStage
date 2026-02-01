@@ -1,12 +1,12 @@
 <xml xmlns="https://developers.google.com/blockly/xml">
   <block type="sb_comment" id="a^FTCRX60CP(#(^`RiqH" x="10" y="10">
-    <field name="TEXT">此範例展示如何「演奏旋律與和弦」&amp;#10;&amp;#10;1. 樂器定義：Piano&amp;#10;   </field>
+    <field name="TEXT">此範例展示如何「演奏旋律與和弦」&amp;#10;&amp;#10;1. 【定義樂器】：Piano&amp;#10;2. 【定義和弦】&amp;#10;3. 使用【演奏旋律】進行旋律線</field>
   </block>
-  <block type="sb_instrument_container" id=":,=J3Y%+lrqv8n3up:Mr" x="10" y="130">
+  <block type="sb_instrument_container" id=":,=J3Y%+lrqv8n3up:Mr" x="10" y="150">
     <field name="NAME">Piano</field>
     <statement name="STACK">
       <block type="sb_set_wave" id="E85`e8cK*)SYw/KAY})I">
-        <field name="TYPE">SQUARE</field>
+        <field name="TYPE">TRIANGLE</field>
         <next>
           <block type="sb_set_adsr" id=".8VS_Tz-mGl=6r%-1Ek(">
             <value name="A">
@@ -34,7 +34,7 @@
       </block>
     </statement>
   </block>
-  <block type="processing_setup" id="OBzOwK(=b(p^aq3NSzPm" x="10" y="350">
+  <block type="processing_setup" id="OBzOwK(=b(p^aq3NSzPm" x="10" y="370">
     <statement name="DO">
       <block type="sb_minim_init" id="s5^7vqid=KXB6T/pVtt-">
         <next>
@@ -66,9 +66,33 @@
                                 <field name="NAME">FM7</field>
                                 <field name="NOTES">F3,A3,E4</field>
                                 <next>
-                                  <block type="sb_play_melody" id="Cc(v=B!sj/3D?z!5]cyO">
-                                    <field name="MELODY">RQ   C4Q D4Q.   E4E  CM7H.                 RQ RQ C5Q B4Q.  G4E DmH      FM7H</field>
-                                    <field name="INSTRUMENT">Lead</field>
+                                  <block type="sb_define_chord" id="n|vUp56bHiIa}fPiz,gI">
+                                    <field name="NAME">FMadd6_C</field>
+                                    <field name="NOTES">C4,D4,F4,A4</field>
+                                    <next>
+                                      <block type="sb_define_chord" id="TN{}MtkY?t;};(C_d#.|">
+                                        <field name="NAME">Bdim</field>
+                                        <field name="NOTES">B3,D4,F4,A4</field>
+                                        <next>
+                                          <block type="sb_define_chord" id="25AJd.|*SoR`+h7n5%v_">
+                                            <field name="NAME">GMaj</field>
+                                            <field name="NOTES">G5,B5,D4</field>
+                                            <next>
+                                              <block type="sb_play_melody" id="/=(c%O^sP*XcozmLST:J">
+                                                <field name="INSTRUMENT">Piano</field>
+                                                <field name="MELODY">RQ   C4Q D4Q.   E4E &amp;#10;CM7H.+E              RE&amp;#10;RQ C5Q B4Q.  G4E&amp;#10;DmH      FM7H</field>
+                                                <next>
+                                                  <block type="sb_play_melody" id="$BXF1(}_crGKXsX2}m]n">
+                                                    <field name="INSTRUMENT">Piano</field>
+                                                    <field name="MELODY">RH   A3Q_T B3Q_T C4Q_T  &amp;#10;DmQ.     E4E FMadd6_CQ.    E4E&amp;#10;BdimQ.     A4E B3Q.    B4E&amp;#10;CM7W&amp;#10;RH</field>
+                                                  </block>
+                                                </next>
+                                              </block>
+                                            </next>
+                                          </block>
+                                        </next>
+                                      </block>
+                                    </next>
                                   </block>
                                 </next>
                               </block>
@@ -83,6 +107,22 @@
             </next>
           </block>
         </next>
+      </block>
+    </statement>
+  </block>
+  <block type="processing_draw" id="eG3^mP1PD^v?[]WNgrsF" x="10" y="1010">
+    <statement name="DO">
+      <block type="controls_if" id=",_#nRym:I.P5]K*]]Z#A">
+        <value name="IF0">
+          <block type="logic_negate" id="m}b[8wl7j:9WYC.S.4sj">
+            <value name="BOOL">
+              <block type="sb_audio_is_playing" id="#6m8#`=17#m9h*8WmL!F"></block>
+            </value>
+          </block>
+        </value>
+        <statement name="DO0">
+          <block type="processing_exit" id="F}uAYwi#F0cKADQ1|(Aa"></block>
+        </statement>
       </block>
     </statement>
   </block>

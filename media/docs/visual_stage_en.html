@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Super Stage Guide</title>
+    <style>
+        body { font-family: sans-serif; line-height: 1.6; padding: 20px; color: #333; }
+        h1 { color: #2C3E50; border-bottom: 3px solid #2C3E50; padding-bottom: 10px; }
+        h2 { color: #444; border-bottom: 2px solid #eee; padding-bottom: 5px; margin-top: 30px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+        th { background-color: #2C3E50; color: white; }
+        .code-var { font-family: monospace; font-weight: bold; color: #e74c3c; }
+    </style>
+</head>
+<body>
+    <h1>Super Stage Control</h1>
+    <p>The stage block provides a global variable system that can be controlled via code or external inputs (MIDI/Serial).</p>
+
+    <h2>Programmable Variables</h2>
+    <table>
+        <thead><tr><th>Variable</th><th>Type</th><th>Description</th></tr></thead>
+        <tbody>
+            <tr><td><span class="code-var">waveScale</span></td><td>float</td><td>Controls waveform jump height.</td></tr>
+            <tr><td><span class="code-var">fgHue</span></td><td>float</td><td>Controls foreground color (HSB 0-255).</td></tr>
+            <tr><td><span class="code-var">masterGain</span></td><td>float</td><td>Master output volume (dB).</td></tr>
+            <tr><td><span class="code-var">adsrA/D/S/R</span></td><td>float</td><td>Real-time envelope shaping.</td></tr>
+        </tbody>
+    </table>
+
+    <h2>Keyboard Shortcuts</h2>
+    <ul>
+        <li><strong>[ ↑ / ↓ ]</strong>: Octave Transpose.</li>
+        <li><strong>[ ← / → ]</strong>: <strong>Switch current instrument</strong>.</li>
+        <li><strong>[ Backspace ]</strong>: Reset transpose.</li>
+    </ul>
+</body>
+</html>

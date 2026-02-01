@@ -26,8 +26,10 @@ Blockly.Processing.injectAudioCore = function() {
   g['activeNotes'] = "HashMap<Integer, ADSR> activeNotes = new HashMap<Integer, ADSR>();";
   g['harmonicPartials'] = "HashMap<String, float[]> harmonicPartials = new HashMap<String, float[]>();";
   g['additiveConfigs'] = "HashMap<String, List<SynthComponent>> additiveConfigs = new HashMap<String, List<SynthComponent>>();";
+  g['activeMelodyCount'] = "int activeMelodyCount = 0;";
+  g['melodyLock'] = "final Object melodyLock = new Object();";
 
-  // Global Audio Params (Shared with Live Show category)
+  // Core Classes and Methods
   g['bpm'] = "float bpm = 120.0;";
   g['masterGain'] = "float masterGain = -5.0;";
   // defAdsr are used as fallback defaults
@@ -183,28 +185,111 @@ Blockly.Processing.injectAudioCore = function() {
     String melody; String inst;
     MelodyPlayer(String m, String i) { melody = m; inst = i; }
     public void run() {
-      String oldInst = currentInstrument;
-      if (inst != null && !inst.equals("")) currentInstrument = inst;
-      String[] tokens = splitTokens(melody, ", ");
-      for (String t : tokens) {
-        t = t.trim(); if (t.length() == 0) continue;
-        float ms = 500;
-        String prefix = t;
-        if (t.endsWith("W")) { ms = (60000/bpm)*4; prefix = t.substring(0, t.length()-1); }
-        else if (t.endsWith("H")) { ms = (60000/bpm)*2; prefix = t.substring(0, t.length()-1); }
-        else if (t.endsWith("Q")) { ms = (60000/bpm);   prefix = t.substring(0, t.length()-1); }
-        else if (t.endsWith("E")) { ms = (60000/bpm)/2; prefix = t.substring(0, t.length()-1); }
-        else if (t.endsWith("S")) { ms = (60000/bpm)/4; prefix = t.substring(0, t.length()-1); }
+      synchronized(melodyLock) {
+        activeMelodyCount++;
+        String oldInst = currentInstrument;
+        if (inst != null && !inst.equals("")) currentInstrument = inst;
         
-        if (chords.containsKey(prefix)) {
-          playChordByNameInternal(prefix, ms * 0.9f, 100);
-        } else {
-          int midi = noteToMidi(prefix);
-          if (midi >= 0) playNoteForDuration(midi, 100, ms * 0.9f);
-        }
-        try { Thread.sleep((long)ms); } catch (Exception e) {}
+              // Split by comma, space, tab, or newline
+        
+              String[] tokens = splitTokens(melody, ", \\t\\n\\r");
+        
+              for (String t : tokens) {
+        
+                t = t.trim(); if (t.length() < 2) continue;
+        
+                
+        
+                float totalMs = 0;
+        
+                String noteName = "";
+        
+                
+        
+                // Support Ties (+) e.g. C4H+Q or C4H.+E
+        
+                String[] parts = t.split("\\\\+");
+        
+                for (int j = 0; j < parts.length; j++) {
+        
+                  String p = parts[j].trim();
+        
+                  if (p.length() == 0) continue;
+        
+                  
+        
+                  float multiplier = 1.0f;
+        
+                  if (p.endsWith(".")) {
+        
+                    multiplier = 1.5f;
+        
+                    p = p.substring(0, p.length() - 1);
+        
+                  } else if (p.endsWith("_T")) {
+        
+                    multiplier = 2.0f / 3.0f;
+        
+                    p = p.substring(0, p.length() - 2);
+        
+                  }
+        
+                  
+        
+                  char durChar = p.charAt(p.length() - 1);
+        
+                  String prefix = p.substring(0, p.length() - 1);
+        
+                  
+        
+                  // The first part of a tied note defines the pitch/chord
+        
+                  if (j == 0) noteName = prefix;
+        
+                  
+        
+                  float baseMs = 0;
+        
+                  if (durChar == 'W') baseMs = (60000.0f / bpm) * 4.0f;
+        
+                  else if (durChar == 'H') baseMs = (60000.0f / bpm) * 2.0f;
+        
+                  else if (durChar == 'Q') baseMs = (60000.0f / bpm);
+        
+                  else if (durChar == 'E') baseMs = (60000.0f / bpm) / 2.0f;
+        
+                  else if (durChar == 'S') baseMs = (60000.0f / bpm) / 4.0f;
+        
+                  
+        
+                  totalMs += (baseMs * multiplier);
+        
+                }
+        
+                
+        
+                if (noteName.length() > 0) {
+        
+                  if (chords.containsKey(noteName)) {
+        
+                    playChordByNameInternal(noteName, totalMs * 0.95f, 100);
+        
+                  } else {
+        
+                    int midi = noteToMidi(noteName);
+        
+                    if (midi >= 0) playNoteForDuration(midi, 100, totalMs * 0.95f);
+        
+                  }
+        
+                  try { Thread.sleep((long)totalMs); } catch (Exception e) {}
+        
+                }
+        
+              }
+        currentInstrument = oldInst;
+        activeMelodyCount--;
       }
-      currentInstrument = oldInst;
     }
   }
 
@@ -318,9 +403,12 @@ registerGenerator('sb_stop_note', function(block) {
 
 registerGenerator('sb_play_melody', function(block) {
   Blockly.Processing.injectAudioCore();
-  const melody = block.getFieldValue('MELODY');
+  const melody = block.getFieldValue('MELODY') || "";
   const instrument = block.getFieldValue('INSTRUMENT');
-  return `playMelodyInternal("${melody}", "${instrument}");\n`;
+  
+  // Replace newlines with spaces to allow Java's splitTokens to handle it
+  const cleanMelody = melody.replace(/\n/g, ' ').replace(/"/g, '\\"');
+  return `playMelodyInternal("${cleanMelody}", "${instrument}");\n`;
 });
 
 registerGenerator('sb_rhythm_sequence', function(block) {
@@ -427,6 +515,10 @@ registerGenerator('audio_current_sample_property', function(block) {
 
 registerGenerator('audio_current_sample_mix_get', function(block) {
   return [`0`, Blockly.Processing.ORDER_ATOMIC];
+});
+
+registerGenerator('sb_audio_is_playing', function(block) {
+  return ['(activeMelodyCount > 0)', Blockly.Processing.ORDER_RELATIONAL];
 });
 
 // State tracker for container context

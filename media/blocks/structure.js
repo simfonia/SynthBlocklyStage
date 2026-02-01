@@ -42,3 +42,29 @@ Blockly.Blocks['processing_on_key_pressed'] = {
     this.setHelpUrl('');
   }
 };
+
+Blockly.Blocks['processing_exit'] = {
+  init: function() {
+    this.appendDummyInput()
+        .appendField(Blockly.Msg['VISUAL_EXIT'] || "結束程式");
+    this.setPreviousStatement(true, null);
+    this.setNextStatement(true, null);
+    this.setColour(Blockly.Msg['STRUCTURE_HUE'] || '#16A085');
+    this.setTooltip(Blockly.Msg['VISUAL_EXIT_TOOLTIP']);
+    this.setHelpUrl('');
+  }
+};
+
+Blockly.Blocks['processing_delay'] = {
+  init: function() {
+    this.appendValueInput("MS")
+        .setCheck("Number")
+        .appendField(Blockly.Msg['STRUCTURE_DELAY'].split('%1')[0] || "等待");
+    this.appendDummyInput()
+        .appendField(Blockly.Msg['STRUCTURE_DELAY'].split('%1')[1] || "毫秒");
+    this.setPreviousStatement(true, null);
+    this.setNextStatement(true, null);
+    this.setColour(Blockly.Msg['STRUCTURE_HUE'] || '#16A085');
+    this.setTooltip(Blockly.Msg['STRUCTURE_DELAY_TOOLTIP']);
+  }
+};

@@ -3,13 +3,18 @@
 ## 核心目錄
 - `src/`: VS Code 擴充功能 TypeScript 原始碼
     - `extension.ts`: 擴充功能進入點、Webview 管理、Processing 執行控制與資源掛載。
-- `media/`: Webview 資源
-    - `main.js`: Blockly 初始化、按鍵衝突檢查 (Glow/Text)、插件註冊、主題定義與 VS Code 通訊。
+    - `media/`: Webview 資源
+    - `main.js`: Blockly 初始化、按鍵衝突檢查、說明文件攔截與 VS Code 通訊。
     - `module_loader.js`: 動態載入積木定義與產生器。
-    - `style.css`: 工具列、Webview 版面樣式、以及積木衝突發光效果 (CSS Filter)。
-    - `docs/`: 積木說明文件 (HTML 格式，支援主題色對齊)。
-    - `blockly/`: 第三方 Blockly 套件與插件 (如 field-multilineinput.js)。
-    - `icons/`: 介面圖示 (PNG 格式，支援 1F1F1F/FE2F89 顏色切換)。
+    - `style.css`: 工具列、Webview 版面樣式、以及積木衝突發光效果。
+    - `zh-hant.js`, `en.js`: 多語系語句定義。
+    - `docs/`: 積木說明文件 (HTML 格式，支援主題色對齊與 i18n)。
+        - `sound_sources_zh-hant.html`, `sound_sources_en.html`
+        - `performance_zh-hant.html`, `performance_en.html`
+        - `melody_zh-hant.html`, `melody_en.html`
+        - `custom_synth_zh-hant.html`, `custom_synth_en.html`
+        - `visual_stage_zh-hant.html`, `visual_stage_en.html`
+    - `blockly/`: 第三方 Blockly 套件與插件 (如 field-multilineinput.js)。    - `icons/`: 介面圖示 (PNG 格式，支援 1F1F1F/FE2F89 顏色切換)。
     - `samples/`: 系統內建音訊取樣庫 (包含 jazzkit, piano, violin, sound 等分類)。
     - `blocks/`: 積木定義
         - `audio.js`, `audio_custom.js`, `live_show.js`, `serial.js`, `visual.js`, `midi.js`, `structure.js`, `ui.js`, `math.js`, `text.js`, `lists.js`, `variables.js`, `tools.js`

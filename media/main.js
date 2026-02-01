@@ -127,14 +127,22 @@ const vscode = acquireVsCodeApi();
 window.open = function(url) {
     if (url) {
         console.log('[Help] Attempting to open:', url);
-        // 如果網址包含 vscode-resource，代表是本地說明檔
-        if (url.indexOf('vscode-resource') !== -1 || url.indexOf('http') !== 0) {
-            const parts = url.split('/');
+        
+        let targetUrl = url;
+        // 如果網址指向本地文檔 (不包含 http)，則加上語系後綴
+        if (url.indexOf('http') !== 0) {
+            const suffix = Blockly.Msg['HELP_LANG_SUFFIX'] || '_zh-hant.html';
+            // 移除原本可能帶有的 .html 結尾以便重新拼接正確語系
+            const baseUrl = url.replace('_zh-hant.html', '').replace('_en.html', '').replace('.html', '');
+            targetUrl = baseUrl + suffix;
+        }
+
+        if (targetUrl.indexOf('vscode-resource') !== -1 || targetUrl.indexOf('http') !== 0) {
+            const parts = targetUrl.split('/');
             const filename = parts[parts.length - 1];
             vscode.postMessage({ command: 'openHelp', fileName: filename });
         } else {
-            // 一般外部網址 (http/https)
-            vscode.postMessage({ command: 'openHelp', url: url });
+            vscode.postMessage({ command: 'openHelp', url: targetUrl });
         }
     }
     return null;

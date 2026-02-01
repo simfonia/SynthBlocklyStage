@@ -199,8 +199,8 @@ Blockly.defineBlocksWithJsonArray([
     "message0": "啟動 Minim 音訊引擎",
     "previousStatement": null,
     "nextStatement": null,
-    "colour": "#E74C3C",
-    "tooltip": "初始化 Minim 音訊引擎（應放於 setup 最上方）。",
+    "colour": "%{BKY_SOUND_SOURCES_HUE}",
+    "tooltip": "初始化 Minim 音訊引擎（應放於 setup 最上方）。%{BKY_HELP_HINT}",
     "helpUrl": window.docsBaseUri + "sound_sources_zh-hant.html"
   },
   {
@@ -212,7 +212,7 @@ Blockly.defineBlocksWithJsonArray([
     ],
     "previousStatement": null,
     "nextStatement": null,
-    "colour": "#E74C3C",
+    "colour": "%{BKY_SOUND_SOURCES_HUE}",
     "tooltip": "從 data 資料夾載入音訊檔案。"
   },
   {
@@ -224,7 +224,7 @@ Blockly.defineBlocksWithJsonArray([
     ],
     "previousStatement": null,
     "nextStatement": null,
-    "colour": "#E74C3C",
+    "colour": "%{BKY_SOUND_SOURCES_HUE}",
     "tooltip": "立即播放指定的音訊樣本一次。"
   },
   {
@@ -239,7 +239,7 @@ Blockly.defineBlocksWithJsonArray([
     ],
     "previousStatement": null,
     "nextStatement": null,
-    "colour": "#E74C3C",
+    "colour": "%{BKY_INSTRUMENT_CONTROL_HUE}",
     "tooltip": "%{BKY_AUDIO_SELECT_INSTRUMENT_TOOLTIP}"
   },
   {
@@ -251,7 +251,7 @@ Blockly.defineBlocksWithJsonArray([
     ],
     "previousStatement": null,
     "nextStatement": null,
-    "colour": "#E74C3C",
+    "colour": "%{BKY_PERFORMANCE_HUE}",
     "tooltip": "開始播放一個持續音。"
   },
   {
@@ -262,20 +262,30 @@ Blockly.defineBlocksWithJsonArray([
     ],
     "previousStatement": null,
     "nextStatement": null,
-    "colour": "#E74C3C",
+    "colour": "%{BKY_PERFORMANCE_HUE}",
     "tooltip": "觸發 ADSR 的 Release 階段並停止發聲。"
   },
   {
     "type": "sb_play_melody",
     "message0": "%{BKY_AUDIO_PLAY_MELODY}",
     "args0": [
-      { "type": "field_input", "name": "MELODY", "text": "C4Q, E4Q, G4H" },
-      { "type": "field_input", "name": "INSTRUMENT", "text": "Lead" }
+      {
+        "type": "field_dropdown",
+        "name": "INSTRUMENT",
+        "options": getInstrumentDropdown
+      },
+      { "type": "input_dummy" },
+      {
+        "type": "field_multilinetext",
+        "name": "MELODY",
+        "text": "C4Q, E4Q, G4H\nF4Q, A4Q, C5H"
+      }
     ],
     "previousStatement": null,
     "nextStatement": null,
-    "colour": "#E74C3C",
-    "tooltip": "按照字串演奏旋律。Q:四分音符, E:八分音符, H:二分音符, W:全音符, R:休止符。"
+    "colour": "%{BKY_PERFORMANCE_HUE}",
+    "tooltip": "%{BKY_AUDIO_PLAY_MELODY_TOOLTIP}%{BKY_HELP_HINT}",
+    "helpUrl": window.docsBaseUri + "melody_zh-hant.html"
   },
   {
     "type": "sb_rhythm_sequence",
@@ -287,7 +297,7 @@ Blockly.defineBlocksWithJsonArray([
     ],
     "previousStatement": null,
     "nextStatement": null,
-    "colour": "#E74C3C",
+    "colour": "%{BKY_PERFORMANCE_HUE}",
     "tooltip": "在指定小節演奏 16 格節奏。x: 擊打, -: 延續, .: 休止。"
   },
   {
@@ -298,7 +308,7 @@ Blockly.defineBlocksWithJsonArray([
     ],
     "previousStatement": null,
     "nextStatement": null,
-    "colour": "#E74C3C",
+    "colour": "%{BKY_PERFORMANCE_HUE}",
     "tooltip": "設定全域演奏速度（每分鐘拍數）。"
   },
   {
@@ -308,54 +318,63 @@ Blockly.defineBlocksWithJsonArray([
       { "type": "field_input", "name": "INTERVAL", "text": "1m" },
       { "type": "input_statement", "name": "DO" }
     ],
-    "colour": "#E74C3C",
+    "colour": "%{BKY_PERFORMANCE_HUE}",
     "tooltip": "%{BKY_AUDIO_TONE_LOOP_TOOLTIP}",
     "hat": true
   },
+    {
+      "type": "sb_define_chord",
+      "message0": "%{BKY_AUDIO_DEFINE_CHORD}",
+      "args0": [
+        { "type": "field_input", "name": "NAME", "text": "CM7" },
+        { "type": "field_input", "name": "NOTES", "text": "C4,E4,G4,B4" }
+      ],
+      "previousStatement": null,
+      "nextStatement": null,
+          "colour": "%{BKY_PERFORMANCE_HUE}",
+          "tooltip": "定義一個自訂和弦名稱，可在旋律中使用。%{BKY_HELP_HINT}",
+          "helpUrl": window.docsBaseUri + "melody_zh-hant.html"
+        },
+        {
+          "type": "sb_play_chord_by_name",
+          "message0": "%{BKY_AUDIO_PLAY_CHORD_BY_NAME}",
+          "args0": [
+            { "type": "field_input", "name": "NAME", "text": "CM7" },
+            { "type": "field_input", "name": "DUR", "text": "4n" },
+            { "type": "input_value", "name": "VELOCITY", "check": "Number" }
+          ],
+          "previousStatement": null,
+          "nextStatement": null,
+          "colour": "%{BKY_PERFORMANCE_HUE}",
+          "tooltip": "根據名稱演奏已定義的和弦。%{BKY_HELP_HINT}",
+          "helpUrl": window.docsBaseUri + "melody_zh-hant.html"
+        },    // Custom Synths (Container Style - No Name)
+    {
+      "type": "sb_create_harmonic_synth",
+      "message0": "%{BKY_AUDIO_CREATE_HARMONIC_SYNTH}",
+      "previousStatement": null,
+      "nextStatement": null,
+          "colour": "%{BKY_SOUND_SOURCES_HUE}",
+          "tooltip": "%{BKY_AUDIO_CREATE_HARMONIC_SYNTH_TOOLTIP}%{BKY_HELP_HINT}",
+          "mutator": "harmonic_mutator",
+          "helpUrl": window.docsBaseUri + "custom_synth_zh-hant.html"
+        },
+        {
+          "type": "sb_create_additive_synth",
+          "message0": "%{BKY_AUDIO_CREATE_ADDITIVE_SYNTH}",
+          "previousStatement": null,
+          "nextStatement": null,
+          "colour": "%{BKY_SOUND_SOURCES_HUE}",
+          "tooltip": "%{BKY_AUDIO_CREATE_ADDITIVE_SYNTH_TOOLTIP}%{BKY_HELP_HINT}",
+          "mutator": "additive_mutator",
+          "helpUrl": window.docsBaseUri + "custom_synth_zh-hant.html"
+        },
   {
-    "type": "sb_define_chord",
-    "message0": "%{BKY_AUDIO_DEFINE_CHORD}",
-    "args0": [
-      { "type": "field_input", "name": "NAME", "text": "CM7" },
-      { "type": "field_input", "name": "NOTES", "text": "C4,E4,G4,B4" }
-    ],
-    "previousStatement": null,
-    "nextStatement": null,
-    "colour": "#E74C3C",
-    "tooltip": "定義一個自訂和弦名稱，可在旋律中使用。"
-  },
-  {
-    "type": "sb_play_chord_by_name",
-    "message0": "%{BKY_AUDIO_PLAY_CHORD_BY_NAME}",
-    "args0": [
-      { "type": "field_input", "name": "NAME", "text": "CM7" },
-      { "type": "field_input", "name": "DUR", "text": "4n" },
-      { "type": "input_value", "name": "VELOCITY", "check": "Number" }
-    ],
-    "previousStatement": null,
-    "nextStatement": null,
-    "colour": "#E74C3C",
-    "tooltip": "根據名稱演奏已定義的和弦。"
-  },
-
-  // Custom Synths (Container Style - No Name)
-  {
-    "type": "sb_create_harmonic_synth",
-    "message0": "%{BKY_AUDIO_CREATE_HARMONIC_SYNTH}",
-    "previousStatement": null,
-    "nextStatement": null,
-    "colour": "#E74C3C",
-    "tooltip": "%{BKY_AUDIO_CREATE_HARMONIC_SYNTH_TOOLTIP}",
-    "mutator": "harmonic_mutator"
-  },
-  {
-    "type": "sb_create_additive_synth",
-    "message0": "%{BKY_AUDIO_CREATE_ADDITIVE_SYNTH}",
-    "previousStatement": null,
-    "nextStatement": null,
-    "colour": "#E74C3C",
-    "tooltip": "%{BKY_AUDIO_CREATE_ADDITIVE_SYNTH_TOOLTIP}",
-    "mutator": "additive_mutator"
+    "type": "sb_audio_is_playing",
+    "message0": "%{BKY_AUDIO_IS_PLAYING}",
+    "output": "Boolean",
+    "colour": "%{BKY_PERFORMANCE_HUE}",
+    "tooltip": "%{BKY_AUDIO_IS_PLAYING_TOOLTIP}"
   }
 ]);
 
@@ -373,7 +392,7 @@ Blockly.Blocks['sb_instrument_container'] = {
         .appendField(new Blockly.FieldTextInput("MySynth"), "NAME");
     this.appendStatementInput("STACK")
         .setCheck(null);
-    this.setColour(230); // Audio color
+    this.setColour(Blockly.Msg['SOUND_SOURCES_HUE'] || "#E74C3C"); // Audio color
     this.setTooltip(Blockly.Msg['SB_INSTRUMENT_CONTAINER_TOOLTIP']);
     this.setHelpUrl("");
   }
@@ -397,7 +416,7 @@ Blockly.Blocks['sb_set_adsr'] = {
         .appendField("R (Release)");
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
-    this.setColour(230);
+    this.setColour(Blockly.Msg['SOUND_SOURCES_HUE'] || "#E74C3C");
     this.setTooltip(Blockly.Msg['SB_SET_ADSR_TOOLTIP']);
   }
 };
@@ -414,7 +433,7 @@ Blockly.Blocks['sb_set_wave'] = {
         ]), "TYPE");
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
-    this.setColour(230);
+    this.setColour(Blockly.Msg['SOUND_SOURCES_HUE'] || "#E74C3C");
     this.setTooltip(Blockly.Msg['SB_SET_WAVE_TOOLTIP']);
   }
 };
