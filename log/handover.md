@@ -64,3 +64,38 @@ SynthBlockly Stage 開發交接指令
 - 繼續更新剩餘舊範例的 XML（將 `audio_` 取代為 `sb_`），特別是 Serial 相關範例。
 - 實作旋律解析器或加強視覺連動積木。
 - 測試並驗證在完全沒有 `data` 資料夾的新專案中，內建資源掛載是否 100% 穩定。
+
+==================================================
+2026-01-30
+
+1. 本次完成重點：
+- **核心演奏對齊**：實作了 Java 版的 MelodyPlayer (Thread) 與 RhythmPlayer。支援 sb_play_melody (C4Q, E4H等) 與 sb_rhythm_sequence (x---)。
+- **時序系統**：實作 sb_tone_loop (執行緒循環) 與 sb_transport_set_bpm。解決了 Processing 依賴 frameCount 導致音樂不穩的問題。
+- **啟動邏輯重構**：徹底分離「內容載入」與「路徑記憶」。現在啟動時是新專案，但開啟檔案會停在上次目錄。
+- **和弦系統移植**：實作 sb_define_chord 與 sb_play_chord_by_name，解析器優先檢查和弦定義。
+
+2. 待辦任務 (Next Steps)：
+- **Serial 深度整合**：實作 Serial.write 以支援從舞台反向控制 Arduino。
+- **多執行緒壓力測試**：驗證多個 sb_tone_loop 同時執行時的 Java 執行緒穩定性。
+- **範例 XML 批次更新**：將剩餘舊範例的 audio_ ID 統一改為 sb_。
+
+==================================================
+2026-01-31
+
+1. 本次工作重點：
+- **樂器定義架構修正**：解決了樂器定義積木放在全域執行無效的問題。現在 `sb_instrument_container` 會強制將內部 Java 代碼（`instrumentMap`, `instrumentADSR`）注入 `setup()` 函式。
+- **ADSR 雙向同步**：實作了 `updateInstrumentUISync()`。切換樂器時 UI 自動更新；調整 UI 參數後切換樂器，變更會自動寫回資料庫記憶。
+- **演奏體驗優化**：
+    - 解決 PC Key 按住不放會連續觸發（機器槍）的問題，現在長按按鍵能正確 Sustain。
+    - 將 ADSR 滑桿精度設為 0.01 單位，提供更細膩的音色控制。
+- **視覺功能大擴充**：
+    - 新增 `visual_ellipse`, `visual_triangle` 繪圖積木。
+    - 實作完整座標變換系統：`rotate`, `translate`, `scale` 及隔離變換的 `push_pop` 積木。
+    - 介面強化：在 `FG COLOR` 滑桿下方加入實體彩虹色條，方便使用者直觀對照 HSB 色彩數值。
+- **Serial 通訊完備**：新增 `sb_serial_write` 積木，實現對 Arduino 的反向控制。
+
+2. 待辦任務 (Next Steps)：
+- **複雜視覺測試**：驗證 `push_pop` 在多重循環嵌套繪圖下的效能與邏輯穩定性。
+- **數學積木擴充**：考慮加入 `sin`, `cos`, `noise` 等三角函數與噪聲積木，以支援產生更豐富的視覺動畫。
+- **範例更新**：繼續將剩餘的範例（特別是 09_wah-wah 等）更新為新版 `sb_` 結構與樂器容器。
+

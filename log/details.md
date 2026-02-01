@@ -41,3 +41,34 @@
 ### 4. Blockly 產生器註冊相容性
 - **問題**：在使用新版 `generator.forBlock` 註冊時，有時會報 `generator does not know how to generate code`。
 - **方案**：採用「強效註冊」模式，同時寫入 `Blockly.Processing.forBlock['id']` 與 `Blockly.Processing['id']`，確保相容性。
+
+### 2026-01-30: 多執行緒演奏與路徑管理
+- **Java 匿名內部類別限制**：在產生器中，若在 new Runnable() 內使用外部變數（如 durationMs），該變數必須標記為 final。已在 audio.js 產生器的 playNoteForDuration 參數中修正。
+- **Minim 非阻塞演奏**：Processing 的 draw() 頻率不穩定。解決方案是在 Java 端為每個旋律、Loop 或節奏序列開啟獨立的 Thread，並配合 Thread.sleep()。
+- **Git Symlink 追蹤問題**：開發時專案下的 data/ 會連結到 samples/ 導致 Git 混亂。解決方案是在專案根目錄 .gitignore 加入 **/data/。
+- **Blockly 啟動同步**：若要啟動時為空但記憶路徑，必須在 extension.ts 中清空 _currentXmlPath 的初始傳值，但維持全域狀態中的 lastPath 供對話框使用。
+
+## 影音架構與穩定性修復 (2026-01-31)
+
+### 1. Java 作用域與注入陷阱
+- **問題**：在產生器的 `Blockly.Processing.definitions_` 中寫入 `instrumentMap.put(...)` 是無效的，因為 Java 不允許在類別頂層直接執行語句。
+- **方案**：樂器容器必須使用 `Blockly.Processing.provideSetup(code)`，將初始化邏輯強制推入 `setup()` 方法中執行。
+
+### 2. 雙向資料同步邏輯
+- **細節**：在 `updateInstrumentUISync()` 中，切換樂器的第一步必須是「將當前 UI 變數存入 `lastInstrument` 對應的 HashMap」，然後才是「從 HashMap 載入 `currentInstrument` 的數值到 UI」。漏掉第一步會導致手動調整的數值在切換後丟失。
+
+### 3. Java 字串轉義與 Unterminated String
+- **坑點**：在 Javascript 模板字串中產生 Java 的 `\n` 時，必須寫成 `\\\\n`。
+    - JS 解析一次：變成 `\\n`
+    - 寫入 .pde 檔案：變成 `\n` 字面量
+    - Java 編譯：正確識別為換行符號。
+- 若只寫 `\\n`，在 `.pde` 中會產生實體換行，導致 Java 報錯 `Unterminated string constant`。
+
+### 4. 檔案寫入損壞 (JS Corruption)
+- **現象**：`write_file` 過程中若不慎混入 `</script>` 或編碼不匹配，會導致 Webview 載入產生器失敗，報 `Uncaught SyntaxError` 或 `generator does not know how to generate code`。
+- **對策**：避免在產生器 JS 中使用過於複雜的字串拼接，優先採用乾淨的模板結構並定期校對引號閉合。
+
+### 5. PC Key 重複觸發機制 (Debounce)
+- **問題**：Windows 鍵盤長按會連續發送 `keyPressed` 事件，導致聲音不斷 Restart。
+- **方案**：使用 `HashSet<Integer> pcKeysHeld`。在 `keyPressed` 時檢查 `if (!contains(p))` 才觸發發聲；在 `keyReleased` 時移除。這確保了長按按鍵時聲音能正確進入 Sustain 階段。
+

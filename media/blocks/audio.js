@@ -5,11 +5,195 @@
 
 /**
  * Audio blocks for Processing (Minim library).
- * Updated to support Mutators for dynamic partials and additive synthesis.
+ * Includes Standard, Harmonic, and Additive synthesis blocks.
  */
 
-// 1. Static Blocks Definition
+// --- MUTATORS (Moved from audio_custom.js) ---
+
+const HARMONIC_PARTIALS_MUTATOR = {
+  itemCount_: 3,
+  
+  mutationToDom: function() {
+    const container = Blockly.utils.xml.createElement('mutation');
+    container.setAttribute('items', this.itemCount_);
+    return container;
+  },
+
+  domToMutation: function(xmlElement) {
+    this.itemCount_ = parseInt(xmlElement.getAttribute('items'), 10);
+    this.updateShape_();
+  },
+
+  decompose: function(workspace) {
+    const containerBlock = workspace.newBlock('sb_harmonic_partial_container');
+    containerBlock.initSvg();
+    let connection = containerBlock.nextConnection;
+    for (let i = 0; i < this.itemCount_; i++) {
+      const itemBlock = workspace.newBlock('sb_harmonic_partial_item');
+      itemBlock.initSvg();
+      connection.connect(itemBlock.previousConnection);
+      connection = itemBlock.nextConnection;
+    }
+    return containerBlock;
+  },
+
+  compose: function(containerBlock) {
+    let itemBlock = containerBlock.getNextBlock();
+    this.itemCount_ = 0;
+    while (itemBlock) {
+      this.itemCount_++;
+      itemBlock = itemBlock.getNextBlock();
+    }
+    this.updateShape_();
+  },
+
+  updateShape_: function() {
+    // 1. Save existing connections
+    const connections = [];
+    for (let i = 1; i <= 100; i++) {
+      const input = this.getInput('PARTIAL' + i);
+      if (!input) break;
+      connections.push(input.connection.targetConnection);
+    }
+
+    // 2. Remove old
+    let i = 1;
+    while (this.getInput('PARTIAL' + i)) {
+      this.removeInput('PARTIAL' + i);
+      i++;
+    }
+
+    // 3. Rebuild and Restore
+    for (let i = 1; i <= this.itemCount_; i++) {
+      const input = this.appendValueInput('PARTIAL' + i)
+          .setCheck('Number')
+          .appendField(Blockly.Msg['AUDIO_HARMONIC_FIELD'].replace('%1', i));
+      if (connections[i-1]) {
+        input.connection.connect(connections[i-1]);
+      }
+    }
+  }
+};
+
+const ADDITIVE_SYNTH_MUTATOR = {
+  itemCount_: 2,
+  mutationToDom: function() {
+    const container = Blockly.utils.xml.createElement('mutation');
+    container.setAttribute('items', this.itemCount_);
+    return container;
+  },
+  domToMutation: function(xmlElement) {
+    this.itemCount_ = parseInt(xmlElement.getAttribute('items'), 10);
+    this.updateShape_();
+  },
+  decompose: function(workspace) {
+    const containerBlock = workspace.newBlock('sb_additive_synth_container');
+    containerBlock.initSvg();
+    let connection = containerBlock.nextConnection;
+    for (let i = 0; i < this.itemCount_; i++) {
+      const itemBlock = workspace.newBlock('sb_additive_synth_item');
+      itemBlock.initSvg();
+      connection.connect(itemBlock.previousConnection);
+      connection = itemBlock.nextConnection;
+    }
+    return containerBlock;
+  },
+  compose: function(containerBlock) {
+    let itemBlock = containerBlock.getNextBlock();
+    this.itemCount_ = 0;
+    while (itemBlock) {
+      this.itemCount_++;
+      itemBlock = itemBlock.getNextBlock();
+    }
+    this.updateShape_();
+  },
+  updateShape_: function() {
+    // 1. Save field data
+    const fieldValues = [];
+    for (let i = 1; i <= 100; i++) {
+      if (!this.getField('WAVE' + i)) break;
+      fieldValues.push({
+        wave: this.getFieldValue('WAVE' + i),
+        ratio: this.getFieldValue('RATIO' + i),
+        amp: this.getFieldValue('AMP' + i)
+      });
+    }
+
+    // 2. Remove old
+    let i = 1;
+    while (this.getInput('COMP' + i)) { this.removeInput('COMP' + i); i++; }
+
+    // 3. Rebuild and Restore
+    for (let i = 1; i <= this.itemCount_; i++) {
+      this.appendDummyInput('COMP' + i)
+          .appendField("波形")
+          .appendField(new Blockly.FieldDropdown([["Triangle","TRIANGLE"],["Sine","SINE"],["Square","SQUARE"],["Saw","SAW"]]), "WAVE" + i)
+          .appendField("倍率")
+          .appendField(new Blockly.FieldTextInput("1.0"), "RATIO" + i)
+          .appendField("振幅")
+          .appendField(new Blockly.FieldTextInput("0.5"), "AMP" + i);
+      
+      if (fieldValues[i-1]) {
+        this.setFieldValue(fieldValues[i-1].wave, 'WAVE' + i);
+        this.setFieldValue(fieldValues[i-1].ratio, 'RATIO' + i);
+        this.setFieldValue(fieldValues[i-1].amp, 'AMP' + i);
+      }
+    }
+  }
+};
+
+// --- DYNAMIC DROPDOWN FOR INSTRUMENTS ---
+const getInstrumentDropdown = function() {
+  const instrumentBlocks = Blockly.getMainWorkspace().getBlocksByType('sb_instrument_container');
+  const options = [];
+  for (let block of instrumentBlocks) {
+    const name = block.getFieldValue('NAME');
+    if (name) {
+      options.push([name, name]);
+    }
+  }
+  if (options.length === 0) {
+    options.push(['(無樂器)', 'none']);
+  }
+  return options;
+};
+
+// --- REGISTER BLOCKS ---
+
 Blockly.defineBlocksWithJsonArray([
+  // Mutator Helper Blocks
+  {
+    "type": "sb_harmonic_partial_container",
+    "message0": "諧波清單",
+    "nextStatement": null,
+    "enableContextMenu": false,
+    "colour": "#E74C3C"
+  },
+  {
+    "type": "sb_harmonic_partial_item",
+    "message0": "泛音層級",
+    "previousStatement": null,
+    "nextStatement": null,
+    "enableContextMenu": false,
+    "colour": "#E74C3C"
+  },
+  {
+    "type": "sb_additive_synth_container",
+    "message0": "振盪器清單",
+    "nextStatement": null,
+    "enableContextMenu": false,
+    "colour": "#E74C3C"
+  },
+  {
+    "type": "sb_additive_synth_item",
+    "message0": "振盪器組件",
+    "previousStatement": null,
+    "nextStatement": null,
+    "enableContextMenu": false,
+    "colour": "#E74C3C"
+  },
+
+  // Standard Audio Blocks
   {
     "type": "sb_minim_init",
     "message0": "啟動 Minim 音訊引擎",
@@ -44,36 +228,19 @@ Blockly.defineBlocksWithJsonArray([
     "tooltip": "立即播放指定的音訊樣本一次。"
   },
   {
-    "type": "sb_create_synth_instrument",
-    "message0": "%{BKY_AUDIO_CREATE_SYNTH_INSTRUMENT}",
+    "type": "sb_select_current_instrument",
+    "message0": "%{BKY_AUDIO_SELECT_INSTRUMENT}",
     "args0": [
-      { "type": "field_input", "name": "NAME", "text": "Lead" },
       {
         "type": "field_dropdown",
-        "name": "TYPE",
-        "options": [
-          ["Triangle", "TRIANGLE"],
-          ["Sine", "SINE"],
-          ["Square", "SQUARE"],
-          ["Saw", "SAW"]
-        ]
+        "name": "NAME",
+        "options": getInstrumentDropdown
       }
     ],
     "previousStatement": null,
     "nextStatement": null,
     "colour": "#E74C3C",
-    "tooltip": "建立一個具備特定名稱的合成器音色。"
-  },
-  {
-    "type": "sb_select_current_instrument",
-    "message0": "%{BKY_AUDIO_SELECT_INSTRUMENT}",
-    "args0": [
-      { "type": "field_input", "name": "NAME", "text": "Lead" }
-    ],
-    "previousStatement": null,
-    "nextStatement": null,
-    "colour": "#E74C3C",
-    "tooltip": "切換目前要演奏的樂器名稱。"
+    "tooltip": "%{BKY_AUDIO_SELECT_INSTRUMENT_TOOLTIP}"
   },
   {
     "type": "sb_play_note",
@@ -97,88 +264,157 @@ Blockly.defineBlocksWithJsonArray([
     "nextStatement": null,
     "colour": "#E74C3C",
     "tooltip": "觸發 ADSR 的 Release 階段並停止發聲。"
+  },
+  {
+    "type": "sb_play_melody",
+    "message0": "%{BKY_AUDIO_PLAY_MELODY}",
+    "args0": [
+      { "type": "field_input", "name": "MELODY", "text": "C4Q, E4Q, G4H" },
+      { "type": "field_input", "name": "INSTRUMENT", "text": "Lead" }
+    ],
+    "previousStatement": null,
+    "nextStatement": null,
+    "colour": "#E74C3C",
+    "tooltip": "按照字串演奏旋律。Q:四分音符, E:八分音符, H:二分音符, W:全音符, R:休止符。"
+  },
+  {
+    "type": "sb_rhythm_sequence",
+    "message0": "%{BKY_AUDIO_RHYTHM_SEQUENCE}",
+    "args0": [
+      { "type": "field_input", "name": "SOURCE", "text": "KICK" },
+      { "type": "field_input", "name": "PATTERN", "text": "x---x---x---x---" },
+      { "type": "input_value", "name": "MEASURE", "check": "Number" }
+    ],
+    "previousStatement": null,
+    "nextStatement": null,
+    "colour": "#E74C3C",
+    "tooltip": "在指定小節演奏 16 格節奏。x: 擊打, -: 延續, .: 休止。"
+  },
+  {
+    "type": "sb_transport_set_bpm",
+    "message0": "%{BKY_AUDIO_SET_BPM}",
+    "args0": [
+      { "type": "input_value", "name": "BPM", "check": "Number" }
+    ],
+    "previousStatement": null,
+    "nextStatement": null,
+    "colour": "#E74C3C",
+    "tooltip": "設定全域演奏速度（每分鐘拍數）。"
+  },
+  {
+    "type": "sb_tone_loop",
+    "message0": "%{BKY_AUDIO_TONE_LOOP}",
+    "args0": [
+      { "type": "field_input", "name": "INTERVAL", "text": "1m" },
+      { "type": "input_statement", "name": "DO" }
+    ],
+    "colour": "#E74C3C",
+    "tooltip": "%{BKY_AUDIO_TONE_LOOP_TOOLTIP}",
+    "hat": true
+  },
+  {
+    "type": "sb_define_chord",
+    "message0": "%{BKY_AUDIO_DEFINE_CHORD}",
+    "args0": [
+      { "type": "field_input", "name": "NAME", "text": "CM7" },
+      { "type": "field_input", "name": "NOTES", "text": "C4,E4,G4,B4" }
+    ],
+    "previousStatement": null,
+    "nextStatement": null,
+    "colour": "#E74C3C",
+    "tooltip": "定義一個自訂和弦名稱，可在旋律中使用。"
+  },
+  {
+    "type": "sb_play_chord_by_name",
+    "message0": "%{BKY_AUDIO_PLAY_CHORD_BY_NAME}",
+    "args0": [
+      { "type": "field_input", "name": "NAME", "text": "CM7" },
+      { "type": "field_input", "name": "DUR", "text": "4n" },
+      { "type": "input_value", "name": "VELOCITY", "check": "Number" }
+    ],
+    "previousStatement": null,
+    "nextStatement": null,
+    "colour": "#E74C3C",
+    "tooltip": "根據名稱演奏已定義的和弦。"
+  },
+
+  // Custom Synths (Container Style - No Name)
+  {
+    "type": "sb_create_harmonic_synth",
+    "message0": "%{BKY_AUDIO_CREATE_HARMONIC_SYNTH}",
+    "previousStatement": null,
+    "nextStatement": null,
+    "colour": "#E74C3C",
+    "tooltip": "%{BKY_AUDIO_CREATE_HARMONIC_SYNTH_TOOLTIP}",
+    "mutator": "harmonic_mutator"
+  },
+  {
+    "type": "sb_create_additive_synth",
+    "message0": "%{BKY_AUDIO_CREATE_ADDITIVE_SYNTH}",
+    "previousStatement": null,
+    "nextStatement": null,
+    "colour": "#E74C3C",
+    "tooltip": "%{BKY_AUDIO_CREATE_ADDITIVE_SYNTH_TOOLTIP}",
+    "mutator": "additive_mutator"
   }
 ]);
 
-// 2. Dynamic Blocks (Harmonic Synth)
-Blockly.Blocks['sb_create_harmonic_synth'] = {
+// Register Mutators
+Blockly.Extensions.registerMutator('harmonic_mutator', HARMONIC_PARTIALS_MUTATOR, undefined, ['sb_harmonic_partial_item']);
+Blockly.Extensions.registerMutator('additive_mutator', ADDITIVE_SYNTH_MUTATOR, undefined, ['sb_additive_synth_item']);
+
+
+// --- INSTRUMENT CONTAINER SYSTEM ---
+
+Blockly.Blocks['sb_instrument_container'] = {
   init: function() {
-    let msg = Blockly.Msg['AUDIO_CREATE_HARMONIC_SYNTH'] || "建立諧波合成音源 名稱 %1";
     this.appendDummyInput()
-        .appendField(msg.replace('%1', '').trim())
-        .appendField(new Blockly.FieldTextInput("Organ"), "NAME");
-    this.setPreviousStatement(true, null);
-    this.setNextStatement(true, null);
-    this.setColour("#E74C3C");
-    this.itemCount_ = 0;
-    this.updateShape_();
-  },
-  mutationToDom: function() {
-    const container = Blockly.utils.xml.createElement('mutation');
-    container.setAttribute('items', this.itemCount_);
-    return container;
-  },
-  domToMutation: function(xmlElement) {
-    this.itemCount_ = parseInt(xmlElement.getAttribute('items'), 10) || 0;
-    this.updateShape_();
-  },
-  updateShape_: function() {
-    for (let i = 1; i <= this.itemCount_; i++) {
-      if (!this.getInput('PARTIAL' + i)) {
-        this.appendValueInput('PARTIAL' + i)
-            .setCheck('Number')
-            .appendField((Blockly.Msg['AUDIO_HARMONIC_FIELD'] || "%1 倍頻 振幅").replace('%1', i));
-      }
-    }
-    // Remove deleted inputs
-    let i = this.itemCount_ + 1;
-    while (this.getInput('PARTIAL' + i)) {
-      this.removeInput('PARTIAL' + i);
-      i++;
-    }
+        .appendField(Blockly.Msg['SB_INSTRUMENT_CONTAINER_MESSAGE'].replace('%1', '').replace('%2', '').trim())
+        .appendField(new Blockly.FieldTextInput("MySynth"), "NAME");
+    this.appendStatementInput("STACK")
+        .setCheck(null);
+    this.setColour(230); // Audio color
+    this.setTooltip(Blockly.Msg['SB_INSTRUMENT_CONTAINER_TOOLTIP']);
+    this.setHelpUrl("");
   }
 };
 
-// 3. Dynamic Blocks (Additive Synth)
-Blockly.Blocks['sb_create_additive_synth'] = {
+Blockly.Blocks['sb_set_adsr'] = {
   init: function() {
-    let msg = Blockly.Msg['AUDIO_CREATE_ADDITIVE_SYNTH'] || "建立自訂合成音源 名稱 %1";
     this.appendDummyInput()
-        .appendField(msg.replace('%1', '').trim())
-        .appendField(new Blockly.FieldTextInput("Bell"), "NAME");
+        .appendField(Blockly.Msg['SB_SET_ADSR_MESSAGE']);
+    this.appendValueInput("A")
+        .setCheck("Number")
+        .appendField("A (Attack)");
+    this.appendValueInput("D")
+        .setCheck("Number")
+        .appendField("D (Decay)");
+    this.appendValueInput("S")
+        .setCheck("Number")
+        .appendField("S (Sustain)");
+    this.appendValueInput("R")
+        .setCheck("Number")
+        .appendField("R (Release)");
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
-    this.setColour("#E74C3C");
-    this.itemCount_ = 0;
-    this.updateShape_();
-  },
-  mutationToDom: function() {
-    const container = Blockly.utils.xml.createElement('mutation');
-    container.setAttribute('items', this.itemCount_);
-    return container;
-  },
-  domToMutation: function(xmlElement) {
-    this.itemCount_ = parseInt(xmlElement.getAttribute('items'), 10) || 0;
-    this.updateShape_();
-  },
-  updateShape_: function() {
-    const waveOptions = [["Sine", "SINE"], ["Square", "SQUARE"], ["Saw", "SAW"], ["Triangle", "TRIANGLE"]];
-    for (let i = 1; i <= this.itemCount_; i++) {
-      if (!this.getInput('PARTIAL' + i)) { // Use PARTIALx for consistency with legacy XML if needed, or adjust to WAVE/RATIO
-        this.appendDummyInput('ROW' + i)
-            .appendField("波形")
-            .appendField(new Blockly.FieldDropdown(waveOptions), 'WAVE' + i)
-            .appendField("頻率倍率")
-            .appendField(new Blockly.FieldTextInput("1.0"), 'RATIO' + i)
-            .appendField("振幅")
-            .appendField(new Blockly.FieldTextInput("0.5"), 'AMP' + i);
-      }
-    }
-    // Remove extra rows
-    let i = this.itemCount_ + 1;
-    while (this.getInput('ROW' + i)) {
-      this.removeInput('ROW' + i);
-      i++;
-    }
+    this.setColour(230);
+    this.setTooltip(Blockly.Msg['SB_SET_ADSR_TOOLTIP']);
+  }
+};
+
+Blockly.Blocks['sb_set_wave'] = {
+  init: function() {
+    this.appendDummyInput()
+        .appendField(Blockly.Msg['SB_SET_WAVE_MESSAGE'])
+        .appendField(new Blockly.FieldDropdown([
+          ["Sine", "SINE"], 
+          ["Square", "SQUARE"], 
+          ["Triangle", "TRIANGLE"], 
+          ["Sawtooth", "SAW"]
+        ]), "TYPE");
+    this.setPreviousStatement(true, null);
+    this.setNextStatement(true, null);
+    this.setColour(230);
+    this.setTooltip(Blockly.Msg['SB_SET_WAVE_TOOLTIP']);
   }
 };

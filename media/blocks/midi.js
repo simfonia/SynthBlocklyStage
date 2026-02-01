@@ -32,7 +32,7 @@ Blockly.defineBlocksWithJsonArray([
       { "type": "input_statement", "name": "DO" }
     ],
     "colour": "#5B67E7",
-    "tooltip": "當外部 MIDI 裝置按下琴鍵時執行的動作。",
+    "tooltip": "%{BKY_MIDI_ON_NOTE_TOOLTIP}",
     "hat": true
   },
   {
@@ -48,7 +48,7 @@ Blockly.defineBlocksWithJsonArray([
       { "type": "input_statement", "name": "DO" }
     ],
     "colour": "#5B67E7",
-    "tooltip": "當外部 MIDI 裝置放開琴鍵時執行的動作。",
+    "tooltip": "%{BKY_MIDI_OFF_NOTE_TOOLTIP}",
     "hat": true
   }
 ]);

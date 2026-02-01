@@ -10,30 +10,30 @@
 Blockly.Blocks['ui_key_event'] = {
   init: function() {
     this.appendDummyInput()
-        .appendField("當按下鍵盤")
+        .appendField(Blockly.Msg['UI_KEY_EVENT'].split('%1')[0])
         .appendField(new Blockly.FieldDropdown(() => window.getAvailableKeys(this)), "KEY")
-        .appendField("鍵")
+        .appendField(Blockly.Msg['UI_KEY_EVENT'].split('%1')[1].split('%2')[0])
         .appendField(new Blockly.FieldLabel(""), "CONFLICT_LABEL");
     this.appendStatementInput("DO")
         .setCheck(null)
-        .appendField("執行");
+        .appendField(Blockly.Msg['BKY_CONTROLS_DO']);
     this.setColour("#2c3e50");
-    this.setTooltip("當偵測到特定按鍵被按下時執行動作。鋼琴音階鍵在舞台啟動時無法自訂。");
+    this.setTooltip(Blockly.Msg['UI_KEY_EVENT_TOOLTIP']);
   }
 };
 
 Blockly.defineBlocksWithJsonArray([
   {
     "type": "ui_init",
-    "message0": "啟動 UI 系統 (ControlP5)",
+    "message0": "%{BKY_UI_INIT}",
     "previousStatement": null,
     "nextStatement": null,
     "colour": "#FFB300",
-    "tooltip": "初始化 ControlP5 介面庫。應放在 setup 中。"
+    "tooltip": "%{BKY_UI_INIT_TOOLTIP}"
   },
   {
     "type": "ui_add_slider",
-    "message0": "新增滑桿 %1 位置 x %2 y %3 寬 %4 高 %5 %6 範圍 %7 到 %8 初始值 %9 標籤 %10",
+    "message0": "%{BKY_UI_ADD_SLIDER}",
     "args0": [
       { "type": "field_input", "name": "VAR", "text": "masterGain" },
       { "type": "field_number", "name": "X", "value": 820 },
@@ -52,7 +52,7 @@ Blockly.defineBlocksWithJsonArray([
   },
   {
     "type": "ui_add_toggle",
-    "message0": "新增切換開關 名稱 %1 位置 x %2 y %3 初始狀態 %4 標籤 %5",
+    "message0": "%{BKY_UI_ADD_TOGGLE}",
     "args0": [
       { "type": "field_input", "name": "VAR", "text": "isMidiMode" },
       { "type": "field_number", "name": "X", "value": 820 },
@@ -66,7 +66,7 @@ Blockly.defineBlocksWithJsonArray([
   },
   {
     "type": "ui_set_font_size",
-    "message0": "設定 UI 字體大小 %1",
+    "message0": "%{BKY_UI_SET_FONT_SIZE}",
     "args0": [
       { "type": "field_number", "name": "SIZE", "value": 20, "min": 8, "max": 60 }
     ],

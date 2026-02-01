@@ -33,6 +33,11 @@ Blockly.Processing.forBlock['serial_read_string'] = function(block) {
   return [code, Blockly.Processing.ORDER_FUNCTION_CALL];
 };
 
+Blockly.Processing.forBlock['sb_serial_write'] = function(block) {
+  const content = Blockly.Processing.valueToCode(block, 'CONTENT', Blockly.Processing.ORDER_ATOMIC) || '""';
+  return `if (myPort != null) myPort.write(${content});\n`;
+};
+
 Blockly.Processing.forBlock['sb_serial_data_received'] = function(block) {
   const varId = block.getFieldValue('DATA');
   const varName = Blockly.Processing.nameDB_.getName(varId, Blockly.Variables.NAME_TYPE);

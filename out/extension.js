@@ -128,19 +128,11 @@ class SynthBlocklyPanel {
         vscode.commands.executeCommand('setContext', 'synthblockly-stage.isWebviewOpen', true);
     }
     _handleWebviewReady() {
-        const lastXmlPath = this._extensionContext.globalState.get('lastXmlPath');
-        if (lastXmlPath && fs.existsSync(lastXmlPath)) {
-            const fileName = path.basename(lastXmlPath);
-            const xml = fs.readFileSync(lastXmlPath, 'utf8');
-            this._currentXmlPath = lastXmlPath;
-            this._panel.title = `SynthBlockly: ${fileName}`;
-            this._panel.webview.postMessage({
-                command: 'initializeWorkspace',
-                xml: xml,
-                fileName: fileName,
-                fullPath: lastXmlPath
-            });
-        }
+        // We do nothing here regarding auto-loading. 
+        // The workspace starts empty by default.
+        // lastPath is already stored in globalState and will be used when _handleOpenProject is called.
+        this._currentXmlPath = undefined;
+        this._panel.title = `SynthBlockly Stage`;
     }
     runSketch() {
         this._panel.webview.postMessage({ command: 'generateCode' });

@@ -1,0 +1,277 @@
+<xml xmlns="https://developers.google.com/blockly/xml">
+  <block type="sb_comment" id="a^FTCRX60CP(#(^`RiqH" x="10" y="10">
+    <field name="TEXT">此範例展示如何「設計音色」&amp;#10;&amp;#10;1. 樂器定義：&amp;#10;- 我們建立了6種樂器：&amp;#10;   Violin, Horn, Harpsichord, Electronic synthesizer, Bell 與 Scary 。&amp;#10;2. 即時切換樂器：&amp;#10;- 使用PC 鍵盤請用左右方向鍵切換樂器。&amp;#10;3. 塑造音色&amp;#10;- 定義波形：使用四種基本波形發聲。注意低頻正弦波可能無法從小型喇叭發聲。&amp;#10;- 諧波合成器：由整數倍頻疊加而成，聲音和諧。&amp;#10;- 加法合成器：包含非整數倍率，會產生不和諧的金屬撞擊感。&amp;#10;- 各別樂器的 ADSR 可分別在&lt;定義樂器&gt;積木內定義。</field>
+  </block>
+  <block type="sb_instrument_container" id=":,=J3Y%+lrqv8n3up:Mr" x="10" y="290">
+    <field name="NAME">Violin</field>
+    <statement name="STACK">
+      <block type="sb_set_wave" id="E85`e8cK*)SYw/KAY})I">
+        <field name="TYPE">SAW</field>
+        <next>
+          <block type="sb_set_adsr" id=".8VS_Tz-mGl=6r%-1Ek(">
+            <value name="A">
+              <shadow type="math_number" id="ej|SGlm4{3]2LTl~#DmR">
+                <field name="NUM">0.5</field>
+              </shadow>
+            </value>
+            <value name="D">
+              <shadow type="math_number" id="t]7uA9j4gjVZn2|iTjYS">
+                <field name="NUM">0</field>
+              </shadow>
+            </value>
+            <value name="S">
+              <shadow type="math_number" id="oRMQ9KIi5z{.i,,3^y{g">
+                <field name="NUM">1</field>
+              </shadow>
+            </value>
+            <value name="R">
+              <shadow type="math_number" id="f-F]K_$)J8#MLRY.m0iK">
+                <field name="NUM">0.5</field>
+              </shadow>
+            </value>
+          </block>
+        </next>
+      </block>
+    </statement>
+  </block>
+  <block type="sb_instrument_container" id="5Q)67P9^L2bA}XVj#SM8" x="10" y="510">
+    <field name="NAME">Horn</field>
+    <statement name="STACK">
+      <block type="sb_create_harmonic_synth" id="X7GC`jH1O=~?/~PO4=()">
+        <mutation items="5"></mutation>
+        <value name="PARTIAL1">
+          <block type="math_number" id="8yoD2u78e!UjhXy$XU16">
+            <field name="NUM">1</field>
+          </block>
+        </value>
+        <value name="PARTIAL2">
+          <block type="math_number" id="f~f66_*lx1?VKw~O3*b`">
+            <field name="NUM">0.8</field>
+          </block>
+        </value>
+        <value name="PARTIAL3">
+          <block type="math_number" id="(=`X_KV3~F~7.HRi`)IZ">
+            <field name="NUM">0.5</field>
+          </block>
+        </value>
+        <value name="PARTIAL4">
+          <block type="math_number" id="B4Jk*g1m1cYr`De1`,nK">
+            <field name="NUM">0.3</field>
+          </block>
+        </value>
+        <value name="PARTIAL5">
+          <block type="math_number" id=",L`CEqW#0cohWm2Q7.;)">
+            <field name="NUM">0.1</field>
+          </block>
+        </value>
+        <next>
+          <block type="sb_set_adsr" id="YcPqthSUy,S*bIZE,d=z">
+            <value name="A">
+              <shadow type="math_number" id="[W+f1=o|2*d4/RzRt$[f">
+                <field name="NUM">0.1</field>
+              </shadow>
+            </value>
+            <value name="D">
+              <shadow type="math_number" id="PlkPs.|=r*t,F,,?NyRA">
+                <field name="NUM">0.1</field>
+              </shadow>
+            </value>
+            <value name="S">
+              <shadow type="math_number" id="O4m]_iDdhvRIQ|D:p.Dl">
+                <field name="NUM">0.7</field>
+              </shadow>
+            </value>
+            <value name="R">
+              <shadow type="math_number" id="u@[58U$^tV]pk,y3X-_I">
+                <field name="NUM">0.2</field>
+              </shadow>
+            </value>
+          </block>
+        </next>
+      </block>
+    </statement>
+  </block>
+  <block type="sb_instrument_container" id="#94aHwMV(]Zk]eiElSFU" x="10" y="870">
+    <field name="NAME">Harpsichord</field>
+    <statement name="STACK">
+      <block type="sb_create_additive_synth" id=".egatNj$m*o}f}K?O!aH">
+        <mutation items="3"></mutation>
+        <field name="WAVE1">SQUARE</field>
+        <field name="RATIO1">1.0</field>
+        <field name="AMP1">1</field>
+        <field name="WAVE2">SQUARE</field>
+        <field name="RATIO2">2</field>
+        <field name="AMP2">0.5</field>
+        <field name="WAVE3">SQUARE</field>
+        <field name="RATIO3">3</field>
+        <field name="AMP3">0.3</field>
+        <next>
+          <block type="sb_set_adsr" id="j9A,gi0KOz%TCUL*vKhh">
+            <value name="A">
+              <shadow type="math_number" id="ii8O}W~ezZ;G47u)Uh(0">
+                <field name="NUM">0.01</field>
+              </shadow>
+            </value>
+            <value name="D">
+              <shadow type="math_number" id="%U8zqxiYuW$jhN_)20jp">
+                <field name="NUM">0.5</field>
+              </shadow>
+            </value>
+            <value name="S">
+              <shadow type="math_number" id="85In(a3JOg)C)vF0Z#JM">
+                <field name="NUM">0.1</field>
+              </shadow>
+            </value>
+            <value name="R">
+              <shadow type="math_number" id="Z+2Br9Dc[0mK2%!oM5Q:">
+                <field name="NUM">0.3</field>
+              </shadow>
+            </value>
+          </block>
+        </next>
+      </block>
+    </statement>
+  </block>
+  <block type="sb_instrument_container" id="9Tre!x/}-T/J=R]MiKnv" x="10" y="1170">
+    <field name="NAME">Electronic synthesizer</field>
+    <statement name="STACK">
+      <block type="sb_create_additive_synth" id="U,{Xirc~7WbIEzd1a5mv">
+        <mutation items="3"></mutation>
+        <field name="WAVE1">SQUARE</field>
+        <field name="RATIO1">1.0</field>
+        <field name="AMP1">0.5</field>
+        <field name="WAVE2">SAW</field>
+        <field name="RATIO2">2</field>
+        <field name="AMP2">0.3</field>
+        <field name="WAVE3">TRIANGLE</field>
+        <field name="RATIO3">0.5</field>
+        <field name="AMP3">0.2</field>
+        <next>
+          <block type="sb_set_adsr" id="q?uE`yVFHd8B$BHJ;(7y">
+            <value name="A">
+              <shadow type="math_number" id="`^]p=T2g0TOVtextf*27">
+                <field name="NUM">0.2</field>
+              </shadow>
+            </value>
+            <value name="D">
+              <shadow type="math_number" id="=7_oEE:j*/dV]Y]D9)oP">
+                <field name="NUM">0</field>
+              </shadow>
+            </value>
+            <value name="S">
+              <shadow type="math_number" id="R%UfOfoaC`0!p7}2s1W3">
+                <field name="NUM">1</field>
+              </shadow>
+            </value>
+            <value name="R">
+              <shadow type="math_number" id="82le^^GWh!7+ZtLZ0Pcq">
+                <field name="NUM">0.5</field>
+              </shadow>
+            </value>
+          </block>
+        </next>
+      </block>
+    </statement>
+  </block>
+  <block type="sb_instrument_container" id="#kTe%`s53t,tUx;-[jC$" x="10" y="1470">
+    <field name="NAME">Bell</field>
+    <statement name="STACK">
+      <block type="sb_create_additive_synth" id="256K_;nWG#o=zn)JAQ[:">
+        <mutation items="3"></mutation>
+        <field name="WAVE1">SINE</field>
+        <field name="RATIO1">1.0</field>
+        <field name="AMP1">1</field>
+        <field name="WAVE2">SINE</field>
+        <field name="RATIO2">2.76</field>
+        <field name="AMP2">0.3</field>
+        <field name="WAVE3">SINE</field>
+        <field name="RATIO3">5.4</field>
+        <field name="AMP3">0.2</field>
+        <next>
+          <block type="sb_set_adsr" id="I6hMNmb,/Iq6}Fh(U63p">
+            <value name="A">
+              <shadow type="math_number" id="7,FYg|Jryf;v5,$[!I%4">
+                <field name="NUM">0.01</field>
+              </shadow>
+            </value>
+            <value name="D">
+              <shadow type="math_number" id="a~*fRYoeLn)jyHFsGqT4">
+                <field name="NUM">0.1</field>
+              </shadow>
+            </value>
+            <value name="S">
+              <shadow type="math_number" id="J}XOoHYYFt$Z=uMn:p[W">
+                <field name="NUM">0.7</field>
+              </shadow>
+            </value>
+            <value name="R">
+              <shadow type="math_number" id="*4mdZYr^5M6l:uwu}G,A">
+                <field name="NUM">2</field>
+              </shadow>
+            </value>
+          </block>
+        </next>
+      </block>
+    </statement>
+  </block>
+  <block type="sb_instrument_container" id="KNpxCIn{8|9/xoSkdN3h" x="10" y="1770">
+    <field name="NAME">Scary</field>
+    <statement name="STACK">
+      <block type="sb_create_additive_synth" id="DJd(YIE:7Yy1?:^Fmw;z">
+        <mutation items="3"></mutation>
+        <field name="WAVE1">SINE</field>
+        <field name="RATIO1">1.0</field>
+        <field name="AMP1">1</field>
+        <field name="WAVE2">SINE</field>
+        <field name="RATIO2">1.3</field>
+        <field name="AMP2">0.8</field>
+        <field name="WAVE3">SINE</field>
+        <field name="RATIO3">0.7</field>
+        <field name="AMP3">0.2</field>
+        <next>
+          <block type="sb_set_adsr" id="/3JH=gBn}ucv=SIwFXTf">
+            <value name="A">
+              <shadow type="math_number" id="p~48d7U=nI.|zJ(UYB.x">
+                <field name="NUM">0.01</field>
+              </shadow>
+            </value>
+            <value name="D">
+              <shadow type="math_number" id="OmqAco)M[[?t4,)Up4u|">
+                <field name="NUM">0.1</field>
+              </shadow>
+            </value>
+            <value name="S">
+              <shadow type="math_number" id="z_CDaCm`,7Z2wTLy%pvv">
+                <field name="NUM">0.5</field>
+              </shadow>
+            </value>
+            <value name="R">
+              <shadow type="math_number" id="MY/OZ}`+exsD@LCl+r})">
+                <field name="NUM">1</field>
+              </shadow>
+            </value>
+          </block>
+        </next>
+      </block>
+    </statement>
+  </block>
+  <block type="processing_setup" id="OBzOwK(=b(p^aq3NSzPm" x="10" y="2070">
+    <statement name="DO">
+      <block type="sb_minim_init" id="s5^7vqid=KXB6T/pVtt-">
+        <next>
+          <block type="visual_stage_setup" id="M4B2;oiz(e-5RiQ4Xv~j">
+            <field name="W">1200</field>
+            <field name="H">400</field>
+            <field name="BG_COLOR">#000000</field>
+            <field name="FG_COLOR">#ff0096</field>
+            <next>
+              <block type="sb_select_current_instrument" id="QjE}I]gnVfEMWgy|mt5i">
+                <field name="NAME">Violin</field>
+              </block>
+            </next>
+          </block>
+        </next>
+      </block>
+    </statement>
+  </block>
+</xml>

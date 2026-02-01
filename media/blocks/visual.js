@@ -47,6 +47,81 @@ Blockly.defineBlocksWithJsonArray([
     "tooltip": "在指定座標繪製一個矩形。"
   },
   {
+    "type": "visual_ellipse",
+    "message0": "%{BKY_VISUAL_ELLIPSE}",
+    "args0": [
+      { "type": "input_value", "name": "X" },
+      { "type": "input_value", "name": "Y" },
+      { "type": "input_value", "name": "W" },
+      { "type": "input_value", "name": "H" }
+    ],
+    "previousStatement": null,
+    "nextStatement": null,
+    "colour": "#3498DB",
+    "tooltip": "繪製一個圓形或橢圓形。"
+  },
+  {
+    "type": "visual_triangle",
+    "message0": "%{BKY_VISUAL_TRIANGLE}",
+    "args0": [
+      { "type": "input_value", "name": "X1" },
+      { "type": "input_value", "name": "Y1" },
+      { "type": "input_value", "name": "X2" },
+      { "type": "input_value", "name": "Y2" },
+      { "type": "input_value", "name": "X3" },
+      { "type": "input_value", "name": "Y3" }
+    ],
+    "previousStatement": null,
+    "nextStatement": null,
+    "colour": "#3498DB",
+    "tooltip": "在三個頂點之間繪製三角形。"
+  },
+  {
+    "type": "visual_rotate",
+    "message0": "%{BKY_VISUAL_ROTATE}",
+    "args0": [
+      { "type": "input_value", "name": "ANGLE", "check": "Number" }
+    ],
+    "previousStatement": null,
+    "nextStatement": null,
+    "colour": "#3498DB",
+    "tooltip": "旋轉座標系統（角度單位：度）。"
+  },
+  {
+    "type": "visual_translate",
+    "message0": "%{BKY_VISUAL_TRANSLATE}",
+    "args0": [
+      { "type": "input_value", "name": "X" },
+      { "type": "input_value", "name": "Y" }
+    ],
+    "previousStatement": null,
+    "nextStatement": null,
+    "colour": "#3498DB",
+    "tooltip": "平移原點位置。"
+  },
+  {
+    "type": "visual_push_pop",
+    "message0": "%{BKY_VISUAL_PUSH_POP}",
+    "args0": [
+      { "type": "input_statement", "name": "STACK" }
+    ],
+    "previousStatement": null,
+    "nextStatement": null,
+    "colour": "#3498DB",
+    "tooltip": "使用 pushMatrix/popMatrix 與 pushStyle/popStyle 隔離內部的變換與顏色設定。"
+  },
+  {
+    "type": "visual_scale",
+    "message0": "%{BKY_VISUAL_SCALE}",
+    "args0": [
+      { "type": "input_value", "name": "S", "check": "Number" }
+    ],
+    "previousStatement": null,
+    "nextStatement": null,
+    "colour": "#3498DB",
+    "tooltip": "縮放後續繪圖的大小。"
+  },
+  {
     "type": "visual_line",
     "message0": "繪製直線 x1 %1 y1 %2 到 x2 %3 y2 %4",
     "args0": [
@@ -97,14 +172,14 @@ Blockly.defineBlocksWithJsonArray([
   },
   {
     "type": "visual_no_stroke",
-    "message0": "不繪製邊框",
+    "message0": "%{BKY_VISUAL_NO_STROKE}",
     "previousStatement": null,
     "nextStatement": null,
     "colour": "#3498DB"
   },
   {
     "type": "visual_no_fill",
-    "message0": "不填充顏色",
+    "message0": "%{BKY_VISUAL_NO_FILL}",
     "previousStatement": null,
     "nextStatement": null,
     "colour": "#3498DB"
@@ -130,11 +205,11 @@ Blockly.defineBlocksWithJsonArray([
   },
   {
     "type": "visual_pixel_density",
-    "message0": "優化高解析度螢幕顯示 (pixelDensity)",
+    "message0": "%{BKY_VISUAL_PIXEL_DENSITY}",
     "previousStatement": null,
     "nextStatement": null,
     "colour": "#3498DB",
-    "tooltip": "自動根據螢幕密度調整繪圖解析度。建議放在 setup 中。"
+    "tooltip": "%{BKY_VISUAL_PIXEL_DENSITY_TOOLTIP}"
   },
   {
     "type": "visual_stage_set_color",
@@ -186,7 +261,7 @@ Blockly.Blocks['visual_stage_setup'] = {
       "previousStatement": null,
       "nextStatement": null,
       "colour": "#2C3E50",
-      "tooltip": "初始化超級表演舞台（包含自動波形與 FFT）。按右鍵選擇「說明」取得操作手冊。",
+      "tooltip": "%{BKY_VISUAL_STAGE_SETUP_TOOLTIP}",
       "helpUrl": window.docsBaseUri + "visual_stage_zh-hant.html"
     });
     // Explicitly force vertical layout

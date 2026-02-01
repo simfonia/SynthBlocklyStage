@@ -1,0 +1,89 @@
+<xml xmlns="https://developers.google.com/blockly/xml">
+  <block type="sb_comment" id="a^FTCRX60CP(#(^`RiqH" x="10" y="10">
+    <field name="TEXT">此範例展示如何「演奏旋律與和弦」&amp;#10;&amp;#10;1. 樂器定義：Piano&amp;#10;   </field>
+  </block>
+  <block type="sb_instrument_container" id=":,=J3Y%+lrqv8n3up:Mr" x="10" y="130">
+    <field name="NAME">Piano</field>
+    <statement name="STACK">
+      <block type="sb_set_wave" id="E85`e8cK*)SYw/KAY})I">
+        <field name="TYPE">SQUARE</field>
+        <next>
+          <block type="sb_set_adsr" id=".8VS_Tz-mGl=6r%-1Ek(">
+            <value name="A">
+              <shadow type="math_number" id="ej|SGlm4{3]2LTl~#DmR">
+                <field name="NUM">0.01</field>
+              </shadow>
+            </value>
+            <value name="D">
+              <shadow type="math_number" id="t]7uA9j4gjVZn2|iTjYS">
+                <field name="NUM">0.1</field>
+              </shadow>
+            </value>
+            <value name="S">
+              <shadow type="math_number" id="oRMQ9KIi5z{.i,,3^y{g">
+                <field name="NUM">0.3</field>
+              </shadow>
+            </value>
+            <value name="R">
+              <shadow type="math_number" id="f-F]K_$)J8#MLRY.m0iK">
+                <field name="NUM">0.5</field>
+              </shadow>
+            </value>
+          </block>
+        </next>
+      </block>
+    </statement>
+  </block>
+  <block type="processing_setup" id="OBzOwK(=b(p^aq3NSzPm" x="10" y="350">
+    <statement name="DO">
+      <block type="sb_minim_init" id="s5^7vqid=KXB6T/pVtt-">
+        <next>
+          <block type="visual_stage_setup" id="0LL^zi)m.n!-sHGlyP_v">
+            <field name="W">1200</field>
+            <field name="H">400</field>
+            <field name="BG_COLOR">#000000</field>
+            <field name="FG_COLOR">#ff0096</field>
+            <next>
+              <block type="sb_select_current_instrument" id="QjE}I]gnVfEMWgy|mt5i">
+                <field name="NAME">Piano</field>
+                <next>
+                  <block type="sb_transport_set_bpm" id="jeB*fIY}KdP*qhgVcHDq">
+                    <value name="BPM">
+                      <shadow type="math_number" id="M#cN|EX.;=6!H1eNi@7U">
+                        <field name="NUM">80</field>
+                      </shadow>
+                    </value>
+                    <next>
+                      <block type="sb_define_chord" id="M#t~)bT4yLKzCgnY)97s">
+                        <field name="NAME">CM7</field>
+                        <field name="NOTES">C4,E4,G4,B4</field>
+                        <next>
+                          <block type="sb_define_chord" id=";T~!b$[7SNY5*}^%Ag*3">
+                            <field name="NAME">Dm</field>
+                            <field name="NOTES">D4,F4,A4</field>
+                            <next>
+                              <block type="sb_define_chord" id="uZ4ldYz6XQ%5tnGJo~mJ">
+                                <field name="NAME">FM7</field>
+                                <field name="NOTES">F3,A3,E4</field>
+                                <next>
+                                  <block type="sb_play_melody" id="Cc(v=B!sj/3D?z!5]cyO">
+                                    <field name="MELODY">RQ   C4Q D4Q.   E4E  CM7H.                 RQ RQ C5Q B4Q.  G4E DmH      FM7H</field>
+                                    <field name="INSTRUMENT">Lead</field>
+                                  </block>
+                                </next>
+                              </block>
+                            </next>
+                          </block>
+                        </next>
+                      </block>
+                    </next>
+                  </block>
+                </next>
+              </block>
+            </next>
+          </block>
+        </next>
+      </block>
+    </statement>
+  </block>
+</xml>

@@ -107,16 +107,22 @@
     <!-- 9. Sound Sources -->
     <category name="%{BKY_CAT_SOUND_SOURCES}" colour="%{BKY_SOUND_SOURCES_HUE}">
         <block type="sb_minim_init"></block>
-        <block type="sb_create_synth_instrument"></block>
-        <block type="audio_create_harmonic_synth"></block>
-        <block type="audio_create_additive_synth"></block>
+        <block type="sb_instrument_container"></block>
+        <block type="sb_set_adsr">
+            <value name="A"><shadow type="math_number"><field name="NUM">0.01</field></shadow></value>
+            <value name="D"><shadow type="math_number"><field name="NUM">0.1</field></shadow></value>
+            <value name="S"><shadow type="math_number"><field name="NUM">0.5</field></shadow></value>
+            <value name="R"><shadow type="math_number"><field name="NUM">0.5</field></shadow></value>
+        </block>
+        <block type="sb_set_wave"></block>
+        <block type="sb_create_harmonic_synth"></block>
+        <block type="sb_create_additive_synth"></block>
         <block type="sb_load_sample"></block>
     </category>
 
     <!-- 10. Instrument Control -->
     <category name="%{BKY_CAT_INSTRUMENT_CONTROL}" colour="%{BKY_INSTRUMENT_CONTROL_HUE}">
         <block type="sb_select_current_instrument"></block>
-        <block type="audio_set_current_sample"></block>
     </category>
 
     <!-- 11. Performance -->
@@ -131,6 +137,18 @@
         <block type="sb_trigger_sample">
             <value name="VELOCITY"><shadow type="math_number"><field name="NUM">100</field></shadow></value>
         </block>
+        <block type="sb_play_melody"></block>
+        <block type="sb_rhythm_sequence">
+            <value name="MEASURE"><shadow type="math_number"><field name="NUM">1</field></shadow></value>
+        </block>
+        <block type="sb_transport_set_bpm">
+            <value name="BPM"><shadow type="math_number"><field name="NUM">120</field></shadow></value>
+        </block>
+        <block type="sb_tone_loop"></block>
+        <block type="sb_define_chord"></block>
+        <block type="sb_play_chord_by_name">
+            <value name="VELOCITY"><shadow type="math_number"><field name="NUM">100</field></shadow></value>
+        </block>
     </category>
 
     <sep></sep>
@@ -139,17 +157,37 @@
     <category name="%{BKY_CAT_VISUAL}" colour="%{BKY_VISUAL_HUE}">
         <block type="visual_color_picker"></block>
         <block type="visual_size"></block>
-        <block type="visual_background"></block>
-        <block type="visual_fill"></block>
-        <block type="visual_stroke"></block>
+        <block type="visual_pixel_density"></block>
+        <block type="visual_constant"></block>
+        
+        <sep></sep>
+        
+        <block type="visual_background">
+            <value name="COLOR"><shadow type="visual_color_picker"></shadow></value>
+        </block>
+        <block type="visual_fill">
+            <value name="COLOR"><shadow type="visual_color_picker"></shadow></value>
+        </block>
+        <block type="visual_no_fill"></block>
+        <block type="visual_stroke">
+            <value name="COLOR"><shadow type="visual_color_picker"></shadow></value>
+        </block>
         <block type="visual_stroke_weight"><value name="WEIGHT"><shadow type="math_number"><field name="NUM">1</field></shadow></value></block>
         <block type="visual_no_stroke"></block>
-        <block type="visual_no_fill"></block>
+
+        <sep></sep>
+
         <block type="visual_rect">
             <value name="X"><shadow type="math_number"><field name="NUM">0</field></shadow></value>
             <value name="Y"><shadow type="math_number"><field name="NUM">0</field></shadow></value>
             <value name="W"><shadow type="math_number"><field name="NUM">100</field></shadow></value>
             <value name="H"><shadow type="math_number"><field name="NUM">100</field></shadow></value>
+        </block>
+        <block type="visual_ellipse">
+            <value name="X"><shadow type="math_number"><field name="NUM">50</field></shadow></value>
+            <value name="Y"><shadow type="math_number"><field name="NUM">50</field></shadow></value>
+            <value name="W"><shadow type="math_number"><field name="NUM">80</field></shadow></value>
+            <value name="H"><shadow type="math_number"><field name="NUM">80</field></shadow></value>
         </block>
         <block type="visual_line">
             <value name="X1"><shadow type="math_number"><field name="NUM">0</field></shadow></value>
@@ -157,6 +195,28 @@
             <value name="X2"><shadow type="math_number"><field name="NUM">100</field></shadow></value>
             <value name="Y2"><shadow type="math_number"><field name="NUM">100</field></shadow></value>
         </block>
+        <block type="visual_triangle">
+            <value name="X1"><shadow type="math_number"><field name="NUM">50</field></shadow></value>
+            <value name="Y1"><shadow type="math_number"><field name="NUM">0</field></shadow></value>
+            <value name="X2"><shadow type="math_number"><field name="NUM">0</field></shadow></value>
+            <value name="Y2"><shadow type="math_number"><field name="NUM">100</field></shadow></value>
+            <value name="X3"><shadow type="math_number"><field name="NUM">100</field></shadow></value>
+            <value name="Y3"><shadow type="math_number"><field name="NUM">100</field></shadow></value>
+        </block>
+
+        <sep></sep>
+
+        <block type="visual_translate">
+            <value name="X"><shadow type="math_number"><field name="NUM">0</field></shadow></value>
+            <value name="Y"><shadow type="math_number"><field name="NUM">0</field></shadow></value>
+        </block>
+        <block type="visual_rotate">
+            <value name="ANGLE"><shadow type="math_number"><field name="NUM">45</field></shadow></value>
+        </block>
+        <block type="visual_scale">
+            <value name="S"><shadow type="math_number"><field name="NUM">1.0</field></shadow></value>
+        </block>
+        <block type="visual_push_pop"></block>
     </category>
 
     <!-- 13. Serial (Arduino) -->
@@ -165,6 +225,13 @@
         <block type="serial_init"></block>
         <block type="serial_available"></block>
         <block type="serial_read_string"></block>
+        <block type="sb_serial_write">
+            <value name="CONTENT">
+                <shadow type="text">
+                    <field name="TEXT">A</field>
+                </shadow>
+            </value>
+        </block>
         <block type="serial_check_mask"></block>
     </category>
 

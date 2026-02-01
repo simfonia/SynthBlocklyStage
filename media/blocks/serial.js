@@ -42,6 +42,17 @@ Blockly.defineBlocksWithJsonArray([
     "tooltip": "從序列埠讀取文字直到遇到換行符號。"
   },
   {
+    "type": "sb_serial_write",
+    "message0": "%{BKY_SERIAL_WRITE}",
+    "args0": [
+      { "type": "input_value", "name": "CONTENT" }
+    ],
+    "previousStatement": null,
+    "nextStatement": null,
+    "colour": "#2c3e50",
+    "tooltip": "寫入資料到序列埠 (Send)"
+  },
+  {
     "type": "sb_serial_data_received",
     "message0": "%{BKY_SERIAL_DATA_RECEIVED}",
     "args0": [

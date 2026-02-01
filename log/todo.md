@@ -2,6 +2,7 @@
 
 ## 專案概述
 **SynthBlockly Stage** 是一個 VS Code 擴充功能，結合了 **Blockly** 視覺化程式設計與 **Processing (Java)** 的強大效能。專為即時音樂表演與互動視覺藝術設計，提供使用者「積木即程式碼」的創作體驗。
+本專案是 #SynthBlockly 專案的桌面版，它已經非常完整，所以目標是對齊它，裏面已有我們需要的所有程式邏輯。
 
 ## 開發核心規範 (沿用成功經驗)
 - **來自 piBlockly**: 
@@ -51,22 +52,24 @@
     - [x] 新增「選取目前樂器」積木。
     - [x] 實作 Java 端的 `HashMap` 樂器存簿。
     - [x] **架構優化**：將 Java 核心支援由視覺積木解耦，改為音訊積木按需注入。
-- [ ] **3-2. 字串演奏解析器 (String Parser)** (進行中)
-    - [ ] 實作 `sb_play_melody`：解析 `C4Q, E4Q, G4H` 字串。
-    - [ ] 實作 `sb_rhythm_sequence`：解析 `x---x---` 節奏字串。
-- [ ] **3-3. 時序系統與節拍控制 (Transport)**
-    - [ ] 實作 `sb_transport_set_bpm`。
-    - [ ] 實作基於音樂時值的 `Loop` 積木（而非 Frame）。
-- [ ] **3-4. 繪圖積木擴充**
-    - [ ] 增加：圓形、多邊形、旋轉 (`rotate`)、座標轉換。
-    - [ ] 整合 `field-colour` 顏色選取器。
+    - [x] **容器化架構**：實作 `sb_instrument_container` 與 `sb_set_adsr`，支援每個樂器獨立的 ADSR 設定。
+- [x] **3-2. 字串演奏解析器 (String Parser)**
+    - [x] 實作 `sb_play_melody`：解析 `C4Q, E4Q, G4H` 字串。
+    - [x] 實作 `sb_rhythm_sequence`：解析 `x---x---` 節奏字串。
+- [x] **3-3. 時序系統與節拍控制 (Transport)**
+    - [x] 實作 `sb_transport_set_bpm`。
+    - [x] 實作基於音樂時值的 `Loop` 積木（採用 Java Thread 實作）。
+- [x] **3-4. 繪圖積木擴充**
+    - [x] 增加：圓形、多邊形、旋轉 (`rotate`)、座標轉換。
+    - [x] 整合 `field-colour` 顏色選取器。
 
 ### 階段四：互動與通訊
 - [ ] **4-1. MIDI 深度支援**
     - [ ] 增加：控制變更 (Control Change, CC) 監聽，用以對接實體旋鈕。
-- [ ] **4-2. Serial (Arduino) 串接**
-    - [ ] 實作：`Serial.list()`, `Serial.readString()`。
-    - [ ] 實作 bitmask 檢查積木 (對齊 SynthBlockly)。
+- [x] **4-2. Serial (Arduino) 串接**
+    - [x] 實作：`Serial.list()`, `Serial.readString()`。
+    - [x] 實作 bitmask 檢查積木 (對齊 SynthBlockly)。
+    - [x] 實作 `Serial.write` 支援反向控制。
 
 ### 階段五：教學導向 (PBL) 整理
 - [ ] **5-1. 實作「範例載入系統」** (工具列按鈕與選單)。
