@@ -26,8 +26,11 @@ Blockly.Processing.injectAudioCore = function() {
   g['activeNotes'] = "HashMap<Integer, ADSR> activeNotes = new HashMap<Integer, ADSR>();";
   g['harmonicPartials'] = "HashMap<String, float[]> harmonicPartials = new HashMap<String, float[]>();";
   g['additiveConfigs'] = "HashMap<String, List<SynthComponent>> additiveConfigs = new HashMap<String, List<SynthComponent>>();";
+  g['samplerMap'] = "HashMap<String, Sampler> samplerMap = new HashMap<String, Sampler>();";
+  g['samplerGainMap'] = "HashMap<String, Gain> samplerGainMap = new HashMap<String, Gain>();";
   g['activeMelodyCount'] = "int activeMelodyCount = 0;";
   g['melodyLock'] = "final Object melodyLock = new Object();";
+  g['isCountingIn'] = "volatile boolean isCountingIn = false;";
 
   // Core Classes and Methods
   g['bpm'] = "float bpm = 120.0;";
@@ -310,6 +313,20 @@ Blockly.Processing.injectAudioCore = function() {
     } catch(Exception e) {}
     return ms;
   }
+
+  void playClick(float freq, float v) {
+    if (out == null) return;
+    float amp = map(v, 0, 127, 0, 0.8f);
+    // Use SQUARE wave for a more sharp, percussive click
+    Oscil wave = new Oscil(freq, amp, Waves.SQUARE);
+    ADSR adsr = new ADSR(1.0, 0.001f, 0.02f, 0.0f, 0.02f);
+    wave.patch(adsr).patch(out);
+    adsr.noteOn();
+    // Since this is called from the count-in thread, a short sleep here is safe and necessary
+    try { Thread.sleep(50); } catch(Exception e) {} 
+    adsr.noteOff();
+    adsr.unpatchAfterRelease(out);
+  }
   `;
 };
 
@@ -332,24 +349,30 @@ registerGenerator('sb_minim_init', function(block) {
   return '';
 });
 
-registerGenerator('sb_load_sample', function(block) {
-  const name = block.getFieldValue('NAME');
+registerGenerator('sb_drum_sampler', function(block) {
+  const name = Blockly.Processing.currentGenInstrumentName;
+  if (!name) return '// sb_drum_sampler must be inside sb_instrument_container\n';
   const path = block.getFieldValue('PATH');
-  Blockly.Processing.global_vars_['sample_' + name] = `Sampler ${name};`;
-  Blockly.Processing.global_vars_['gain_' + name] = `Gain ${name}_gain;`;
-  
-  const initCode = `${name} = new Sampler("${path}", 4, minim);\n` + 
-                   `${name}_gain = new Gain(0.f);\n` + 
-                   `${name}.patch(${name}_gain).patch(out);`;
-  Blockly.Processing.provideSetup(initCode);
-  
-  return "";
+  let code = 'if (minim == null) { minim = new Minim(this); out = minim.getLineOut(); }\n';
+  code += 'samplerMap.put("' + name + '", new Sampler("' + path + '", 4, minim));\n';
+  code += 'samplerGainMap.put("' + name + '", new Gain(0.f));\n';
+  code += 'samplerMap.get("' + name + '").patch(samplerGainMap.get("' + name + '")).patch(out);\n';
+  code += 'instrumentMap.put("' + name + '", "SAMPLER");\n';
+  code += 'instrumentADSR.put("' + name + '", new float[]{defAdsrA, defAdsrD, defAdsrS, defAdsrR});\n';
+  return code;
 });
 
 registerGenerator('sb_trigger_sample', function(block) {
   const name = block.getFieldValue('NAME');
   const velocity = Blockly.Processing.valueToCode(block, 'VELOCITY', Blockly.Processing.ORDER_ATOMIC) || '100';
-  return `if (${name} != null) {\n  ${name}_gain.setValue(map(${velocity}, 0, 127, -40, 0));\n  ${name}.trigger();\n}\n`;
+  
+  return `if (samplerMap.containsKey("${name}")) {\n` +
+         `  samplerGainMap.get("${name}").setValue(map(${velocity}, 0, 127, -40, 0));\n` + 
+         `  samplerMap.get("${name}").trigger();\n` +
+         `} else if (${name} != null) {\n` + 
+         `  ${name}_gain.setValue(map(${velocity}, 0, 127, -40, 0));\n` + 
+         `  ${name}.trigger();\n` +
+         `}\n`;
 });
 
 registerGenerator('sb_create_harmonic_synth', function(block) {
@@ -416,24 +439,91 @@ registerGenerator('sb_rhythm_sequence', function(block) {
   const source = block.getFieldValue('SOURCE');
   const pattern = block.getFieldValue('PATTERN');
   const measure = Blockly.Processing.valueToCode(block, 'MEASURE', Blockly.Processing.ORDER_ATOMIC) || '1';
+  const velocity = Blockly.Processing.valueToCode(block, 'VELOCITY', Blockly.Processing.ORDER_ATOMIC) || '100';
+  const isChordMode = (block.getFieldValue('CHORD_MODE') === 'TRUE');
   
-  // Rhythm logic using threads for non-blocking 16-step sequence
-  return `new Thread(new Runnable() {
+  let code = 'new Thread(new Runnable() {\n';
+  code += '  public void run() {\n';
+  code += '    int timeout = 0;\n';
+  code += '    while(isCountingIn && timeout < 500) { try { Thread.sleep(10); timeout++; } catch(Exception e) {} }\n';
+  code += '    try { Thread.sleep((long)(((' + measure + '-1) * 4 * 60000) / bpm)); } catch(Exception e) {}\n';
+  code += '    String rawPattern = "' + pattern + '";\n';
+  code += '    String[] steps;\n';
+  code += '    if (rawPattern.contains(",")) {\n';
+  code += '      steps = rawPattern.split(",");\n';
+  code += '    } else {\n';
+  code += '      String p = rawPattern.replace("|", "").replace(" ", "");\n';
+  code += '      steps = new String[p.length()];\n';
+  code += '      for(int i=0; i<p.length(); i++) steps[i] = String.valueOf(p.charAt(i));\n';
+  code += '    }\n';
+  code += '    float stepMs = (60000 / bpm) / 4;\n';
+  code += '    for (int i=0; i<Math.min(steps.length, 16); i++) {\n';
+  code += '      String token = steps[i].trim();\n';
+  code += '      if (token.equals(".")) {\n';
+  code += '        try { Thread.sleep((long)stepMs); } catch(Exception e) {}\n';
+  code += '        continue;\n';
+  code += '      }\n';
+  code += '      int sustainSteps = 1;\n';
+  code += '      for (int j=i+1; j<Math.min(steps.length, 16); j++) {\n';
+  code += '        String nextToken = steps[j].trim();\n';
+  code += '        if (nextToken.equals("-")) sustainSteps++;\n';
+  code += '        else break;\n';
+  code += '      }\n';
+  code += '      float noteDur = stepMs * sustainSteps;\n';
+  code += '      if (!token.equals("-")) {\n';
+  code += '        if (samplerMap.containsKey("' + source + '")) {\n';
+  code += '          if (token.equalsIgnoreCase("x")) {\n';
+  code += '             samplerGainMap.get("' + source + '").setValue(map(' + velocity + ', 0, 127, -40, 0));\n';
+  code += '             samplerMap.get("' + source + '").trigger();\n';
+  code += '          }\n';
+  code += '        } else {\n';
+  code += '          String oldInst = currentInstrument;\n';
+  code += '          currentInstrument = "' + source + '";\n';
+  code += '          if (' + isChordMode + ') {\n';
+  code += '            if (token.equals("x")) token = "C";\n';
+  code += '            if (chords.containsKey(token)) playChordByNameInternal(token, noteDur * 0.9f, (float)' + velocity + ');\n';
+  code += '            else { int midi = noteToMidi(token); if (midi >= 0) playNoteForDuration(midi, (float)' + velocity + ', noteDur * 0.9f); }\n';
+  code += '          } else {\n';
+  code += '            if (token.equalsIgnoreCase("x")) playNoteForDuration(60, (float)' + velocity + ', noteDur * 0.8f);\n';
+  code += '            else { int midi = noteToMidi(token); if (midi >= 0) playNoteForDuration(midi, (float)' + velocity + ', noteDur * 0.9f); }\n';
+  code += '          }\n';
+  code += '          currentInstrument = oldInst;\n';
+  code += '        }\n';
+  code += '      }\n';
+  code += '      try { Thread.sleep((long)stepMs); } catch(Exception e) {}\n';
+  code += '    }\n';
+  code += '  }\n';
+  code += '}).start();\n';
+  return code;
+});
+
+registerGenerator('sb_transport_count_in', function(block) {
+  Blockly.Processing.injectAudioCore();
+  const measures = Blockly.Processing.valueToCode(block, 'MEASURES', Blockly.Processing.ORDER_ATOMIC) || '1';
+  const velocity = Blockly.Processing.valueToCode(block, 'VELOCITY', Blockly.Processing.ORDER_ATOMIC) || '100';
+  
+  const setupCode = `isCountingIn = true;
+  new Thread(new Runnable() {
     public void run() {
-      try { Thread.sleep((long)(((${measure}-1) * 4 * 60000) / bpm)); } catch(Exception e) {}
-      String p = "${pattern}";
-      float stepMs = (60000 / bpm) / 4;
-      for (int i=0; i<min(p.length(), 16); i++) {
-        char c = p.charAt(i);
-        if (c == 'x' || c == 'X') {
-          if ("${source}".equals("KICK")) { if (kick != null) kick.trigger(); }
-          else if ("${source}".equals("SNARE")) { if (snare != null) snare.trigger(); }
-          else { playNoteForDuration(60, 100, stepMs * 0.8f); }
+      try {
+        Thread.sleep(1000); 
+        logToScreen("--- COUNT IN START ---", 1);
+        for (int m=0; m<${measures}; m++) {
+          for (int b=0; b<4; b++) {
+            playClick((b==0 ? 880.0f : 440.0f), (float)${velocity});
+            Thread.sleep((long)(60000.0f/bpm));
+          }
         }
-        try { Thread.sleep((long)stepMs); } catch(Exception e) {}
+      } catch (Exception e) {
+      } finally {
+        isCountingIn = false;
+        logToScreen("--- PLAY ---", 1);
       }
     }
-  }).start();\n`;
+  }).start();`;
+  
+  Blockly.Processing.provideSetup(setupCode);
+  return "";
 });
 
 registerGenerator('sb_transport_set_bpm', function(block) {
@@ -447,8 +537,10 @@ registerGenerator('sb_tone_loop', function(block) {
   const interval = block.getFieldValue('INTERVAL') || '1m';
   const branch = Blockly.Processing.statementToCode(block, 'DO');
   
-  return `new Thread(new Runnable() {
+  const code = `new Thread(new Runnable() {
     public void run() {
+      int timeout = 0;
+      while(isCountingIn && timeout < 500) { try { Thread.sleep(10); timeout++; } catch(Exception e) {} }
       while (true) {
         float ms = 2000;
         String iv = "${interval}";
@@ -467,6 +559,9 @@ registerGenerator('sb_tone_loop', function(block) {
       }
     }
   }).start();\n`;
+  
+  Blockly.Processing.provideSetup(code);
+  return "";
 });
 
 registerGenerator('sb_define_chord', function(block) {
@@ -526,22 +621,17 @@ Blockly.Processing.currentGenInstrumentName = null;
 
 registerGenerator('sb_instrument_container', function(block) {
   const name = block.getFieldValue('NAME');
-  
-  // Set context
   Blockly.Processing.currentGenInstrumentName = name;
   
-  // We don't force TRIANGLE here anymore, we let the inner blocks decide.
-  // But we still need to ensure instrumentADSR has something.
-  let code = `instrumentADSR.put("${name}", new float[]{defAdsrA, defAdsrD, defAdsrS, defAdsrR});\n`;
-  
-  // Process inner blocks
+  // Collect all code from children (like sb_drum_sampler or sb_set_wave)
   const branch = Blockly.Processing.statementToCode(block, 'STACK');
+  
+  // Ensure basic map entries if not already set by children
+  let code = 'if (!instrumentMap.containsKey("' + name + '")) instrumentMap.put("' + name + '", "TRIANGLE");\n';
+  code += 'if (!instrumentADSR.containsKey("' + name + '")) instrumentADSR.put("' + name + '", new float[]{defAdsrA, defAdsrD, defAdsrS, defAdsrR});\n';
   code += branch;
   
-  // Clear context
   Blockly.Processing.currentGenInstrumentName = null;
-  
-  // FORCE this initialization code into setup() to ensure it runs in Processing
   Blockly.Processing.provideSetup(code);
   return '';
 });

@@ -18,7 +18,9 @@ AudioOutput out;
 ControlP5 cp5;
 FFT fft;
 HashMap<Integer, ADSR> activeNotes = new HashMap<Integer, ADSR>();
+HashMap<String, Gain> samplerGainMap = new HashMap<String, Gain>();
 HashMap<String, List<SynthComponent>> additiveConfigs = new HashMap<String, List<SynthComponent>>();
+HashMap<String, Sampler> samplerMap = new HashMap<String, Sampler>();
 HashMap<String, String[]> chords = new HashMap<String, String[]>();
 HashMap<String, float[]> harmonicPartials = new HashMap<String, float[]>();
 HashSet<Integer> pcKeysHeld = new HashSet<Integer>();
@@ -37,6 +39,7 @@ boolean showADSR = true;
 boolean showLog = true;
 boolean showSpec = true;
 boolean showWave = true;
+final Object melodyLock = new Object();
 float adsrA = 0.01;
 float adsrD = 0.1;
 float adsrR = 0.5;
@@ -50,11 +53,13 @@ float fgHue = 230.0;
 float masterGain = -5.0;
 float trailAlpha = 100.0;
 float waveScale = 2.5;
+int activeMelodyCount = 0;
 int adsrState = 0;
 int adsrTimer = 0;
 int serialBaud = 115200;
 int stageBgColor;
 int stageFgColor;
+volatile boolean isCountingIn = false;
 
 int pitchTranspose = 0;
 
@@ -201,28 +206,111 @@ int pitchTranspose = 0;
     String melody; String inst;
     MelodyPlayer(String m, String i) { melody = m; inst = i; }
     public void run() {
-      String oldInst = currentInstrument;
-      if (inst != null && !inst.equals("")) currentInstrument = inst;
-      String[] tokens = splitTokens(melody, ", ");
-      for (String t : tokens) {
-        t = t.trim(); if (t.length() == 0) continue;
-        float ms = 500;
-        String prefix = t;
-        if (t.endsWith("W")) { ms = (60000/bpm)*4; prefix = t.substring(0, t.length()-1); }
-        else if (t.endsWith("H")) { ms = (60000/bpm)*2; prefix = t.substring(0, t.length()-1); }
-        else if (t.endsWith("Q")) { ms = (60000/bpm);   prefix = t.substring(0, t.length()-1); }
-        else if (t.endsWith("E")) { ms = (60000/bpm)/2; prefix = t.substring(0, t.length()-1); }
-        else if (t.endsWith("S")) { ms = (60000/bpm)/4; prefix = t.substring(0, t.length()-1); }
+      synchronized(melodyLock) {
+        activeMelodyCount++;
+        String oldInst = currentInstrument;
+        if (inst != null && !inst.equals("")) currentInstrument = inst;
         
-        if (chords.containsKey(prefix)) {
-          playChordByNameInternal(prefix, ms * 0.9f, 100);
-        } else {
-          int midi = noteToMidi(prefix);
-          if (midi >= 0) playNoteForDuration(midi, 100, ms * 0.9f);
-        }
-        try { Thread.sleep((long)ms); } catch (Exception e) {}
+              // Split by comma, space, tab, or newline
+        
+              String[] tokens = splitTokens(melody, ", \t\n\r");
+        
+              for (String t : tokens) {
+        
+                t = t.trim(); if (t.length() < 2) continue;
+        
+                
+        
+                float totalMs = 0;
+        
+                String noteName = "";
+        
+                
+        
+                // Support Ties (+) e.g. C4H+Q or C4H.+E
+        
+                String[] parts = t.split("\\+");
+        
+                for (int j = 0; j < parts.length; j++) {
+        
+                  String p = parts[j].trim();
+        
+                  if (p.length() == 0) continue;
+        
+                  
+        
+                  float multiplier = 1.0f;
+        
+                  if (p.endsWith(".")) {
+        
+                    multiplier = 1.5f;
+        
+                    p = p.substring(0, p.length() - 1);
+        
+                  } else if (p.endsWith("_T")) {
+        
+                    multiplier = 2.0f / 3.0f;
+        
+                    p = p.substring(0, p.length() - 2);
+        
+                  }
+        
+                  
+        
+                  char durChar = p.charAt(p.length() - 1);
+        
+                  String prefix = p.substring(0, p.length() - 1);
+        
+                  
+        
+                  // The first part of a tied note defines the pitch/chord
+        
+                  if (j == 0) noteName = prefix;
+        
+                  
+        
+                  float baseMs = 0;
+        
+                  if (durChar == 'W') baseMs = (60000.0f / bpm) * 4.0f;
+        
+                  else if (durChar == 'H') baseMs = (60000.0f / bpm) * 2.0f;
+        
+                  else if (durChar == 'Q') baseMs = (60000.0f / bpm);
+        
+                  else if (durChar == 'E') baseMs = (60000.0f / bpm) / 2.0f;
+        
+                  else if (durChar == 'S') baseMs = (60000.0f / bpm) / 4.0f;
+        
+                  
+        
+                  totalMs += (baseMs * multiplier);
+        
+                }
+        
+                
+        
+                if (noteName.length() > 0) {
+        
+                  if (chords.containsKey(noteName)) {
+        
+                    playChordByNameInternal(noteName, totalMs * 0.95f, 100);
+        
+                  } else {
+        
+                    int midi = noteToMidi(noteName);
+        
+                    if (midi >= 0) playNoteForDuration(midi, 100, totalMs * 0.95f);
+        
+                  }
+        
+                  try { Thread.sleep((long)totalMs); } catch (Exception e) {}
+        
+                }
+        
+              }
+        currentInstrument = oldInst;
+        activeMelodyCount--;
       }
-      currentInstrument = oldInst;
     }
   }
 
@@ -242,6 +330,20 @@ int pitchTranspose = 0;
       }
     } catch(Exception e) {}
     return ms;
+  }
+
+  void playClick(float freq, float v) {
+    if (out == null) return;
+    float amp = map(v, 0, 127, 0, 0.8f);
+    // Use SQUARE wave for a more sharp, percussive click
+    Oscil wave = new Oscil(freq, amp, Waves.SQUARE);
+    ADSR adsr = new ADSR(1.0, 0.001f, 0.02f, 0.0f, 0.02f);
+    wave.patch(adsr).patch(out);
+    adsr.noteOn();
+    // Since this is called from the count-in thread, a short sleep here is safe and necessary
+    try { Thread.sleep(50); } catch(Exception e) {} 
+    adsr.noteOff();
+    adsr.unpatchAfterRelease(out);
   }
 
 void logToScreen(String msg, int type) {
@@ -362,28 +464,34 @@ void logToScreen(String msg, int type) {
   }
 
 void setup() {
-  instrumentADSR.put("Violin", new float[]{defAdsrA, defAdsrD, defAdsrS, defAdsrR});
+  if (!instrumentMap.containsKey("Violin")) instrumentMap.put("Violin", "TRIANGLE");
+  if (!instrumentADSR.containsKey("Violin")) instrumentADSR.put("Violin", new float[]{defAdsrA, defAdsrD, defAdsrS, defAdsrR});
     instrumentMap.put("Violin", "SAW");
     instrumentADSR.put("Violin", new float[]{(float)0.5, (float)0, (float)1, (float)0.5});
-    instrumentADSR.put("Horn", new float[]{defAdsrA, defAdsrD, defAdsrS, defAdsrR});
+    if (!instrumentMap.containsKey("Horn")) instrumentMap.put("Horn", "TRIANGLE");
+  if (!instrumentADSR.containsKey("Horn")) instrumentADSR.put("Horn", new float[]{defAdsrA, defAdsrD, defAdsrS, defAdsrR});
     instrumentMap.put("Horn", "HARMONIC");
     harmonicPartials.put("Horn", new float[]{
     1f, 0.8f, 0.5f, 0.3f, 0.1f
     });
     instrumentADSR.put("Horn", new float[]{(float)0.1, (float)0.1, (float)0.7, (float)0.2});
-    instrumentADSR.put("Harpsichord", new float[]{defAdsrA, defAdsrD, defAdsrS, defAdsrR});
+    if (!instrumentMap.containsKey("Harpsichord")) instrumentMap.put("Harpsichord", "TRIANGLE");
+  if (!instrumentADSR.containsKey("Harpsichord")) instrumentADSR.put("Harpsichord", new float[]{defAdsrA, defAdsrD, defAdsrS, defAdsrR});
     instrumentMap.put("Harpsichord", "ADDITIVE");
     additiveConfigs.put("Harpsichord", Arrays.asList(new SynthComponent[]{new SynthComponent("SQUARE", 1.0f, 1f), new SynthComponent("SQUARE", 2f, 0.5f), new SynthComponent("SQUARE", 3f, 0.3f)}));
     instrumentADSR.put("Harpsichord", new float[]{(float)0.01, (float)0.5, (float)0.1, (float)0.3});
-    instrumentADSR.put("Electronic synthesizer", new float[]{defAdsrA, defAdsrD, defAdsrS, defAdsrR});
+    if (!instrumentMap.containsKey("Electronic synthesizer")) instrumentMap.put("Electronic synthesizer", "TRIANGLE");
+  if (!instrumentADSR.containsKey("Electronic synthesizer")) instrumentADSR.put("Electronic synthesizer", new float[]{defAdsrA, defAdsrD, defAdsrS, defAdsrR});
     instrumentMap.put("Electronic synthesizer", "ADDITIVE");
     additiveConfigs.put("Electronic synthesizer", Arrays.asList(new SynthComponent[]{new SynthComponent("SQUARE", 1.0f, 0.5f), new SynthComponent("SAW", 2f, 0.3f), new SynthComponent("TRIANGLE", 0.5f, 0.2f)}));
     instrumentADSR.put("Electronic synthesizer", new float[]{(float)0.2, (float)0, (float)1, (float)0.5});
-    instrumentADSR.put("Bell", new float[]{defAdsrA, defAdsrD, defAdsrS, defAdsrR});
+    if (!instrumentMap.containsKey("Bell")) instrumentMap.put("Bell", "TRIANGLE");
+  if (!instrumentADSR.containsKey("Bell")) instrumentADSR.put("Bell", new float[]{defAdsrA, defAdsrD, defAdsrS, defAdsrR});
     instrumentMap.put("Bell", "ADDITIVE");
     additiveConfigs.put("Bell", Arrays.asList(new SynthComponent[]{new SynthComponent("SINE", 1.0f, 1f), new SynthComponent("SINE", 2.76f, 0.3f), new SynthComponent("SINE", 5.4f, 0.2f)}));
     instrumentADSR.put("Bell", new float[]{(float)0.01, (float)0.1, (float)0.7, (float)2});
-    instrumentADSR.put("Scary", new float[]{defAdsrA, defAdsrD, defAdsrS, defAdsrR});
+    if (!instrumentMap.containsKey("Scary")) instrumentMap.put("Scary", "TRIANGLE");
+  if (!instrumentADSR.containsKey("Scary")) instrumentADSR.put("Scary", new float[]{defAdsrA, defAdsrD, defAdsrS, defAdsrR});
     instrumentMap.put("Scary", "ADDITIVE");
     additiveConfigs.put("Scary", Arrays.asList(new SynthComponent[]{new SynthComponent("SINE", 1.0f, 1f), new SynthComponent("SINE", 1.3f, 0.8f), new SynthComponent("SINE", 0.7f, 0.2f)}));
     instrumentADSR.put("Scary", new float[]{(float)0.01, (float)0.1, (float)0.5, (float)1});

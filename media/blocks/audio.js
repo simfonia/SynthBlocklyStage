@@ -204,16 +204,33 @@ Blockly.defineBlocksWithJsonArray([
     "helpUrl": window.docsBaseUri + "sound_sources_zh-hant.html"
   },
   {
-    "type": "sb_load_sample",
-    "message0": "載入音訊樣本 名稱 %1 檔案路徑 %2",
+    "type": "sb_drum_sampler",
+    "message0": "打擊樂器取樣器 路徑 %1",
     "args0": [
-      { "type": "field_input", "name": "NAME", "text": "kick" },
-      { "type": "field_input", "name": "PATH", "text": "kick.wav" }
+      {
+        "type": "field_dropdown",
+        "name": "PATH",
+        "options": [
+          ["Kick", "drum/kick.wav"],
+          ["Snare", "drum/snare.wav"],
+          ["Hi-Hat (Closed)", "drum/ch.wav"],
+          ["Hi-Hat (Open)", "drum/oh.wav"],
+          ["Tom (High)", "drum/tom_hi.wav"],
+          ["Tom (Mid)", "drum/tom_mid.wav"],
+          ["Tom (Low)", "drum/tom_low.wav"],
+          ["Crash", "drum/crash.wav"],
+          ["Ride", "drum/ride.wav"],
+          ["Clap", "drum/clap.wav"],
+          ["Rimshot", "drum/rim.wav"],
+          ["Cowbell", "drum/cowbell.wav"],
+          ["CUSTOM...", "CUSTOM"]
+        ]
+      }
     ],
     "previousStatement": null,
     "nextStatement": null,
     "colour": "%{BKY_SOUND_SOURCES_HUE}",
-    "tooltip": "從 data 資料夾載入音訊檔案。"
+    "tooltip": "載入打擊樂器樣本檔案 (WAV/MP3/AIFF)"
   },
   {
     "type": "sb_trigger_sample",
@@ -283,7 +300,7 @@ Blockly.defineBlocksWithJsonArray([
     ],
     "previousStatement": null,
     "nextStatement": null,
-    "colour": "%{BKY_PERFORMANCE_HUE}",
+    "colour": "#FF6F00",
     "tooltip": "%{BKY_AUDIO_PLAY_MELODY_TOOLTIP}%{BKY_HELP_HINT}",
     "helpUrl": window.docsBaseUri + "melody_zh-hant.html"
   },
@@ -291,14 +308,36 @@ Blockly.defineBlocksWithJsonArray([
     "type": "sb_rhythm_sequence",
     "message0": "%{BKY_AUDIO_RHYTHM_SEQUENCE}",
     "args0": [
-      { "type": "field_input", "name": "SOURCE", "text": "KICK" },
-      { "type": "field_input", "name": "PATTERN", "text": "x---x---x---x---" },
-      { "type": "input_value", "name": "MEASURE", "check": "Number" }
+      { "type": "input_dummy" },
+      { "type": "field_input", "name": "SOURCE", "text": "Kick" },
+      {
+        "type": "field_dropdown",
+        "name": "CHORD_MODE",
+        "options": [
+          ["單音/打擊", "FALSE"],
+          ["音名/和弦", "TRUE"]
+        ]
+      },
+      { "type": "input_value", "name": "MEASURE", "check": "Number" },
+      { "type": "field_input", "name": "PATTERN", "text": "x--- x--- x--- x---" },
+      { "type": "input_value", "name": "VELOCITY", "check": "Number" }
     ],
     "previousStatement": null,
     "nextStatement": null,
     "colour": "%{BKY_PERFORMANCE_HUE}",
     "tooltip": "在指定小節演奏 16 格節奏。x: 擊打, -: 延續, .: 休止。"
+  },
+  {
+    "type": "sb_transport_count_in",
+    "message0": "%{BKY_AUDIO_COUNT_IN}",
+    "args0": [
+      { "type": "input_value", "name": "MEASURES", "check": "Number" },
+      { "type": "input_value", "name": "VELOCITY", "check": "Number" }
+    ],
+    "previousStatement": null,
+    "nextStatement": null,
+    "colour": "%{BKY_PERFORMANCE_HUE}",
+    "tooltip": "在正式演奏前播放預備拍（節拍器聲音）。"
   },
   {
     "type": "sb_transport_set_bpm",

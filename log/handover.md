@@ -99,3 +99,9 @@ SynthBlockly Stage 開發交接指令
 - **數學積木擴充**：考慮加入 `sin`, `cos`, `noise` 等三角函數與噪聲積木，以支援產生更豐富的視覺動畫。
 - **範例更新**：繼續將剩餘的範例（特別是 09_wah-wah 等）更新為新版 `sb_` 結構與樂器容器。
 
+# 2026-02-02 交接紀錄
+- 成功解決 AudioCore 在 Template Literal 中的轉義災難，關鍵在於不要隨意修改包含 \\\\+ 的字串。
+- 實作了 sb_instrument_container 的代碼收集機制，解決 setup() 中初始化順序導致的 NullPointerException。
+- 完成了範例路徑保護 (extension.ts) 與前端 UI 狀態同步 (main.js)。
+- 完成了非阻塞式的預備拍 (Count-in) 功能，包含旗標同步機制。
+- 修正了另存新檔會建立巢狀資料夾的 Bug。

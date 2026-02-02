@@ -1,0 +1,182 @@
+<xml xmlns="https://developers.google.com/blockly/xml">
+  <block type="sb_comment" id="a^FTCRX60CP(#(^`RiqH" x="10" y="10">
+    <field name="TEXT">此範例展示如何使用打擊樂器取樣器建立爵士鼓組&amp;#10;&amp;#10;1. 樂器定義：使用專用的取樣器路徑&amp;#10;2. 節奏編排：使用步進音序器編寫 16 步進節奏</field>
+  </block>
+  <block type="sb_instrument_container" id=":,=J3Y%+lrqv8n3up:Mr" x="10" y="130">
+    <field name="NAME">Kick</field>
+    <statement name="STACK">
+      <block type="sb_drum_sampler" id="4,yTcOLLDP4pICCnN632">
+        <field name="PATH">drum/kick.wav</field>
+      </block>
+    </statement>
+  </block>
+  <block type="sb_instrument_container" id="Bl~?A0oi,5gS$SUHM^_F" x="10" y="230">
+    <field name="NAME">Snare</field>
+    <statement name="STACK">
+      <block type="sb_drum_sampler" id="-/a}hQl8|xAeZPWI%3@8">
+        <field name="PATH">drum/snare.wav</field>
+      </block>
+    </statement>
+  </block>
+  <block type="sb_instrument_container" id="JQs!A1drO1laSbDEz]`G" x="10" y="330">
+    <field name="NAME">HiHat</field>
+    <statement name="STACK">
+      <block type="sb_drum_sampler" id="jzMH(PrPao1~A3RdL9.|">
+        <field name="PATH">drum/ch.wav</field>
+      </block>
+    </statement>
+  </block>
+  <block type="sb_instrument_container" id="rim_inst_cont" x="10" y="430">
+    <field name="NAME">Rimshot</field>
+    <statement name="STACK">
+      <block type="sb_drum_sampler" id="rim_sampler">
+        <field name="PATH">drum/rim.wav</field>
+      </block>
+    </statement>
+  </block>
+  <block type="sb_instrument_container" id="9Tre!x/}-T/J=R]MiKnv" x="10" y="530">
+    <field name="NAME">Synth</field>
+    <statement name="STACK">
+      <block type="sb_set_wave" id="U,{Xirc~7WbIEzd1a5mv">
+        <field name="TYPE">SAW</field>
+        <next>
+          <block type="sb_set_adsr" id="q?uE`yVFHd8B$BHJ;(7y">
+            <value name="A">
+              <shadow type="math_number" id="O55]MjmsD?Z2O]N~kr%+">
+                <field name="NUM">0.02</field>
+              </shadow>
+            </value>
+            <value name="D">
+              <shadow type="math_number" id="`.X:I%4YZs?urR-@53i1">
+                <field name="NUM">0.1</field>
+              </shadow>
+            </value>
+            <value name="S">
+              <shadow type="math_number" id="j*,|dPTj,qA_YpJc,4u|">
+                <field name="NUM">0.3</field>
+              </shadow>
+            </value>
+            <value name="R">
+              <shadow type="math_number" id="01wvkzwg2;RwkJzgo%pt">
+                <field name="NUM">0.4</field>
+              </shadow>
+            </value>
+          </block>
+        </next>
+      </block>
+    </statement>
+  </block>
+  <block type="processing_setup" id="OBzOwK(=b(p^aq3NSzPm" x="10" y="750">
+    <statement name="DO">
+      <block type="sb_minim_init" id="s5^7vqid=KXB6T/pVtt-">
+        <next>
+          <block type="visual_stage_setup" id="M4B2;oiz(e-5RiQ4Xv~j">
+            <field name="W">1200</field>
+            <field name="H">400</field>
+            <field name="BG_COLOR">#000000</field>
+            <field name="FG_COLOR">#00ffcc</field>
+            <next>
+              <block type="sb_select_current_instrument" id="Kp.#`G~GKO8C^sx,*p?3">
+                <field name="NAME">Synth</field>
+                <next>
+                  <block type="sb_transport_set_bpm" id="#G8;)w|t)$EAH#d4-gsA">
+                    <value name="BPM">
+                      <shadow type="math_number" id="i)RGS.`/H.x8lytz4F7q">
+                        <field name="NUM">95</field>
+                      </shadow>
+                    </value>
+                    <next>
+                      <block type="sb_transport_count_in" id="ZCAL(U;j:%sR~GUErM(H">
+                        <value name="MEASURES">
+                          <shadow type="math_number" id="|DpY(fl9h:my(uutYykD">
+                            <field name="NUM">1</field>
+                          </shadow>
+                        </value>
+                        <value name="VELOCITY">
+                          <shadow type="math_number" id="Uh/DJHlkl.nfD#3Ya)J~">
+                            <field name="NUM">100</field>
+                          </shadow>
+                        </value>
+                      </block>
+                    </next>
+                  </block>
+                </next>
+              </block>
+            </next>
+          </block>
+        </next>
+      </block>
+    </statement>
+  </block>
+  <block type="sb_tone_loop" id=":3#mGP32w9C.v$EYpWYB" x="10" y="1030">
+    <field name="INTERVAL">1m</field>
+    <statement name="DO">
+      <block type="sb_rhythm_sequence" id="zYs.T2F/WoLCCi.c{0`k">
+        <field name="SOURCE">Kick</field>
+        <field name="CHORD_MODE">FALSE</field>
+        <field name="PATTERN">x--- .... x--- ....</field>
+        <value name="VELOCITY">
+          <shadow type="math_number" id="=p%5k(N55*$5g9RiEP%A">
+            <field name="NUM">110</field>
+          </shadow>
+        </value>
+        <value name="MEASURE">
+          <shadow type="math_number" id="1|Z~aJ]RnlyW2!c7R8AR">
+            <field name="NUM">1</field>
+          </shadow>
+        </value>
+        <next>
+          <block type="sb_rhythm_sequence" id="}+1cU%iuR][}v$:e8~w}">
+            <field name="SOURCE">Snare</field>
+            <field name="CHORD_MODE">FALSE</field>
+            <field name="PATTERN">.... x--- .... x---</field>
+            <value name="VELOCITY">
+              <shadow type="math_number" id="NC+h%07~)_%oj/~4bu4P">
+                <field name="NUM">100</field>
+              </shadow>
+            </value>
+            <value name="MEASURE">
+              <shadow type="math_number" id="QR{X7Btsa]0Q#Y.p~r%w">
+                <field name="NUM">1</field>
+              </shadow>
+            </value>
+            <next>
+              <block type="sb_rhythm_sequence" id="MCAzM{FfaXa3f4(_d6(.">
+                <field name="SOURCE">HiHat</field>
+                <field name="CHORD_MODE">FALSE</field>
+                <field name="PATTERN">x-x- x-x- x-x- x-x-</field>
+                <value name="VELOCITY">
+                  <shadow type="math_number" id="ZA8Q7L.@*s4?Y*mih[}6">
+                    <field name="NUM">80</field>
+                  </shadow>
+                </value>
+                <value name="MEASURE">
+                  <shadow type="math_number" id="_aB}{40*:XErM?C1,QYC">
+                    <field name="NUM">1</field>
+                  </shadow>
+                </value>
+                <next>
+                  <block type="sb_rhythm_sequence" id="rim_seq">
+                    <field name="SOURCE">Rimshot</field>
+                    <field name="CHORD_MODE">FALSE</field>
+                    <field name="PATTERN">..x. ..x. ..x. ..x.</field>
+                    <value name="VELOCITY">
+                      <shadow type="math_number" id="XQQ_aXsg!iBc$xv7E8xD">
+                        <field name="NUM">70</field>
+                      </shadow>
+                    </value>
+                    <value name="MEASURE">
+                      <shadow type="math_number" id="~}C|T3o5q3d;iiE$=KZo">
+                        <field name="NUM">1</field>
+                      </shadow>
+                    </value>
+                  </block>
+                </next>
+              </block>
+            </next>
+          </block>
+        </next>
+      </block>
+    </statement>
+  </block>
+</xml>

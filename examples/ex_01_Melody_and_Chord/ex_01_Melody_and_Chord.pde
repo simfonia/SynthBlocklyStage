@@ -18,7 +18,9 @@ AudioOutput out;
 ControlP5 cp5;
 FFT fft;
 HashMap<Integer, ADSR> activeNotes = new HashMap<Integer, ADSR>();
+HashMap<String, Gain> samplerGainMap = new HashMap<String, Gain>();
 HashMap<String, List<SynthComponent>> additiveConfigs = new HashMap<String, List<SynthComponent>>();
+HashMap<String, Sampler> samplerMap = new HashMap<String, Sampler>();
 HashMap<String, String[]> chords = new HashMap<String, String[]>();
 HashMap<String, float[]> harmonicPartials = new HashMap<String, float[]>();
 HashSet<Integer> pcKeysHeld = new HashSet<Integer>();
@@ -57,6 +59,7 @@ int adsrTimer = 0;
 int serialBaud = 115200;
 int stageBgColor;
 int stageFgColor;
+volatile boolean isCountingIn = false;
 
 int pitchTranspose = 0;
 
@@ -329,6 +332,20 @@ int pitchTranspose = 0;
     return ms;
   }
 
+  void playClick(float freq, float v) {
+    if (out == null) return;
+    float amp = map(v, 0, 127, 0, 0.8f);
+    // Use SQUARE wave for a more sharp, percussive click
+    Oscil wave = new Oscil(freq, amp, Waves.SQUARE);
+    ADSR adsr = new ADSR(1.0, 0.001f, 0.02f, 0.0f, 0.02f);
+    wave.patch(adsr).patch(out);
+    adsr.noteOn();
+    // Since this is called from the count-in thread, a short sleep here is safe and necessary
+    try { Thread.sleep(50); } catch(Exception e) {} 
+    adsr.noteOff();
+    adsr.unpatchAfterRelease(out);
+  }
+
 void logToScreen(String msg, int type) {
     Textarea target = (type >= 1) ? cp5.get(Textarea.class, "alertsArea") : cp5.get(Textarea.class, "consoleArea");
     if (target != null) {
@@ -447,9 +464,10 @@ void logToScreen(String msg, int type) {
   }
 
 void setup() {
-  instrumentADSR.put("Piano", new float[]{defAdsrA, defAdsrD, defAdsrS, defAdsrR});
+  if (!instrumentMap.containsKey("Piano")) instrumentMap.put("Piano", "TRIANGLE");
+  if (!instrumentADSR.containsKey("Piano")) instrumentADSR.put("Piano", new float[]{defAdsrA, defAdsrD, defAdsrS, defAdsrR});
     instrumentMap.put("Piano", "TRIANGLE");
-    instrumentADSR.put("Piano", new float[]{(float)0.01, (float)0.1, (float)0.3, (float)0.5});
+    instrumentADSR.put("Piano", new float[]{(float)0.01, (float)0.1, (float)0.3, (float)1});
     minim = new Minim(this);
   out = minim.getLineOut();
   currentInstrument = "";

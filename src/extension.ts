@@ -103,7 +103,7 @@ class SynthBlocklyPanel {
                         this._handleSetProcessingPath();
                         return;
                     case 'autoSaveProject':
-                        this._handleAutoSave(message.xml, message.code);
+                        this._handleAutoSave({ xml: message.xml, code: message.code });
                         return;
                     case 'newProject':
                         this._handleNewProject(message.isDirty);
@@ -225,14 +225,19 @@ class SynthBlocklyPanel {
         }
     }
 
-    private async _handleAutoSave(xml: string, code: string) {
+    private _handleAutoSave(data: any) {
         if (!this._currentXmlPath) return;
+
+        // Prevent auto-saving for examples
+        if (this._currentXmlPath.includes(`${path.sep}examples${path.sep}`)) {
+            return;
+        }
+
         try {
-            const xmlPath = this._currentXmlPath;
-            fs.writeFileSync(xmlPath, xml);
-            const pdePath = path.join(path.dirname(xmlPath), `${path.basename(xmlPath, '.xml')}.pde`);
-            fs.writeFileSync(pdePath, code);
-            this._extensionContext.globalState.update('lastXmlPath', xmlPath);
+            fs.writeFileSync(this._currentXmlPath, data.xml);
+            const pdePath = path.join(path.dirname(this._currentXmlPath), `${path.basename(this._currentXmlPath, '.xml')}.pde`);
+            fs.writeFileSync(pdePath, data.code);
+            this._extensionContext.globalState.update('lastXmlPath', this._currentXmlPath);
         } catch (e) {
             console.error('[AutoSave] Failed:', e);
         }
@@ -267,15 +272,28 @@ class SynthBlocklyPanel {
         if (fileUri) {
             const userChosenPath = fileUri.fsPath;
             const parentDir = path.dirname(userChosenPath);
-            const rawFileName = path.basename(userChosenPath);
+            const parentDirName = path.basename(parentDir);
+            const rawFileName = path.basename(userChosenPath, '.xml');
             
             // Apply Sanitizer to ensure folder and files are Processing-legal
             const cleanName = this._sanitizeProjectName(rawFileName);
             
-            // Final Directory Structure: parent/CleanName/CleanName.xml
-            const targetFolder = path.join(parentDir, cleanName);
-            const finalXmlPath = path.join(targetFolder, `${cleanName}.xml`);
-            const finalPdePath = path.join(targetFolder, `${cleanName}.pde`);
+            let targetFolder: string;
+            let finalXmlPath: string;
+            let finalPdePath: string;
+
+            // If the user selected an XML file inside a folder already named after the project,
+            // we overwrite that project instead of creating a new nested folder.
+            if (parentDirName === cleanName) {
+                targetFolder = parentDir;
+                finalXmlPath = path.join(targetFolder, `${cleanName}.xml`);
+                finalPdePath = path.join(targetFolder, `${cleanName}.pde`);
+            } else {
+                // New Project structure: parent/CleanName/CleanName.xml
+                targetFolder = path.join(parentDir, cleanName);
+                finalXmlPath = path.join(targetFolder, `${cleanName}.xml`);
+                finalPdePath = path.join(targetFolder, `${cleanName}.pde`);
+            }
 
             if (!fs.existsSync(targetFolder)) {
                 fs.mkdirSync(targetFolder, { recursive: true });

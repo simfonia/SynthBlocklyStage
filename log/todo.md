@@ -39,6 +39,7 @@
     - [x] 實作「原生安全檢查」：解決 Webview 沙盒限制，使用 VS Code 視窗進行存檔確認。
     - [x] 實作「自動存檔」：2 秒防抖背景備份。
     - [x] 實作「專案名稱顯示」：工具列顯示檔名，懸停顯示完整路徑。
+    - [x] **安全性**：實作範例路徑保護，防止自動儲存覆寫內建範例。
 - [x] **2-3. 強化日誌系統**
     - [x] 在舞台 (Processing) 端實作雙層分類日誌 (Alerts/Console)。
     - [x] 實作執行期 MIDI SCAN 與動態裝置切換選單。
@@ -66,8 +67,8 @@
     - [x] 整合 `field-colour` 顏色選取器。
 
 ### 階段四：互動與通訊
-- [ ] **4-1. MIDI 深度支援**
-    - [ ] 增加：控制變更 (Control Change, CC) 監聽，用以對接實體旋鈕。
+- [x] **4-1. MIDI 深度支援**
+    - [x] 增加：控制變更 (Control Change, CC) 監聽，用以對接實體旋鈕。
 - [x] **4-2. Serial (Arduino) 串接**
     - [x] 實作：`Serial.list()`, `Serial.readString()`。
     - [x] 實作 bitmask 檢查積木 (對齊 SynthBlockly)。
@@ -79,6 +80,8 @@
     - [x] 實作多語系自動感應說明系統。
     - [x] 完成音源、演奏、旋律、合成技術、舞台控制之 HTML 文檔。
     - [x] 實作 Tooltip 聯動引導。
+- [x] **5-3. 核心範例建立**
+    - [x] 完成 `ex_03_Rock`：展示 Drum Sampler 與多軌 Sequencer 聯動。
 
 ---
 

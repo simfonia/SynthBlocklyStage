@@ -49,7 +49,7 @@ float defAdsrA = 0.01;
 float defAdsrD = 0.1;
 float defAdsrR = 0.5;
 float defAdsrS = 0.5;
-float fgHue = 230.0;
+float fgHue = 75.0;
 float masterGain = -5.0;
 float trailAlpha = 100.0;
 float waveScale = 2.5;
@@ -471,19 +471,30 @@ void noteOn(int channel, int pitch, int velocity) {
 
 }
 
+void noteOff(int channel, int pitch, int velocity) {
+  logToScreen("Note OFF - Pitch: " + pitch, 0);
+    stopNoteInternal((int)pitch);
+
+}
+
 void setup() {
-  if (!instrumentMap.containsKey("piano")) instrumentMap.put("piano", "TRIANGLE");
-  if (!instrumentADSR.containsKey("piano")) instrumentADSR.put("piano", new float[]{defAdsrA, defAdsrD, defAdsrS, defAdsrR});
-    instrumentMap.put("piano", "ADDITIVE");
-    additiveConfigs.put("piano", Arrays.asList(new SynthComponent[]{new SynthComponent("TRIANGLE", 1.0f, 1f), new SynthComponent("TRIANGLE", 2f, 0.5f), new SynthComponent("TRIANGLE", 3f, 0.3f)}));
-    instrumentADSR.put("piano", new float[]{(float)0.01, (float)0.1, (float)0.3, (float)0.5});
+  if (!instrumentMap.containsKey("Organ")) instrumentMap.put("Organ", "TRIANGLE");
+  if (!instrumentADSR.containsKey("Organ")) instrumentADSR.put("Organ", new float[]{defAdsrA, defAdsrD, defAdsrS, defAdsrR});
+    instrumentMap.put("Organ", "HARMONIC");
+    harmonicPartials.put("Organ", new float[]{
+    1f, 0.5f, 0.3f, 0.2f
+    });
+    if (!instrumentMap.containsKey("Bell")) instrumentMap.put("Bell", "TRIANGLE");
+  if (!instrumentADSR.containsKey("Bell")) instrumentADSR.put("Bell", new float[]{defAdsrA, defAdsrD, defAdsrS, defAdsrR});
+    instrumentMap.put("Bell", "ADDITIVE");
+    additiveConfigs.put("Bell", Arrays.asList(new SynthComponent[]{new SynthComponent("SINE", 1f, 0.8f), new SynthComponent("TRIANGLE", 2.76f, 0.4f), new SynthComponent("SQUARE", 5.4f, 0.2f)}));
     minim = new Minim(this);
   out = minim.getLineOut();
   currentInstrument = "";
     size(1600, 600);
   pixelDensity(displayDensity());
   stageBgColor = color(0, 0, 0);
-  stageFgColor = color(255, 0, 150);
+  stageFgColor = color(117, 251, 76);
   minim = new Minim(this);
   out = minim.getLineOut();
   fft = new FFT(out.bufferSize(), out.sampleRate());
@@ -507,7 +518,7 @@ void setup() {
   cp5.addToggle("showLog").setPosition(230, 430).setSize(40, 20).setCaptionLabel("LOG");
   cp5.addSlider("trailAlpha").setPosition(20, 495).setSize(150, 15).setRange(0, 255).setCaptionLabel("TRAIL");
   cp5.addSlider("waveScale").setPosition(20, 525).setSize(150, 15).setRange(0.1, 10).setCaptionLabel("SCALE");
-  cp5.addSlider("fgHue").setPosition(20, 555).setSize(150, 15).setRange(0, 255).setValue(230.0).setCaptionLabel("FG COLOR");
+  cp5.addSlider("fgHue").setPosition(20, 555).setSize(150, 15).setRange(0, 255).setValue(75.0).setCaptionLabel("FG COLOR");
   cp5.addSlider("adsrA").setPosition(320, 485).setSize(15, 80).setRange(0, 2).setDecimalPrecision(2).setCaptionLabel("A");
   cp5.addSlider("adsrD").setPosition(380, 485).setSize(15, 80).setRange(0, 1).setDecimalPrecision(2).setCaptionLabel("D");
   cp5.addSlider("adsrS").setPosition(440, 485).setSize(15, 80).setRange(0, 1).setDecimalPrecision(2).setCaptionLabel("S");
@@ -528,19 +539,7 @@ void setup() {
   cp5.addButton("copyLogs").setPosition(1405, 5).setSize(90, 25).setCaptionLabel("COPY LOG");
   cp5.addButton("clearLogs").setPosition(1500, 5).setSize(90, 25).setCaptionLabel("CLEAR LOG");
   logToScreen("System Initialized.", 0);
-    currentInstrument = "piano";
-    MidiBus.list();
-    myBus = new MidiBus(this, 0, -1);
-    if (!instrumentMap.containsKey("violin")) instrumentMap.put("violin", "TRIANGLE");
-  if (!instrumentADSR.containsKey("violin")) instrumentADSR.put("violin", new float[]{defAdsrA, defAdsrD, defAdsrS, defAdsrR});
-    instrumentMap.put("violin", "ADDITIVE");
-    additiveConfigs.put("violin", Arrays.asList(new SynthComponent[]{new SynthComponent("SINE", 1.0f, 1f), new SynthComponent("SINE", 2f, 0.5f), new SynthComponent("SINE", 3f, 0.3f)}));
-    instrumentADSR.put("violin", new float[]{(float)0.2, (float)0, (float)1, (float)0.5});
-    if (!instrumentMap.containsKey("electronic synthesizer")) instrumentMap.put("electronic synthesizer", "TRIANGLE");
-  if (!instrumentADSR.containsKey("electronic synthesizer")) instrumentADSR.put("electronic synthesizer", new float[]{defAdsrA, defAdsrD, defAdsrS, defAdsrR});
-    instrumentMap.put("electronic synthesizer", "ADDITIVE");
-    additiveConfigs.put("electronic synthesizer", Arrays.asList(new SynthComponent[]{new SynthComponent("SQUARE", 1.0f, 0.5f), new SynthComponent("SAW", 2f, 0.3f), new SynthComponent("TRIANGLE", 0.5f, 0.2f)}));
-    instrumentADSR.put("electronic synthesizer", new float[]{(float)0.2, (float)0, (float)1, (float)0.5});
+    currentInstrument = "Organ";
 }
 
 

@@ -5,7 +5,9 @@
         <block type="processing_draw"></block>
         <block type="processing_delay">
             <value name="MS">
-                <shadow type="math_number"><field name="NUM">1000</field></shadow>
+                <shadow type="math_number">
+                    <field name="NUM">1000</field>
+                </shadow>
             </value>
         </block>
         <block type="processing_exit"></block>
@@ -28,14 +30,28 @@
     <category name="%{BKY_CAT_LOOPS}" colour="%{BKY_LOOPS_HUE}">
         <block type="controls_repeat_ext">
             <value name="TIMES">
-                <shadow type="math_number"><field name="NUM">10</field></shadow>
+                <shadow type="math_number">
+                    <field name="NUM">10</field>
+                </shadow>
             </value>
         </block>
         <block type="controls_whileUntil"></block>
         <block type="controls_for">
-            <value name="FROM"><shadow type="math_number"><field name="NUM">1</field></shadow></value>
-            <value name="TO"><shadow type="math_number"><field name="NUM">10</field></shadow></value>
-            <value name="BY"><shadow type="math_number"><field name="NUM">1</field></shadow></value>
+            <value name="FROM">
+                <shadow type="math_number">
+                    <field name="NUM">1</field>
+                </shadow>
+            </value>
+            <value name="TO">
+                <shadow type="math_number">
+                    <field name="NUM">10</field>
+                </shadow>
+            </value>
+            <value name="BY">
+                <shadow type="math_number">
+                    <field name="NUM">1</field>
+                </shadow>
+            </value>
         </block>
         <block type="controls_forEach"></block>
         <block type="controls_flow_statements"></block>
@@ -45,8 +61,16 @@
     <category name="%{BKY_CAT_MATH}" colour="%{BKY_MATH_HUE}">
         <block type="math_number"></block>
         <block type="math_arithmetic">
-            <value name="A"><shadow type="math_number"><field name="NUM">1</field></shadow></value>
-            <value name="B"><shadow type="math_number"><field name="NUM">1</field></shadow></value>
+            <value name="A">
+                <shadow type="math_number">
+                    <field name="NUM">1</field>
+                </shadow>
+            </value>
+            <value name="B">
+                <shadow type="math_number">
+                    <field name="NUM">1</field>
+                </shadow>
+            </value>
         </block>
         <block type="math_single"></block>
         <block type="math_trig"></block>
@@ -55,14 +79,38 @@
         <block type="math_round"></block>
         <block type="math_modulo"></block>
         <block type="math_map">
-            <value name="FROM_LOW"><shadow type="math_number"><field name="NUM">0</field></shadow></value>
-            <value name="FROM_HIGH"><shadow type="math_number"><field name="NUM">127</field></shadow></value>
-            <value name="TO_LOW"><shadow type="math_number"><field name="NUM">0</field></shadow></value>
-            <value name="TO_HIGH"><shadow type="math_number"><field name="NUM">100</field></shadow></value>
+            <value name="FROM_LOW">
+                <shadow type="math_number">
+                    <field name="NUM">0</field>
+                </shadow>
+            </value>
+            <value name="FROM_HIGH">
+                <shadow type="math_number">
+                    <field name="NUM">127</field>
+                </shadow>
+            </value>
+            <value name="TO_LOW">
+                <shadow type="math_number">
+                    <field name="NUM">0</field>
+                </shadow>
+            </value>
+            <value name="TO_HIGH">
+                <shadow type="math_number">
+                    <field name="NUM">100</field>
+                </shadow>
+            </value>
         </block>
         <block type="math_constrain">
-            <value name="LOW"><shadow type="math_number"><field name="NUM">0</field></shadow></value>
-            <value name="HIGH"><shadow type="math_number"><field name="NUM">100</field></shadow></value>
+            <value name="LOW">
+                <shadow type="math_number">
+                    <field name="NUM">0</field>
+                </shadow>
+            </value>
+            <value name="HIGH">
+                <shadow type="math_number">
+                    <field name="NUM">100</field>
+                </shadow>
+            </value>
         </block>
     </category>
 
@@ -70,7 +118,11 @@
     <category name="%{BKY_CAT_TEXT}" colour="%{BKY_TEXT_HUE}">
         <block type="text"></block>
         <block type="text_join"></block>
-        <block type="text_append"><value name="TEXT"><shadow type="text"></shadow></value></block>
+        <block type="text_append">
+            <value name="TEXT">
+                <shadow type="text"></shadow>
+            </value>
+        </block>
         <block type="text_length"></block>
         <block type="text_isEmpty"></block>
         <block type="text_charAt"></block>
@@ -102,10 +154,16 @@
     <category name="%{BKY_CAT_LIVE_SHOW}" colour="%{BKY_LIVE_SHOW_HUE}">
         <block type="visual_stage_setup"></block>
         <block type="visual_stage_set_color">
-            <value name="COLOR"><shadow type="visual_color_picker"></shadow></value>
+            <value name="COLOR">
+                <shadow type="visual_color_picker"></shadow>
+            </value>
         </block>
         <block type="live_set_param">
-            <value name="VALUE"><shadow type="math_number"><field name="NUM">1</field></shadow></value>
+            <value name="VALUE">
+                <shadow type="math_number">
+                    <field name="NUM">1</field>
+                </shadow>
+            </value>
         </block>
         <block type="live_get_param"></block>
     </category>
@@ -115,15 +173,31 @@
         <block type="sb_minim_init"></block>
         <block type="sb_instrument_container"></block>
         <block type="sb_set_adsr">
-            <value name="A"><shadow type="math_number"><field name="NUM">0.01</field></shadow></value>
-            <value name="D"><shadow type="math_number"><field name="NUM">0.1</field></shadow></value>
-            <value name="S"><shadow type="math_number"><field name="NUM">0.5</field></shadow></value>
-            <value name="R"><shadow type="math_number"><field name="NUM">0.5</field></shadow></value>
+            <value name="A">
+                <shadow type="math_number">
+                    <field name="NUM">0.01</field>
+                </shadow>
+            </value>
+            <value name="D">
+                <shadow type="math_number">
+                    <field name="NUM">0.1</field>
+                </shadow>
+            </value>
+            <value name="S">
+                <shadow type="math_number">
+                    <field name="NUM">0.5</field>
+                </shadow>
+            </value>
+            <value name="R">
+                <shadow type="math_number">
+                    <field name="NUM">0.5</field>
+                </shadow>
+            </value>
         </block>
         <block type="sb_set_wave"></block>
         <block type="sb_create_harmonic_synth"></block>
         <block type="sb_create_additive_synth"></block>
-        <block type="sb_load_sample"></block>
+        <block type="sb_drum_sampler"></block>
     </category>
 
     <!-- 10. Instrument Control -->
@@ -133,29 +207,81 @@
 
     <!-- 11. Performance -->
     <category name="%{BKY_CAT_PERFORMANCE}" colour="%{BKY_PERFORMANCE_HUE}">
-        <block type="sb_play_note">
-            <value name="PITCH"><shadow type="variables_get"><field name="VAR">pitch</field></shadow></value>
-            <value name="VELOCITY"><shadow type="math_number"><field name="NUM">100</field></shadow></value>
+        <!-- 設定速度 -->
+        <block type="sb_transport_set_bpm">
+            <value name="BPM">
+                <shadow type="math_number">
+                    <field name="NUM">120</field>
+                </shadow>
+            </value>
         </block>
+        <!-- 預備拍 -->
+        <block type="sb_transport_count_in">
+            <value name="MEASURES">
+                <shadow type="math_number">
+                    <field name="NUM">1</field>
+                </shadow>
+            </value>
+            <value name="VELOCITY">
+                <shadow type="math_number">
+                    <field name="NUM">100</field>
+                </shadow>
+            </value>
+        </block>
+        <!-- 定義和弦 -->
+        <block type="sb_define_chord"></block>
+        <!-- 演奏旋律 -->
+        <block type="sb_play_melody"></block>
+        <!-- 演奏和弦 -->
+        <block type="sb_play_chord_by_name">
+            <value name="VELOCITY">
+                <shadow type="math_number">
+                    <field name="NUM">100</field>
+                </shadow>
+            </value>
+        </block>
+
+        <block type="sb_play_note">
+            <value name="PITCH">
+                <shadow type="variables_get">
+                    <field name="VAR">pitch</field>
+                </shadow>
+            </value>
+            <value name="VELOCITY">
+                <shadow type="math_number">
+                    <field name="NUM">100</field>
+                </shadow>
+            </value>
+        </block>
+
         <block type="sb_stop_note">
-            <value name="PITCH"><shadow type="variables_get"><field name="VAR">pitch</field></shadow></value>
+            <value name="PITCH">
+                <shadow type="variables_get">
+                    <field name="VAR">pitch</field>
+                </shadow>
+            </value>
         </block>
         <block type="sb_trigger_sample">
-            <value name="VELOCITY"><shadow type="math_number"><field name="NUM">100</field></shadow></value>
+            <value name="VELOCITY">
+                <shadow type="math_number">
+                    <field name="NUM">100</field>
+                </shadow>
+            </value>
         </block>
-        <block type="sb_play_melody"></block>
         <block type="sb_audio_is_playing"></block>
         <block type="sb_rhythm_sequence">
-            <value name="MEASURE"><shadow type="math_number"><field name="NUM">1</field></shadow></value>
-        </block>
-        <block type="sb_transport_set_bpm">
-            <value name="BPM"><shadow type="math_number"><field name="NUM">120</field></shadow></value>
+            <value name="MEASURE">
+                <shadow type="math_number">
+                    <field name="NUM">1</field>
+                </shadow>
+            </value>
+            <value name="VELOCITY">
+                <shadow type="math_number">
+                    <field name="NUM">100</field>
+                </shadow>
+            </value>
         </block>
         <block type="sb_tone_loop"></block>
-        <block type="sb_define_chord"></block>
-        <block type="sb_play_chord_by_name">
-            <value name="VELOCITY"><shadow type="math_number"><field name="NUM">100</field></shadow></value>
-        </block>
     </category>
 
     <sep></sep>
@@ -166,62 +292,162 @@
         <block type="visual_size"></block>
         <block type="visual_pixel_density"></block>
         <block type="visual_constant"></block>
-        
+
         <sep></sep>
-        
+
         <block type="visual_background">
-            <value name="COLOR"><shadow type="visual_color_picker"></shadow></value>
+            <value name="COLOR">
+                <shadow type="visual_color_picker"></shadow>
+            </value>
         </block>
         <block type="visual_fill">
-            <value name="COLOR"><shadow type="visual_color_picker"></shadow></value>
+            <value name="COLOR">
+                <shadow type="visual_color_picker"></shadow>
+            </value>
         </block>
         <block type="visual_no_fill"></block>
         <block type="visual_stroke">
-            <value name="COLOR"><shadow type="visual_color_picker"></shadow></value>
+            <value name="COLOR">
+                <shadow type="visual_color_picker"></shadow>
+            </value>
         </block>
-        <block type="visual_stroke_weight"><value name="WEIGHT"><shadow type="math_number"><field name="NUM">1</field></shadow></value></block>
+        <block type="visual_stroke_weight">
+            <value name="WEIGHT">
+                <shadow type="math_number">
+                    <field name="NUM">1</field>
+                </shadow>
+            </value>
+        </block>
         <block type="visual_no_stroke"></block>
 
         <sep></sep>
 
         <block type="visual_rect">
-            <value name="X"><shadow type="math_number"><field name="NUM">0</field></shadow></value>
-            <value name="Y"><shadow type="math_number"><field name="NUM">0</field></shadow></value>
-            <value name="W"><shadow type="math_number"><field name="NUM">100</field></shadow></value>
-            <value name="H"><shadow type="math_number"><field name="NUM">100</field></shadow></value>
+            <value name="X">
+                <shadow type="math_number">
+                    <field name="NUM">0</field>
+                </shadow>
+            </value>
+            <value name="Y">
+                <shadow type="math_number">
+                    <field name="NUM">0</field>
+                </shadow>
+            </value>
+            <value name="W">
+                <shadow type="math_number">
+                    <field name="NUM">100</field>
+                </shadow>
+            </value>
+            <value name="H">
+                <shadow type="math_number">
+                    <field name="NUM">100</field>
+                </shadow>
+            </value>
         </block>
         <block type="visual_ellipse">
-            <value name="X"><shadow type="math_number"><field name="NUM">50</field></shadow></value>
-            <value name="Y"><shadow type="math_number"><field name="NUM">50</field></shadow></value>
-            <value name="W"><shadow type="math_number"><field name="NUM">80</field></shadow></value>
-            <value name="H"><shadow type="math_number"><field name="NUM">80</field></shadow></value>
+            <value name="X">
+                <shadow type="math_number">
+                    <field name="NUM">50</field>
+                </shadow>
+            </value>
+            <value name="Y">
+                <shadow type="math_number">
+                    <field name="NUM">50</field>
+                </shadow>
+            </value>
+            <value name="W">
+                <shadow type="math_number">
+                    <field name="NUM">80</field>
+                </shadow>
+            </value>
+            <value name="H">
+                <shadow type="math_number">
+                    <field name="NUM">80</field>
+                </shadow>
+            </value>
         </block>
         <block type="visual_line">
-            <value name="X1"><shadow type="math_number"><field name="NUM">0</field></shadow></value>
-            <value name="Y1"><shadow type="math_number"><field name="NUM">0</field></shadow></value>
-            <value name="X2"><shadow type="math_number"><field name="NUM">100</field></shadow></value>
-            <value name="Y2"><shadow type="math_number"><field name="NUM">100</field></shadow></value>
+            <value name="X1">
+                <shadow type="math_number">
+                    <field name="NUM">0</field>
+                </shadow>
+            </value>
+            <value name="Y1">
+                <shadow type="math_number">
+                    <field name="NUM">0</field>
+                </shadow>
+            </value>
+            <value name="X2">
+                <shadow type="math_number">
+                    <field name="NUM">100</field>
+                </shadow>
+            </value>
+            <value name="Y2">
+                <shadow type="math_number">
+                    <field name="NUM">100</field>
+                </shadow>
+            </value>
         </block>
         <block type="visual_triangle">
-            <value name="X1"><shadow type="math_number"><field name="NUM">50</field></shadow></value>
-            <value name="Y1"><shadow type="math_number"><field name="NUM">0</field></shadow></value>
-            <value name="X2"><shadow type="math_number"><field name="NUM">0</field></shadow></value>
-            <value name="Y2"><shadow type="math_number"><field name="NUM">100</field></shadow></value>
-            <value name="X3"><shadow type="math_number"><field name="NUM">100</field></shadow></value>
-            <value name="Y3"><shadow type="math_number"><field name="NUM">100</field></shadow></value>
+            <value name="X1">
+                <shadow type="math_number">
+                    <field name="NUM">50</field>
+                </shadow>
+            </value>
+            <value name="Y1">
+                <shadow type="math_number">
+                    <field name="NUM">0</field>
+                </shadow>
+            </value>
+            <value name="X2">
+                <shadow type="math_number">
+                    <field name="NUM">0</field>
+                </shadow>
+            </value>
+            <value name="Y2">
+                <shadow type="math_number">
+                    <field name="NUM">100</field>
+                </shadow>
+            </value>
+            <value name="X3">
+                <shadow type="math_number">
+                    <field name="NUM">100</field>
+                </shadow>
+            </value>
+            <value name="Y3">
+                <shadow type="math_number">
+                    <field name="NUM">100</field>
+                </shadow>
+            </value>
         </block>
 
         <sep></sep>
 
         <block type="visual_translate">
-            <value name="X"><shadow type="math_number"><field name="NUM">0</field></shadow></value>
-            <value name="Y"><shadow type="math_number"><field name="NUM">0</field></shadow></value>
+            <value name="X">
+                <shadow type="math_number">
+                    <field name="NUM">0</field>
+                </shadow>
+            </value>
+            <value name="Y">
+                <shadow type="math_number">
+                    <field name="NUM">0</field>
+                </shadow>
+            </value>
         </block>
         <block type="visual_rotate">
-            <value name="ANGLE"><shadow type="math_number"><field name="NUM">45</field></shadow></value>
+            <value name="ANGLE">
+                <shadow type="math_number">
+                    <field name="NUM">45</field>
+                </shadow>
+            </value>
         </block>
         <block type="visual_scale">
-            <value name="S"><shadow type="math_number"><field name="NUM">1.0</field></shadow></value>
+            <value name="S">
+                <shadow type="math_number">
+                    <field name="NUM">1.0</field>
+                </shadow>
+            </value>
         </block>
         <block type="visual_push_pop"></block>
     </category>

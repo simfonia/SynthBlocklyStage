@@ -1,0 +1,107 @@
+<xml xmlns="https://developers.google.com/blockly/xml">
+  <variables>
+    <variable id="E=mzf@D?z/WQM@0mehXU">channel</variable>
+    <variable id="Zk=xeNwCzE{tu(j2*m1!">pitch</variable>
+    <variable id="ffV/C}vmgi@Z39;_D{zX">velocity</variable>
+  </variables>
+  <block type="sb_comment" id="guide" x="10" y="10">
+    <field name="TEXT">【使用MIDI鍵盤演奏】&amp;#10;1. 點擊「執行」啟動。&amp;#10;2. Organ：諧波合成，聽感厚實。&amp;#10;3. Bell：加法合成，聽感有金屬碰撞味。&amp;#10;4. 按下「左/右方向鍵」切換樂器。&amp;#10;5. 使用MIDI鍵盤或電腦鍵盤演奏。</field>
+  </block>
+  <block type="sb_instrument_container" id="D!V_O^(~:7NvZL,JzN}1" x="10" y="170">
+    <field name="NAME">Organ</field>
+    <statement name="STACK">
+      <block type="sb_create_harmonic_synth" id="create_organ">
+        <mutation items="4"></mutation>
+        <value name="PARTIAL1">
+          <block type="math_number" id="?^)T:sv~g8/Sr?F~;F?(">
+            <field name="NUM">1</field>
+          </block>
+        </value>
+        <value name="PARTIAL2">
+          <block type="math_number" id="H(8}*K/,XZ;#4}=]~:fX">
+            <field name="NUM">0.5</field>
+          </block>
+        </value>
+        <value name="PARTIAL3">
+          <block type="math_number" id="%_tC|U7D#w.flY9dcGKj">
+            <field name="NUM">0.3</field>
+          </block>
+        </value>
+        <value name="PARTIAL4">
+          <block type="math_number" id="d~%kvQU![fU%EFq`0%Kd">
+            <field name="NUM">0.2</field>
+          </block>
+        </value>
+      </block>
+    </statement>
+  </block>
+  <block type="sb_instrument_container" id="ax.$c/-Yo^1;Mr68_K5G" x="10" y="370">
+    <field name="NAME">Bell</field>
+    <statement name="STACK">
+      <block type="sb_create_additive_synth" id="create_bell">
+        <mutation items="3"></mutation>
+        <field name="WAVE1">SINE</field>
+        <field name="RATIO1">1</field>
+        <field name="AMP1">0.8</field>
+        <field name="WAVE2">TRIANGLE</field>
+        <field name="RATIO2">2.76</field>
+        <field name="AMP2">0.4</field>
+        <field name="WAVE3">SQUARE</field>
+        <field name="RATIO3">5.4</field>
+        <field name="AMP3">0.2</field>
+      </block>
+    </statement>
+  </block>
+  <block type="processing_setup" id="setup" x="10" y="550">
+    <statement name="DO">
+      <block type="sb_minim_init" id="init_minim">
+        <next>
+          <block type="visual_stage_setup" id="super_stage">
+            <field name="W">1200</field>
+            <field name="H">400</field>
+            <field name="BG_COLOR">#000000</field>
+            <field name="FG_COLOR">#75fb4c</field>
+            <next>
+              <block type="sb_select_current_instrument" id="select_init">
+                <field name="NAME">Organ</field>
+              </block>
+            </next>
+          </block>
+        </next>
+      </block>
+    </statement>
+  </block>
+  <block type="midi_on_note" id="midi_on" x="10" y="750">
+    <field name="CHANNEL" id="E=mzf@D?z/WQM@0mehXU">channel</field>
+    <field name="PITCH" id="Zk=xeNwCzE{tu(j2*m1!">pitch</field>
+    <field name="VELOCITY" id="ffV/C}vmgi@Z39;_D{zX">velocity</field>
+    <statement name="DO">
+      <block type="sb_play_note" id="play">
+        <value name="PITCH">
+          <block type="variables_get" id="JsB_Hu^1!8Ss(}EZxYHj">
+            <field name="VAR" id="Zk=xeNwCzE{tu(j2*m1!">pitch</field>
+          </block>
+        </value>
+        <value name="VELOCITY">
+          <block type="variables_get" id="U7nyF[uOkH_`p9*Q$APc">
+            <field name="VAR" id="ffV/C}vmgi@Z39;_D{zX">velocity</field>
+          </block>
+        </value>
+      </block>
+    </statement>
+  </block>
+  <block type="midi_off_note" id="midi_off" x="10" y="930">
+    <field name="CHANNEL" id="E=mzf@D?z/WQM@0mehXU">channel</field>
+    <field name="PITCH" id="Zk=xeNwCzE{tu(j2*m1!">pitch</field>
+    <field name="VELOCITY" id="ffV/C}vmgi@Z39;_D{zX">velocity</field>
+    <statement name="DO">
+      <block type="sb_stop_note" id="stop">
+        <value name="PITCH">
+          <block type="variables_get" id="b|L|FyY#;J~o3SkJ)mdF">
+            <field name="VAR" id="Zk=xeNwCzE{tu(j2*m1!">pitch</field>
+          </block>
+        </value>
+      </block>
+    </statement>
+  </block>
+</xml>

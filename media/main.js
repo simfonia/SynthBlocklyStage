@@ -156,9 +156,20 @@ function updateStatusUI() {
     const label = document.getElementById('saveStatus');
     if (!label) return;
     
+    const projectName = document.getElementById('projectName');
+    const isExample = projectName && projectName.title && projectName.title.toLowerCase().includes('examples');
+
     if (!hasPath) {
         label.textContent = "○ New Project (unsaved!)";
         label.className = "status-label status-dirty";
+    } else if (isExample) {
+        if (isDirty) {
+            label.textContent = "● Example (Modified)";
+            label.className = "status-label status-dirty";
+        } else {
+            label.textContent = "✓ Example (Read Only)";
+            label.className = "status-label status-saved";
+        }
     } else if (isDirty) {
         label.textContent = "● Unsaved Changes";
         label.className = "status-label status-dirty";
@@ -246,8 +257,14 @@ async function init() {
     });
 
     let autoSaveTimeout = null;
-    const triggerAutoSave = () => {
-        if (autoSaveTimeout) clearTimeout(autoSaveTimeout);
+function triggerAutoSave() {
+    // Prevent auto-saving for examples
+    const projectName = document.getElementById('projectName');
+    if (projectName && projectName.title && projectName.title.toLowerCase().includes('examples')) {
+        return;
+    }
+    
+    if (autoSaveTimeout) clearTimeout(autoSaveTimeout);
         autoSaveTimeout = setTimeout(() => {
             const xml = Blockly.Xml.workspaceToDom(workspace);
             const xmlText = Blockly.Xml.domToPrettyText(xml);

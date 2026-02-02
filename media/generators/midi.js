@@ -52,4 +52,21 @@ void noteOff(int ${channelVar}, int ${pitchVar}, int ${velocityVar}) {
   return ''; 
 };
 
+Blockly.Processing.forBlock['midi_on_controller_change'] = function(block) {
+  const channelVar = "channel";
+  const numberVar = "number";
+  const valueVar = "value";
+  
+  const branch = Blockly.Processing.statementToCode(block, 'DO');
+  
+  const funcCode = `
+void controllerChange(int ${channelVar}, int ${numberVar}, int ${valueVar}) {
+  ${branch}
+}
+  `;
+  
+  Blockly.Processing.definitions_['midi_on_controller_change'] = funcCode;
+  return ''; 
+};
+
 

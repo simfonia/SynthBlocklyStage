@@ -23,6 +23,7 @@
         - `audio.js`, `live_show.js`, `serial.js`, `visual.js`, `midi.js`, `structure.js`, `ui.js`, `math.js`, `text.js`, `lists.js`, `variables.js`, `functions.js`, `tools.js`
 - `examples/`: XML 範例專案庫
     - `data/`: 全域共享音訊樣本與資源。
+    - `ex_03_Rock/`: 展示爵士鼓取樣器與 16 步進節奏序列。
     - `08_Serial_KICK/`, `09_wah-wah/` ... 各式功能範例。
 - `log/`: 開發紀錄
     - `todo.md`: 任務進度清單。

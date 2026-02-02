@@ -50,5 +50,21 @@ Blockly.defineBlocksWithJsonArray([
     "colour": "#5B67E7",
     "tooltip": "%{BKY_MIDI_OFF_NOTE_TOOLTIP}",
     "hat": true
+  },
+  {
+    "type": "midi_on_controller_change",
+    "message0": "當收到 MIDI CC 控制訊號 %1 %2 頻道 %3 號碼 %4 數值 %5 %6 %7",
+    "args0": [
+      { "type": "input_dummy" },
+      { "type": "input_dummy" },
+      { "type": "field_variable", "name": "CHANNEL", "variable": "channel" },
+      { "type": "field_variable", "name": "NUMBER", "variable": "number" },
+      { "type": "field_variable", "name": "VALUE", "variable": "value" },
+      { "type": "input_dummy" },
+      { "type": "input_statement", "name": "DO" }
+    ],
+    "colour": "#5B67E7",
+    "tooltip": "監聽 MIDI 控制器變更 (Control Change, CC)",
+    "hat": true
   }
 ]);

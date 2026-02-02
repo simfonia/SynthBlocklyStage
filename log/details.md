@@ -72,3 +72,7 @@
 - **問題**：Windows 鍵盤長按會連續發送 `keyPressed` 事件，導致聲音不斷 Restart。
 - **方案**：使用 `HashSet<Integer> pcKeysHeld`。在 `keyPressed` 時檢查 `if (!contains(p))` 才觸發發聲；在 `keyReleased` 時移除。這確保了長按按鍵時聲音能正確進入 Sustain 階段。
 
+# 2026-02-02 技術細節
+- **Minim 初始化陷阱**：在 setup() 中呼叫 delay() 會卡死音訊執行緒，導致預備拍無聲。必須在獨立執行緒中處理，並在啟動前加入少量 sleep。
+- **旗標同步順序**：isCountingIn = true 必須在 setup() 的主流程中立即執行，若在執行緒內部設定，其他執行緒可能因為競爭條件 (Race Condition) 而搶先開始。
+- **音訊觸發時間**：adsr.noteOn() 與 noteOff() 中間必須有實質的 sleep (如 50ms)，否則音訊緩衝區來不及反應。
