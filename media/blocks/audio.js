@@ -142,6 +142,67 @@ const ADDITIVE_SYNTH_MUTATOR = {
   }
 };
 
+const DRUM_SAMPLER_MUTATOR = {
+  mutationToDom: function() {
+    const container = Blockly.utils.xml.createElement('mutation');
+    container.setAttribute('type', this.getFieldValue('PATH') || 'Kick');
+    return container;
+  },
+  domToMutation: function(xmlElement) {
+    this.updateShape_(xmlElement.getAttribute('type') || 'Kick');
+  },
+  updateShape_: function(type) {
+    const inputExists = this.getInput('CUSTOM_PATH');
+    if (type === 'CUSTOM') {
+      if (!inputExists) {
+        this.appendDummyInput('CUSTOM_PATH')
+            .appendField(Blockly.Msg['AUDIO_SAMPLER_PATH_FIELD'] || "路徑")
+            .appendField(new Blockly.FieldTextInput("drum/kick.wav"), "CUSTOM_PATH_VALUE");
+      }
+    } else {
+      if (inputExists) {
+        this.removeInput('CUSTOM_PATH');
+      }
+    }
+  }
+};
+
+const MELODIC_SAMPLER_MUTATOR = {
+  mutationToDom: function() {
+    const container = Blockly.utils.xml.createElement('mutation');
+    container.setAttribute('type', this.getFieldValue('TYPE') || 'PIANO');
+    return container;
+  },
+  domToMutation: function(xmlElement) {
+    this.updateShape_(xmlElement.getAttribute('type') || 'PIANO');
+  },
+  updateShape_: function(type) {
+    const inputExists = this.getInput('CUSTOM_PATH');
+    if (type === 'CUSTOM') {
+      if (!inputExists) {
+        this.appendDummyInput('CUSTOM_PATH')
+            .appendField(Blockly.Msg['AUDIO_SAMPLER_PATH_FIELD'] || "路徑")
+            .appendField(new Blockly.FieldTextInput("piano"), "CUSTOM_PATH_VALUE");
+      }
+    } else {
+      if (inputExists) {
+        this.removeInput('CUSTOM_PATH');
+      }
+    }
+  }
+};
+
+// Helper mixin to trigger updateShape on field change
+const SAMPLER_HELPER = {
+  onchange: function(e) {
+    if (!this.workspace || this.isInFlyout) return;
+    // Check if the change is on this block and is the source field
+    if (e.type === Blockly.Events.BLOCK_CHANGE && e.blockId === this.id && (e.name === 'PATH' || e.name === 'TYPE')) {
+      this.updateShape_(e.newValue);
+    }
+  }
+};
+
 // --- DYNAMIC DROPDOWN FOR INSTRUMENTS ---
 const getInstrumentDropdown = function() {
   const instrumentBlocks = Blockly.getMainWorkspace().getBlocksByType('sb_instrument_container');
@@ -217,36 +278,7 @@ Blockly.defineBlocksWithJsonArray([
     "nextStatement": null,
     "colour": "%{BKY_SOUND_SOURCES_HUE}",
     "tooltip": "初始化 Minim 音訊引擎（應放於 setup 最上方）。%{BKY_HELP_HINT}",
-    "helpUrl": window.docsBaseUri + "sound_sources_zh-hant.html"
-  },
-  {
-    "type": "sb_drum_sampler",
-    "message0": "打擊樂器取樣器 路徑 %1",
-    "args0": [
-      {
-        "type": "field_dropdown",
-        "name": "PATH",
-        "options": [
-          ["Kick", "drum/kick.wav"],
-          ["Snare", "drum/snare.wav"],
-          ["Hi-Hat (Closed)", "drum/ch.wav"],
-          ["Hi-Hat (Open)", "drum/oh.wav"],
-          ["Tom (High)", "drum/tom_hi.wav"],
-          ["Tom (Mid)", "drum/tom_mid.wav"],
-          ["Tom (Low)", "drum/tom_low.wav"],
-          ["Crash", "drum/crash.wav"],
-          ["Ride", "drum/ride.wav"],
-          ["Clap", "drum/clap.wav"],
-          ["Rimshot", "drum/rim.wav"],
-          ["Cowbell", "drum/cowbell.wav"],
-          ["CUSTOM...", "CUSTOM"]
-        ]
-      }
-    ],
-    "previousStatement": null,
-    "nextStatement": null,
-    "colour": "%{BKY_SOUND_SOURCES_HUE}",
-    "tooltip": "載入打擊樂器樣本檔案 (WAV/MP3/AIFF)"
+    "helpUrl": "sound_sources"
   },
   {
     "type": "sb_trigger_sample",
@@ -263,7 +295,8 @@ Blockly.defineBlocksWithJsonArray([
     "previousStatement": null,
     "nextStatement": null,
     "colour": "%{BKY_PERFORMANCE_HUE}",
-    "tooltip": "%{BKY_AUDIO_TRIGGER_SAMPLE_TOOLTIP}"
+    "tooltip": "%{BKY_AUDIO_TRIGGER_SAMPLE_TOOLTIP}%{BKY_HELP_HINT}",
+    "helpUrl": "sound_sources"
   },
   {
     "type": "sb_select_current_instrument",
@@ -279,6 +312,22 @@ Blockly.defineBlocksWithJsonArray([
     "nextStatement": null,
     "colour": "%{BKY_INSTRUMENT_CONTROL_HUE}",
     "tooltip": "%{BKY_AUDIO_SELECT_INSTRUMENT_TOOLTIP}"
+  },
+  {
+    "type": "sb_set_instrument_volume",
+    "message0": "%{BKY_AUDIO_SET_INSTRUMENT_VOLUME}",
+    "args0": [
+      {
+        "type": "field_dropdown",
+        "name": "NAME",
+        "options": getInstrumentDropdown
+      },
+      { "type": "input_value", "name": "VOLUME", "check": "Number" }
+    ],
+    "previousStatement": null,
+    "nextStatement": null,
+    "colour": "%{BKY_INSTRUMENT_CONTROL_HUE}",
+    "tooltip": "%{BKY_AUDIO_SET_INSTRUMENT_VOLUME_TOOLTIP}"
   },
   {
     "type": "sb_play_note",
@@ -323,7 +372,7 @@ Blockly.defineBlocksWithJsonArray([
     "nextStatement": null,
     "colour": "%{BKY_PERFORMANCE_HUE}",
     "tooltip": "%{BKY_AUDIO_PLAY_MELODY_TOOLTIP}%{BKY_HELP_HINT}",
-    "helpUrl": window.docsBaseUri + "melody_zh-hant.html"
+    "helpUrl": "melody"
   },
   {
     "type": "sb_rhythm_sequence",
@@ -407,7 +456,7 @@ Blockly.defineBlocksWithJsonArray([
       "nextStatement": null,
           "colour": "%{BKY_PERFORMANCE_HUE}",
           "tooltip": "定義一個自訂和弦名稱，可在旋律中使用。%{BKY_HELP_HINT}",
-          "helpUrl": window.docsBaseUri + "melody_zh-hant.html"
+          "helpUrl": "melody"
         },
         {
           "type": "sb_play_chord_by_name",
@@ -425,7 +474,7 @@ Blockly.defineBlocksWithJsonArray([
           "nextStatement": null,
           "colour": "%{BKY_PERFORMANCE_HUE}",
           "tooltip": "根據名稱演奏已定義的和弦。%{BKY_HELP_HINT}",
-          "helpUrl": window.docsBaseUri + "melody_zh-hant.html"
+          "helpUrl": "melody"
         },    // Custom Synths (Container Style - No Name)
     {
       "type": "sb_create_harmonic_synth",
@@ -435,7 +484,7 @@ Blockly.defineBlocksWithJsonArray([
           "colour": "%{BKY_SOUND_SOURCES_HUE}",
           "tooltip": "%{BKY_AUDIO_CREATE_HARMONIC_SYNTH_TOOLTIP}%{BKY_HELP_HINT}",
           "mutator": "harmonic_mutator",
-          "helpUrl": window.docsBaseUri + "custom_synth_zh-hant.html"
+          "helpUrl": "custom_synth"
         },
         {
           "type": "sb_create_additive_synth",
@@ -445,7 +494,7 @@ Blockly.defineBlocksWithJsonArray([
           "colour": "%{BKY_SOUND_SOURCES_HUE}",
           "tooltip": "%{BKY_AUDIO_CREATE_ADDITIVE_SYNTH_TOOLTIP}%{BKY_HELP_HINT}",
           "mutator": "additive_mutator",
-          "helpUrl": window.docsBaseUri + "custom_synth_zh-hant.html"
+          "helpUrl": "custom_synth"
         },
   {
     "type": "sb_audio_is_playing",
@@ -464,9 +513,77 @@ Blockly.defineBlocksWithJsonArray([
   }
 ]);
 
+// --- MANUAL BLOCK EXTENSIONS ---
+
+Blockly.Blocks['sb_drum_sampler'] = {
+  init: function() {
+    this.jsonInit({
+      "type": "sb_drum_sampler",
+      "message0": "%{BKY_AUDIO_CREATE_DRUM_SAMPLER}",
+      "args0": [
+        {
+          "type": "field_dropdown",
+          "name": "PATH",
+          "options": [
+            ["Kick", "drum/kick.wav"],
+            ["Snare", "drum/snare.wav"],
+            ["Rimshot", "drum/rim.wav"],
+            ["Hi-Hat (Closed)", "drum/ch.wav"],
+            ["Hi-Hat (Open)", "drum/oh.wav"],
+            ["Tom (High)", "drum/tom_hi.wav"],
+            ["Tom (Mid)", "drum/tom_mid.wav"],
+            ["Tom (Low)", "drum/tom_low.wav"],
+            ["Crash", "drum/crash.wav"],
+            ["Ride", "drum/ride.wav"],
+            ["Clap", "drum/clap.wav"],
+            ["%{BKY_AUDIO_SAMPLER_CUSTOM}", "CUSTOM"]
+          ]
+        }
+      ],
+      "previousStatement": null,
+      "nextStatement": null,
+      "colour": "%{BKY_SOUND_SOURCES_HUE}",
+      "tooltip": "%{BKY_AUDIO_DRUM_SAMPLER_TOOLTIP}%{BKY_HELP_HINT}",
+      "helpUrl": "sound_sources",
+      "mutator": "drum_sampler_mutator"
+    });
+  }
+};
+Object.assign(Blockly.Blocks['sb_drum_sampler'], SAMPLER_HELPER);
+
+Blockly.Blocks['sb_melodic_sampler'] = {
+  init: function() {
+    this.jsonInit({
+      "type": "sb_melodic_sampler",
+      "message0": "%{BKY_AUDIO_CREATE_MELODIC_SAMPLER}",
+      "args0": [
+        {
+          "type": "field_dropdown",
+          "name": "TYPE",
+          "options": [
+            ["%{BKY_AUDIO_MELODIC_SAMPLER_PIANO}", "PIANO"],
+            ["%{BKY_AUDIO_MELODIC_SAMPLER_VIOLIN_PIZZ}", "VIOLIN_PIZZ"],
+            ["%{BKY_AUDIO_MELODIC_SAMPLER_VIOLIN_ARCO}", "VIOLIN_ARCO"],
+            ["%{BKY_AUDIO_SAMPLER_CUSTOM}", "CUSTOM"]
+          ]
+        }
+      ],
+      "previousStatement": null,
+      "nextStatement": null,
+      "colour": "%{BKY_SOUND_SOURCES_HUE}",
+      "tooltip": "%{BKY_AUDIO_MELODIC_SAMPLER_TOOLTIP}%{BKY_HELP_HINT}",
+      "helpUrl": "sound_sources",
+      "mutator": "melodic_sampler_mutator"
+    });
+  }
+};
+Object.assign(Blockly.Blocks['sb_melodic_sampler'], SAMPLER_HELPER);
+
 // Register Mutators
 Blockly.Extensions.registerMutator('harmonic_mutator', HARMONIC_PARTIALS_MUTATOR, undefined, ['sb_harmonic_partial_item']);
 Blockly.Extensions.registerMutator('additive_mutator', ADDITIVE_SYNTH_MUTATOR, undefined, ['sb_additive_synth_item']);
+Blockly.Extensions.registerMutator('melodic_sampler_mutator', MELODIC_SAMPLER_MUTATOR, undefined);
+Blockly.Extensions.registerMutator('drum_sampler_mutator', DRUM_SAMPLER_MUTATOR, undefined);
 
 
 // --- INSTRUMENT CONTAINER SYSTEM ---
@@ -481,6 +598,35 @@ Blockly.Blocks['sb_instrument_container'] = {
     this.setColour(Blockly.Msg['SOUND_SOURCES_HUE'] || "#E74C3C"); // Audio color
     this.setTooltip(Blockly.Msg['SB_INSTRUMENT_CONTAINER_TOOLTIP']);
     this.setHelpUrl("");
+  },
+  onchange: function() {
+    if (!this.workspace || this.isInFlyout) return;
+    
+    // 定義所有被視為「音源」的積木類型
+    const sourceTypes = [
+      'sb_set_wave', 
+      'sb_melodic_sampler', 
+      'sb_drum_sampler', 
+      'sb_create_harmonic_synth', 
+      'sb_create_additive_synth'
+    ];
+
+    // 取得所有啟用的子積木
+    const descendants = this.getDescendants(false);
+    const sources = descendants.filter(b => sourceTypes.includes(b.type) && b.isEnabled());
+
+    const svg = this.getSvgRoot();
+    if (sources.length > 1) {
+      this.setWarningText(Blockly.Msg['SB_INSTRUMENT_CONTAINER_MULTI_SOURCE_WARN']);
+      if (svg) {
+        svg.classList.add('blockly-conflict-glow');
+      }
+    } else {
+      this.setWarningText(null);
+      if (svg) {
+        svg.classList.remove('blockly-conflict-glow');
+      }
+    }
   }
 };
 
@@ -504,6 +650,29 @@ Blockly.Blocks['sb_set_adsr'] = {
     this.setNextStatement(true, null);
     this.setColour(Blockly.Msg['SOUND_SOURCES_HUE'] || "#E74C3C");
     this.setTooltip(Blockly.Msg['SB_SET_ADSR_TOOLTIP']);
+  },
+  onchange: function() {
+    if (!this.workspace || this.isInFlyout) return;
+    
+    // 尋找所屬的容器
+    let parent = this.getParent();
+    while (parent && parent.type !== 'sb_instrument_container') {
+      parent = parent.getParent();
+    }
+
+    if (parent) {
+      // 檢查容器內是否有「啟用中」的旋律取樣器
+      const hasEnabledSampler = parent.getDescendants(false).some(b => 
+        b.type === 'sb_melodic_sampler' && b.isEnabled()
+      );
+      if (hasEnabledSampler) {
+        this.setWarningText(Blockly.Msg['SB_SET_ADSR_SAMPLER_WARN']);
+      } else {
+        this.setWarningText(null);
+      }
+    } else {
+      this.setWarningText(null);
+    }
   }
 };
 
@@ -513,8 +682,8 @@ Blockly.Blocks['sb_set_wave'] = {
         .appendField(Blockly.Msg['SB_SET_WAVE_MESSAGE'])
         .appendField(new Blockly.FieldDropdown([
           ["Sine", "SINE"], 
-          ["Square", "SQUARE"], 
-          ["Triangle", "TRIANGLE"], 
+          ["Square", "SQUARE"],
+          ["Triangle", "TRIANGLE"],
           ["Sawtooth", "SAW"]
         ]), "TYPE");
     this.setPreviousStatement(true, null);

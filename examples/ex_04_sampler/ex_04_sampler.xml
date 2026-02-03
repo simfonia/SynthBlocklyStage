@@ -1,5 +1,8 @@
 <xml xmlns="https://developers.google.com/blockly/xml">
-  <block type="processing_setup" id="Jv3-%AxQrgzq^8;pwwhH" x="10" y="10">
+  <block type="sb_comment" id="f@L)!ssPW$J-,Ap%;3ac" x="10" y="10">
+    <field name="TEXT">此範例展示如何使用真實樂器的音色&amp;#10;&amp;#10;請切換Lead樂器中的音源，&amp;#10;體驗合成器與取樣器的不同感受。&amp;#10;旋律取樣器只對ADSR中的R有效。</field>
+  </block>
+  <block type="processing_setup" id="Jv3-%AxQrgzq^8;pwwhH" x="10" y="150">
     <statement name="DO">
       <block type="sb_minim_init" id="ghU*B?rx;#9Zledm}-~y">
         <next>
@@ -22,23 +25,74 @@
       </block>
     </statement>
   </block>
-  <block type="sb_instrument_container" id="gJqsx!(m0h~j=*#b?S41" x="10" y="210">
-    <field name="NAME">Synth</field>
+  <block type="sb_instrument_container" id="gJqsx!(m0h~j=*#b?S41" x="10" y="350">
+    <field name="NAME">Lead</field>
     <statement name="STACK">
-      <block type="sb_set_wave" id="raz9lPhjpD+};Ok}|~z:">
-        <field name="TYPE">SQUARE</field>
+      <block type="sb_set_wave" id="Z0|[Q7}FkYoeF1LtS|Xu" disabled-reasons="MANUALLY_DISABLED">
+        <field name="TYPE">SINE</field>
+        <next>
+          <block type="sb_melodic_sampler" id="D)VzN4RFQxp,Fs^WGonV">
+            <mutation type="PIANO"></mutation>
+            <field name="TYPE">PIANO</field>
+            <next>
+              <block type="sb_set_adsr" id="Lm|eJGD-`!-zML)zLi1J" disabled-reasons="MANUALLY_DISABLED">
+                <value name="A">
+                  <shadow type="math_number" id="P=yln5lv,(#,Ay!]o(Ka">
+                    <field name="NUM">0.01</field>
+                  </shadow>
+                </value>
+                <value name="D">
+                  <shadow type="math_number" id="T]up-%h{#6t(nit@9mf3">
+                    <field name="NUM">0.1</field>
+                  </shadow>
+                </value>
+                <value name="S">
+                  <shadow type="math_number" id="q{N(dF%qZZ4Frn$CeWd]">
+                    <field name="NUM">0.5</field>
+                  </shadow>
+                </value>
+                <value name="R">
+                  <shadow type="math_number" id="_!WU49d$M?6UGhxt+HxJ">
+                    <field name="NUM">0.5</field>
+                  </shadow>
+                </value>
+                <next>
+                  <block type="sb_set_instrument_volume" id="YQZbVNaU.fKo{e%URegt">
+                    <field name="NAME">Lead</field>
+                    <value name="VOLUME">
+                      <shadow type="math_number" id="4bejf^A-1@K^FWviDXeO">
+                        <field name="NUM">100</field>
+                      </shadow>
+                    </value>
+                  </block>
+                </next>
+              </block>
+            </next>
+          </block>
+        </next>
       </block>
     </statement>
   </block>
-  <block type="sb_instrument_container" id="9/}qj8c]i{(O:/3I[.{Q" x="10" y="310">
+  <block type="sb_instrument_container" id="9/}qj8c]i{(O:/3I[.{Q" x="10" y="650">
     <field name="NAME">clap</field>
     <statement name="STACK">
       <block type="sb_drum_sampler" id="oQDX:AbZ4}?N]U##N[bt">
+        <mutation type="drum/clap.wav"></mutation>
         <field name="PATH">drum/clap.wav</field>
+        <next>
+          <block type="sb_set_instrument_volume" id="+Ar^CPsmB3ro+gqeqY/L">
+            <field name="NAME">clap</field>
+            <value name="VOLUME">
+              <shadow type="math_number" id="+(QpLOUj,QL0h}.gX$x-">
+                <field name="NUM">90</field>
+              </shadow>
+            </value>
+          </block>
+        </next>
       </block>
     </statement>
   </block>
-  <block type="sb_perform" id="iL(;3l#n91x{%S3sTJ:%" x="10" y="410">
+  <block type="sb_perform" id="iL(;3l#n91x{%S3sTJ:%" x="10" y="770">
     <statement name="DO">
       <block type="controls_repeat_ext" id="p!)^EM,m9U2MMwCB:H1`">
         <value name="TIMES">
@@ -48,7 +102,7 @@
         </value>
         <statement name="DO">
           <block type="sb_trigger_sample" id="M4L6gvddaYDOPrtW6$ga">
-            <field name="NAME">Synth</field>
+            <field name="NAME">Lead</field>
             <field name="NOTE">G5Q</field>
             <value name="VELOCITY">
               <shadow type="math_number" id="cxc,GOeMtbOwB(VWQX,)">
@@ -57,7 +111,7 @@
             </value>
             <next>
               <block type="sb_trigger_sample" id="#V3dj~,q1f*KWa)whm[J">
-                <field name="NAME">Synth</field>
+                <field name="NAME">Lead</field>
                 <field name="NOTE">E5Q</field>
                 <value name="VELOCITY">
                   <shadow type="math_number" id="Ytm.{wYdq7r26f%PU$#?">
@@ -66,7 +120,7 @@
                 </value>
                 <next>
                   <block type="sb_trigger_sample" id="Q$Ms(8tG-jP![^oWWcmB">
-                    <field name="NAME">Synth</field>
+                    <field name="NAME">Lead</field>
                     <field name="NOTE">E5Q</field>
                     <value name="VELOCITY">
                       <shadow type="math_number" id="nS7YWqSPKE1|dHVeZQ[V">
@@ -99,7 +153,7 @@
             </value>
             <statement name="DO">
               <block type="sb_trigger_sample" id="plXn`j=JF.e/;HuwBPLq">
-                <field name="NAME">Synth</field>
+                <field name="NAME">Lead</field>
                 <field name="NOTE">F5Q</field>
                 <value name="VELOCITY">
                   <shadow type="math_number" id="uN7[#QlV[{fLP9WDl28.">
@@ -108,7 +162,7 @@
                 </value>
                 <next>
                   <block type="sb_trigger_sample" id="zeGPsn0Yk6Z6iv/Q$)o#">
-                    <field name="NAME">Synth</field>
+                    <field name="NAME">Lead</field>
                     <field name="NOTE">D5Q</field>
                     <value name="VELOCITY">
                       <shadow type="math_number" id="3ZUXHg$8Rj%[Xp?M?_k6">
@@ -117,7 +171,7 @@
                     </value>
                     <next>
                       <block type="sb_trigger_sample" id="yvoM}$u%Pe.r$(n]`]b#">
-                        <field name="NAME">Synth</field>
+                        <field name="NAME">Lead</field>
                         <field name="NOTE">D5Q</field>
                         <value name="VELOCITY">
                           <shadow type="math_number" id="4;@LCoGDOM=Zs}-(ukY]">
@@ -146,7 +200,7 @@
       </block>
     </statement>
   </block>
-  <block type="sb_perform" id="Ky0,:V3q%$rAxVV,g2r5" x="10" y="770">
+  <block type="sb_perform" id="Ky0,:V3q%$rAxVV,g2r5" x="10" y="1130">
     <statement name="DO">
       <block type="controls_repeat_ext" id="4Ve(#,jes:Rj9E5z[~bT">
         <value name="TIMES">
@@ -156,7 +210,7 @@
         </value>
         <statement name="DO">
           <block type="sb_trigger_sample" id="b2:M!d95]J=mGwiDrXjS">
-            <field name="NAME">Synth</field>
+            <field name="NAME">Lead</field>
             <field name="NOTE">C3E</field>
             <value name="VELOCITY">
               <shadow type="math_number" id="AUAx153n%2!|T2LpD*i+">
@@ -165,7 +219,7 @@
             </value>
             <next>
               <block type="sb_trigger_sample" id="-+Ljd-d@.u0Zi2Qk%J(C">
-                <field name="NAME">Synth</field>
+                <field name="NAME">Lead</field>
                 <field name="NOTE">G3E</field>
                 <value name="VELOCITY">
                   <shadow type="math_number" id="F8rr3gc.x|-.G56`3+]U">
@@ -174,7 +228,7 @@
                 </value>
                 <next>
                   <block type="sb_trigger_sample" id="=VHi!rHSn0SfAGw5Tn]~">
-                    <field name="NAME">Synth</field>
+                    <field name="NAME">Lead</field>
                     <field name="NOTE">E3E</field>
                     <value name="VELOCITY">
                       <shadow type="math_number" id="|+PPVMftZ=FB4K_(Ov;F">
@@ -183,7 +237,7 @@
                     </value>
                     <next>
                       <block type="sb_trigger_sample" id="Yd_1Zf9a%~AJ9bnp_zLc">
-                        <field name="NAME">Synth</field>
+                        <field name="NAME">Lead</field>
                         <field name="NOTE">G3E</field>
                         <value name="VELOCITY">
                           <shadow type="math_number" id="~bKFu$u?tMGbg+tsQ5*;">
@@ -207,7 +261,7 @@
             </value>
             <statement name="DO">
               <block type="sb_trigger_sample" id="@v9dqiDPfSSd:eMW%;{;">
-                <field name="NAME">Synth</field>
+                <field name="NAME">Lead</field>
                 <field name="NOTE">D3E</field>
                 <value name="VELOCITY">
                   <shadow type="math_number" id="c`-RX!T(L{kja=ow6-tk">
@@ -216,7 +270,7 @@
                 </value>
                 <next>
                   <block type="sb_trigger_sample" id=".g-H4I0c=pGq;GpgZXm3">
-                    <field name="NAME">Synth</field>
+                    <field name="NAME">Lead</field>
                     <field name="NOTE">G3E</field>
                     <value name="VELOCITY">
                       <shadow type="math_number" id=":ckW/5ZW`TND.h~}};~3">
@@ -225,7 +279,7 @@
                     </value>
                     <next>
                       <block type="sb_trigger_sample" id="{uD3d1#-b:L3]h+bYGn%">
-                        <field name="NAME">Synth</field>
+                        <field name="NAME">Lead</field>
                         <field name="NOTE">F3E</field>
                         <value name="VELOCITY">
                           <shadow type="math_number" id="}F92MR3}tHIvslv|Yr4L">
@@ -234,7 +288,7 @@
                         </value>
                         <next>
                           <block type="sb_trigger_sample" id="hLqgehCR3{*{T5Mhm76m">
-                            <field name="NAME">Synth</field>
+                            <field name="NAME">Lead</field>
                             <field name="NOTE">G3E</field>
                             <value name="VELOCITY">
                               <shadow type="math_number" id="~H7*N.Ex-G`$$vOwYk[V">
@@ -254,7 +308,7 @@
       </block>
     </statement>
   </block>
-  <block type="processing_draw" id="V,WL;(TDQH:RR{oR2?hO" x="10" y="1130">
+  <block type="processing_draw" id="V,WL;(TDQH:RR{oR2?hO" x="10" y="1490">
     <statement name="DO">
       <block type="controls_if" id="MsHB}p,0fW]esD5f1*S#">
         <value name="IF0">

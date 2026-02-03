@@ -4,34 +4,93 @@
     <meta charset="UTF-8">
     <title>Sound Source Blocks Guide</title>
     <style>
-        body { font-family: sans-serif; line-height: 1.6; padding: 20px; color: #333; }
+        body { font-family: sans-serif; line-height: 1.6; padding: 20px; color: #333; max-width: 900px; margin: 0 auto; }
         h1 { color: #E74C3C; border-bottom: 3px solid #E74C3C; padding-bottom: 10px; }
         h2 { color: #444; border-bottom: 2px solid #eee; padding-bottom: 5px; margin-top: 30px; }
-        .type-box { margin-bottom: 20px; padding: 15px; background: #fdf2f2; border-radius: 8px; border-left: 5px solid #E74C3C; }
+        .block-box { margin-bottom: 25px; padding: 15px; background: #fff5f5; border-radius: 8px; border-left: 5px solid #E74C3C; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        code { background: #eee; padding: 2px 4px; border-radius: 4px; font-family: 'Courier New', Courier, monospace; font-weight: bold; }
         .important { background-color: #fffbe6; border-left: 4px solid #ffc107; padding: 15px; margin: 15px 0; border-radius: 0 8px 8px 0; }
+        .tip { background-color: #e8f4fd; border-left: 4px solid #3498db; padding: 15px; margin: 15px 0; border-radius: 0 8px 8px 0; }
+        .custom-section { background-color: #f9f9f9; padding: 20px; border-radius: 10px; border: 1px dashed #ccc; margin-top: 40px; }
+        ul { padding-left: 25px; }
+        li { margin-bottom: 8px; }
     </style>
 </head>
 <body>
     <h1>Sound Source Creation</h1>
-    <p>Everything starts here. You can initialize the audio engine, load samples, or create custom synthesizers.</p>
+    <p>This is the laboratory of sound. In SynthBlockly Stage, all sounds must first be defined here and given an "Instrument Name" before they can be used in performance blocks.</p>
 
-    <div class="important">
-        <strong>Core Rule:</strong> You must place the "Init Minim Audio Engine" block (usually at the top of <code>setup</code>) before any other audio features can work.
-    </div>
-
-    <div class="type-box">
+    <div class="block-box">
         <h2>1. Init Minim Audio Engine</h2>
-        <p>Wakes up the underlying audio system. It prepares the <code>AudioOutput</code> for all sounds.</p>
+        <p><strong>The master switch for all audio features.</strong> Place this block at the very top of your <code>setup</code> block. It initializes the computer's sound card and prepares output channels.</p>
     </div>
 
-    <div class="type-box">
-        <h2>2. Load Audio Sample</h2>
-        <p>Loads a <code>.wav</code> or <code>.mp3</code> file from your project's <code>data/</code> folder into memory.</p>
+    <div class="block-box">
+        <h2>2. Define Instrument (Container)</h2>
+        <p>A <strong>Hat block</strong> used to encapsulate all settings for one instrument. You must set the "Name" (e.g., <code>MySynth</code>).</p>
+        <div class="important">
+            <strong>Note:</strong> A container can only have one sound source block (Waveform, Sampler, or Synth). If multiple are placed, the lower block will overwrite the previous ones.
+        </div>
     </div>
 
-    <div class="type-box">
-        <h2>3. Select Current Instrument</h2>
-        <p>Switch the active target for your performance. This block automatically detects all defined instruments in your workspace.</p>
+    <div class="block-box">
+        <h2>3. Set ADSR</h2>
+        <p>Controls the "energy shape" of the sound. Must be placed inside a container.</p>
+        <ul>
+            <li><strong>A (Attack)</strong>: Time taken for the sound to reach peak volume.</li>
+            <li><strong>D (Decay)</strong>: Time taken to drop from peak to sustain level.</li>
+            <li><strong>S (Sustain)</strong>: The volume level held while a key is pressed (0.0 ~ 1.0).</li>
+            <li><strong>R (Release)</strong>: Time taken for the sound to fade to silence after the key is released.</li>
+        </ul>
+    </div>
+
+    <div class="block-box">
+        <h2>4. Set Waveform</h2>
+        <p>Basic subtractive synthesis source. Supports <code>Sine</code>, <code>Square</code>, <code>Triangle</code>, and <code>Sawtooth</code>.</p>
+    </div>
+
+    <div class="block-box">
+        <h2>5. Harmonic/Additive Synths</h2>
+        <p>Create complex timbres by combining multiple frequency components.</p>
+        <ul>
+            <li><strong>Harmonic Synth</strong>: Set amplitudes for the fundamental and its overtones.</li>
+            <li><strong>Additive Synth</strong>: Customize waveforms, frequency ratios, and amplitudes for each component.</li>
+        </ul>
+    </div>
+
+    <div class="block-box">
+        <h2>6. Melodic Sampler</h2>
+        <p>Uses recordings of real instruments. The system automatically picks the closest sample and shifts its pitch based on the note played.</p>
+        <div class="important">
+            <strong>ADSR Limitation:</strong> To preserve the realistic "Attack" transients (like a piano strike), Samplers <strong>skip A, D, and S settings</strong> and only apply <strong>Release (R)</strong>.
+        </div>
+    </div>
+
+    <div class="block-box">
+        <h2>7. Drum Sampler</h2>
+        <p>Designed for drum kits and sound effects. These are "Fixed Pitch"—they play the raw sample regardless of the note played.</p>
+    </div>
+
+    <div class="custom-section">
+        <h2>Using Custom Samples</h2>
+        <p>To use your own sounds, place the files in the <code>data/</code> directory of your project folder.</p>
+
+        <h3>A. Custom Percussion</h3>
+        <p>Select <code>CUSTOM...</code> in the dropdown and enter the path relative to <code>data/</code>.</p>
+        <p>Example: File is at <code>data/sfx/boom.wav</code>, enter <code>sfx/boom.wav</code>.</p>
+
+        <h3>B. Custom Melodic Instruments</h3>
+        <p>Melodic samplers require a <strong>folder</strong> of samples for high-quality scaling. Create a folder and follow these rules:</p>
+        <ol>
+            <li><strong>Naming</strong>: Files must include the pitch name (e.g., <code>C4.mp3</code>, <code>Fs3.wav</code>).</li>
+            <li><strong>Auto-Recognition</strong>: The system parses pitch info from filenames automatically.</li>
+            <li><strong>Smart Filling</strong>: You don't need every semitone. If you have C4 and G4, playing E4 will automatically shift C4 up.</li>
+        </ol>
+        <p>Enter the folder name in the path field (e.g., <code>my_piano</code>).</p>
+    </div>
+
+    <div class="tip">
+        <strong>Tip:</strong> You can adjust ADSR or waveforms anytime; the stage reflects changes instantly. Glows or warning icons indicate conflicts (like duplicate names or too many sources).
     </div>
 </body>
 </html>

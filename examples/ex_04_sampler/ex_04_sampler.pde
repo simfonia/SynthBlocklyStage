@@ -18,8 +18,10 @@ AudioOutput out;
 ControlP5 cp5;
 FFT fft;
 HashMap<Integer, ADSR> activeNotes = new HashMap<Integer, ADSR>();
+HashMap<String, Float> instrumentVolumes = new HashMap<String, Float>();
 HashMap<String, Gain> samplerGainMap = new HashMap<String, Gain>();
 HashMap<String, List<SynthComponent>> additiveConfigs = new HashMap<String, List<SynthComponent>>();
+HashMap<String, MelodicSampler> melodicSamplers = new HashMap<String, MelodicSampler>();
 HashMap<String, Sampler> samplerMap = new HashMap<String, Sampler>();
 HashMap<String, String[]> chords = new HashMap<String, String[]>();
 HashMap<String, float[]> harmonicPartials = new HashMap<String, float[]>();
@@ -63,6 +65,66 @@ volatile boolean isCountingIn = false;
 
 int pitchTranspose = 0;
 
+  class MelodicSampler {
+    TreeMap<Integer, Sampler> samples = new TreeMap<Integer, Sampler>();
+    TreeMap<Integer, TickRate> rates = new TreeMap<Integer, TickRate>();
+    TreeMap<Integer, ADSR> adsrs = new TreeMap<Integer, ADSR>();
+    Summer mixer = new Summer();
+    Minim m;
+    
+    MelodicSampler(Minim minim) { 
+      this.m = minim; 
+      mixer.patch(out);
+    }
+    
+    void loadSamples(String folder) {
+      File dir = new File(dataPath(folder));
+      if (!dir.exists()) return;
+      File[] files = dir.listFiles();
+      if (files == null) return;
+      for (File f : files) {
+        String fullName = f.getName();
+        String upperName = fullName.toUpperCase();
+        if (upperName.endsWith(".MP3") || upperName.endsWith(".WAV")) {
+          String noteName = fullName.substring(0, fullName.lastIndexOf('.'));
+          int midi = noteToMidi(noteName);
+          if (midi >= 0) {
+            Sampler s = new Sampler(folder + "/" + fullName, 4, m);
+            TickRate tr = new TickRate(1.f);
+            ADSR a = new ADSR(1.0, 0.001f, 0.001f, 1.0f, 0.5f); // 預設 R=0.5
+            tr.setInterpolation(true);
+            s.patch(tr).patch(a).patch(mixer);
+            samples.put(midi, s);
+            rates.put(midi, tr);
+            adsrs.put(midi, a);
+          }
+        }
+      }
+    }
+    
+    ADSR trigger(int midi, float amp, float r) {
+      if (samples.isEmpty()) return null;
+      Integer closest = samples.floorKey(midi);
+      if (closest == null) closest = samples.ceilingKey(midi);
+      
+      Sampler src = samples.get(closest);
+      TickRate tr = rates.get(closest);
+      ADSR a = adsrs.get(closest);
+      
+      if (src != null && tr != null && a != null) {
+        float rate = (float)Math.pow(2.0, (midi - closest) / 12.0);
+        tr.value.setLastValue(rate);
+        
+        // 使用傳入的 amp 設定最大振幅
+        a.setParameters(amp, 0.001f, 0.001f, 1.0f, r, 0, 0);
+        a.noteOn();
+        src.trigger();
+        return a;
+      }
+      return null;
+    }
+  }
+
   class SynthComponent {
     String waveType; float ratio; float amp;
     SynthComponent(String w, float r, float a) { waveType = w; ratio = r; amp = a; }
@@ -104,14 +166,30 @@ int pitchTranspose = 0;
     if (p < 0) return;
     if (activeNotes.containsKey(p)) stopNoteInternal(p);
     
-    float masterAmp = map(vel, 0, 127, 0, 0.6f);
+    float masterAmp = map(vel, 0, 127, 0, 0.5f);
+    // 套用樂器個別音量 (預設為 1.0)
+    masterAmp *= instrumentVolumes.getOrDefault(currentInstrument, 1.0f);
+
+    String type = instrumentMap.getOrDefault(currentInstrument, "TRIANGLE");
+    if (type.equals("MELODIC_SAMPLER")) {
+      MelodicSampler ms = melodicSamplers.get(currentInstrument);
+      if (ms != null) {
+        // 將計算好的 masterAmp 傳給取樣器
+        ADSR adsr = ms.trigger(p, masterAmp, adsrR);
+        if (adsr != null) {
+          activeNotes.put(p, adsr);
+          adsrTimer = millis(); adsrState = 1;
+        }
+      }
+      return;
+    }
+    
     float baseFreq = mtof((float)p);
     
     // Use LIVE values from UI Sliders for active performance
     ADSR adsr = new ADSR(1.0, adsrA, adsrD, adsrS, adsrR);
     
     Summer mixer = new Summer(); 
-    String type = instrumentMap.getOrDefault(currentInstrument, "TRIANGLE");
     
     if (type.equals("HARMONIC")) {
       float[] partials = harmonicPartials.get(currentInstrument);
@@ -202,24 +280,11 @@ int pitchTranspose = 0;
     }
   }
 
-  class MelodyPlayer extends Thread {
-    String melody; String inst;
-    MelodyPlayer(String m, String i) { melody = m; inst = i; }
-    public void run() {
-      try { Thread.sleep(200); } catch(Exception e) {} // Wait for UI
-      synchronized(melodyLock) {
-        activeMelodyCount++;
-        String[] tokens = splitTokens(melody, ", \t\n\r");
-        for (String t : tokens) {
-          parseAndPlayNote(inst, t, 100);
-        }
-        activeMelodyCount--;
-      }
-    }
-  }
-
   void playMelodyInternal(String m, String i) {
-    new MelodyPlayer(m, i).start();
+    String[] tokens = splitTokens(m, ", \t\n\r");
+    for (String t : tokens) {
+      parseAndPlayNote(i, t, 100);
+    }
   }
 
   void parseAndPlayNote(String name, String token, float vel) {
@@ -248,9 +313,10 @@ int pitchTranspose = 0;
     
     if (noteName.length() > 0) {
       String type = instrumentMap.getOrDefault(name, "DRUM");
+      float volScale = instrumentVolumes.getOrDefault(name, 1.0f);
       if (type.equals("DRUM")) {
         if (!noteName.equalsIgnoreCase("R") && samplerMap.containsKey(name)) {
-          samplerGainMap.get(name).setValue(map(vel, 0, 127, -40, 0));
+          samplerGainMap.get(name).setValue(map(vel * volScale, 0, 127, -40, 0));
           samplerMap.get(name).trigger();
         }
       } else {
@@ -465,9 +531,14 @@ void setup() {
   cp5.addButton("clearLogs").setPosition(1500, 5).setSize(90, 25).setCaptionLabel("CLEAR LOG");
   logToScreen("System Initialized.", 0);
     bpm = (float)120;
-    if (!instrumentMap.containsKey("Synth")) instrumentMap.put("Synth", "TRIANGLE");
-  if (!instrumentADSR.containsKey("Synth")) instrumentADSR.put("Synth", new float[]{defAdsrA, defAdsrD, defAdsrS, defAdsrR});
-    instrumentMap.put("Synth", "SQUARE");
+    if (!instrumentMap.containsKey("Lead")) instrumentMap.put("Lead", "TRIANGLE");
+  if (!instrumentADSR.containsKey("Lead")) instrumentADSR.put("Lead", new float[]{defAdsrA, defAdsrD, defAdsrS, defAdsrR});
+    if (minim == null) { minim = new Minim(this); out = minim.getLineOut(); }
+    if (!melodicSamplers.containsKey("Lead")) melodicSamplers.put("Lead", new MelodicSampler(minim));
+    melodicSamplers.get("Lead").loadSamples("piano");
+    instrumentMap.put("Lead", "MELODIC_SAMPLER");
+    instrumentADSR.put("Lead", new float[]{defAdsrA, defAdsrD, defAdsrS, defAdsrR});
+    instrumentVolumes.put("Lead", (float)100 / 100.0f);
     if (!instrumentMap.containsKey("clap")) instrumentMap.put("clap", "TRIANGLE");
   if (!instrumentADSR.containsKey("clap")) instrumentADSR.put("clap", new float[]{defAdsrA, defAdsrD, defAdsrS, defAdsrR});
     if (minim == null) { minim = new Minim(this); out = minim.getLineOut(); }
@@ -476,6 +547,7 @@ void setup() {
     samplerMap.get("clap").patch(samplerGainMap.get("clap")).patch(out);
     instrumentMap.put("clap", "DRUM");
     instrumentADSR.put("clap", new float[]{defAdsrA, defAdsrD, defAdsrS, defAdsrR});
+    instrumentVolumes.put("clap", (float)90 / 100.0f);
     new Thread(new Runnable() {
       public void run() {
         activeMelodyCount++;
@@ -483,15 +555,15 @@ void setup() {
         int timeout = 0;
         while(isCountingIn && timeout < 500) { try { Thread.sleep(10); timeout++; } catch(Exception e) {} }
           for (int count = 0; count < 1; count++) {
-            parseAndPlayNote("Synth", "G5Q", (float)50);
-            parseAndPlayNote("Synth", "E5Q", (float)50);
-            parseAndPlayNote("Synth", "E5Q", (float)50);
+            parseAndPlayNote("Lead", "G5Q", (float)50);
+            parseAndPlayNote("Lead", "E5Q", (float)50);
+            parseAndPlayNote("Lead", "E5Q", (float)50);
             parseAndPlayNote("clap", "XQ", (float)100);
           }
           for (int count2 = 0; count2 < 1; count2++) {
-            parseAndPlayNote("Synth", "F5Q", (float)50);
-            parseAndPlayNote("Synth", "D5Q", (float)50);
-            parseAndPlayNote("Synth", "D5Q", (float)50);
+            parseAndPlayNote("Lead", "F5Q", (float)50);
+            parseAndPlayNote("Lead", "D5Q", (float)50);
+            parseAndPlayNote("Lead", "D5Q", (float)50);
             parseAndPlayNote("clap", "XQ", (float)100);
           }
         
@@ -505,16 +577,16 @@ void setup() {
         int timeout = 0;
         while(isCountingIn && timeout < 500) { try { Thread.sleep(10); timeout++; } catch(Exception e) {} }
           for (int count3 = 0; count3 < 2; count3++) {
-            parseAndPlayNote("Synth", "C3E", (float)80);
-            parseAndPlayNote("Synth", "G3E", (float)30);
-            parseAndPlayNote("Synth", "E3E", (float)30);
-            parseAndPlayNote("Synth", "G3E", (float)30);
+            parseAndPlayNote("Lead", "C3E", (float)80);
+            parseAndPlayNote("Lead", "G3E", (float)30);
+            parseAndPlayNote("Lead", "E3E", (float)30);
+            parseAndPlayNote("Lead", "G3E", (float)30);
           }
           for (int count4 = 0; count4 < 2; count4++) {
-            parseAndPlayNote("Synth", "D3E", (float)80);
-            parseAndPlayNote("Synth", "G3E", (float)30);
-            parseAndPlayNote("Synth", "F3E", (float)30);
-            parseAndPlayNote("Synth", "G3E", (float)30);
+            parseAndPlayNote("Lead", "D3E", (float)80);
+            parseAndPlayNote("Lead", "G3E", (float)30);
+            parseAndPlayNote("Lead", "F3E", (float)30);
+            parseAndPlayNote("Lead", "G3E", (float)30);
           }
         
         activeMelodyCount--;

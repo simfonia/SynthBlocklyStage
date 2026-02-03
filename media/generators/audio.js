@@ -20,6 +20,7 @@ Blockly.Processing.injectAudioCore = function() {
   Blockly.Processing.addImport("import java.util.LinkedHashMap;");
   g['instrumentMap'] = "LinkedHashMap<String, String> instrumentMap = new LinkedHashMap<String, String>();";
   g['instrumentADSR'] = "LinkedHashMap<String, float[]> instrumentADSR = new LinkedHashMap<String, float[]>();";
+  g['instrumentVolumes'] = "HashMap<String, Float> instrumentVolumes = new HashMap<String, Float>();";
   g['chords'] = "HashMap<String, String[]> chords = new HashMap<String, String[]>();";
   g['currentInstrument'] = 'String currentInstrument = "default";';
   g['lastInstrument'] = 'String lastInstrument = "";';
@@ -28,6 +29,7 @@ Blockly.Processing.injectAudioCore = function() {
   g['additiveConfigs'] = "HashMap<String, List<SynthComponent>> additiveConfigs = new HashMap<String, List<SynthComponent>>();";
   g['samplerMap'] = "HashMap<String, Sampler> samplerMap = new HashMap<String, Sampler>();";
   g['samplerGainMap'] = "HashMap<String, Gain> samplerGainMap = new HashMap<String, Gain>();";
+  g['melodicSamplers'] = "HashMap<String, MelodicSampler> melodicSamplers = new HashMap<String, MelodicSampler>();";
   g['activeMelodyCount'] = "int activeMelodyCount = 0;";
   g['melodyLock'] = "final Object melodyLock = new Object();";
   g['isCountingIn'] = "volatile boolean isCountingIn = false;";
@@ -44,6 +46,66 @@ Blockly.Processing.injectAudioCore = function() {
   // Core Classes and Methods
   Blockly.Processing.definitions_['AudioCore'] = `
   int pitchTranspose = 0;
+
+  class MelodicSampler {
+    TreeMap<Integer, Sampler> samples = new TreeMap<Integer, Sampler>();
+    TreeMap<Integer, TickRate> rates = new TreeMap<Integer, TickRate>();
+    TreeMap<Integer, ADSR> adsrs = new TreeMap<Integer, ADSR>();
+    Summer mixer = new Summer();
+    Minim m;
+    
+    MelodicSampler(Minim minim) { 
+      this.m = minim; 
+      mixer.patch(out);
+    }
+    
+    void loadSamples(String folder) {
+      File dir = new File(dataPath(folder));
+      if (!dir.exists()) return;
+      File[] files = dir.listFiles();
+      if (files == null) return;
+      for (File f : files) {
+        String fullName = f.getName();
+        String upperName = fullName.toUpperCase();
+        if (upperName.endsWith(".MP3") || upperName.endsWith(".WAV")) {
+          String noteName = fullName.substring(0, fullName.lastIndexOf('.'));
+          int midi = noteToMidi(noteName);
+          if (midi >= 0) {
+            Sampler s = new Sampler(folder + "/" + fullName, 4, m);
+            TickRate tr = new TickRate(1.f);
+            ADSR a = new ADSR(1.0, 0.001f, 0.001f, 1.0f, 0.5f); // 預設 R=0.5
+            tr.setInterpolation(true);
+            s.patch(tr).patch(a).patch(mixer);
+            samples.put(midi, s);
+            rates.put(midi, tr);
+            adsrs.put(midi, a);
+          }
+        }
+      }
+    }
+    
+    ADSR trigger(int midi, float amp, float r) {
+      if (samples.isEmpty()) return null;
+      Integer closest = samples.floorKey(midi);
+      if (closest == null) closest = samples.ceilingKey(midi);
+      
+      Sampler src = samples.get(closest);
+      TickRate tr = rates.get(closest);
+      ADSR a = adsrs.get(closest);
+      
+      if (src != null && tr != null && a != null) {
+        float rate = (float)Math.pow(2.0, (midi - closest) / 12.0);
+        tr.value.setLastValue(rate);
+        
+        // 使用傳入的 amp 設定最大振幅
+        a.setParameters(amp, 0.001f, 0.001f, 1.0f, r, 0, 0);
+        a.noteOn();
+        src.trigger();
+        return a;
+      }
+      return null;
+    }
+  }
 
   class SynthComponent {
     String waveType; float ratio; float amp;
@@ -86,14 +148,30 @@ Blockly.Processing.injectAudioCore = function() {
     if (p < 0) return;
     if (activeNotes.containsKey(p)) stopNoteInternal(p);
     
-    float masterAmp = map(vel, 0, 127, 0, 0.6f);
+    float masterAmp = map(vel, 0, 127, 0, 0.5f);
+    // 套用樂器個別音量 (預設為 1.0)
+    masterAmp *= instrumentVolumes.getOrDefault(currentInstrument, 1.0f);
+
+    String type = instrumentMap.getOrDefault(currentInstrument, "TRIANGLE");
+    if (type.equals("MELODIC_SAMPLER")) {
+      MelodicSampler ms = melodicSamplers.get(currentInstrument);
+      if (ms != null) {
+        // 將計算好的 masterAmp 傳給取樣器
+        ADSR adsr = ms.trigger(p, masterAmp, adsrR);
+        if (adsr != null) {
+          activeNotes.put(p, adsr);
+          adsrTimer = millis(); adsrState = 1;
+        }
+      }
+      return;
+    }
+    
     float baseFreq = mtof((float)p);
     
     // Use LIVE values from UI Sliders for active performance
     ADSR adsr = new ADSR(1.0, adsrA, adsrD, adsrS, adsrR);
     
     Summer mixer = new Summer(); 
-    String type = instrumentMap.getOrDefault(currentInstrument, "TRIANGLE");
     
     if (type.equals("HARMONIC")) {
       float[] partials = harmonicPartials.get(currentInstrument);
@@ -184,24 +262,11 @@ Blockly.Processing.injectAudioCore = function() {
     }
   }
 
-  class MelodyPlayer extends Thread {
-    String melody; String inst;
-    MelodyPlayer(String m, String i) { melody = m; inst = i; }
-    public void run() {
-      try { Thread.sleep(200); } catch(Exception e) {} // Wait for UI
-      synchronized(melodyLock) {
-        activeMelodyCount++;
-        String[] tokens = splitTokens(melody, ", \\t\\n\\r");
-        for (String t : tokens) {
-          parseAndPlayNote(inst, t, 100);
-        }
-        activeMelodyCount--;
-      }
-    }
-  }
-
   void playMelodyInternal(String m, String i) {
-    new MelodyPlayer(m, i).start();
+    String[] tokens = splitTokens(m, ", \\t\\n\\r");
+    for (String t : tokens) {
+      parseAndPlayNote(i, t, 100);
+    }
   }
 
   void parseAndPlayNote(String name, String token, float vel) {
@@ -230,9 +295,10 @@ Blockly.Processing.injectAudioCore = function() {
     
     if (noteName.length() > 0) {
       String type = instrumentMap.getOrDefault(name, "DRUM");
+      float volScale = instrumentVolumes.getOrDefault(name, 1.0f);
       if (type.equals("DRUM")) {
         if (!noteName.equalsIgnoreCase("R") && samplerMap.containsKey(name)) {
-          samplerGainMap.get(name).setValue(map(vel, 0, 127, -40, 0));
+          samplerGainMap.get(name).setValue(map(vel * volScale, 0, 127, -40, 0));
           samplerMap.get(name).trigger();
         }
       } else {
@@ -301,12 +367,34 @@ registerGenerator('sb_minim_init', function(block) {
 registerGenerator('sb_drum_sampler', function(block) {
   const name = Blockly.Processing.currentGenInstrumentName;
   if (!name) return '// sb_drum_sampler must be inside sb_instrument_container\n';
-  const path = block.getFieldValue('PATH');
+  
+  const type = block.getFieldValue('PATH');
+  const path = (type === 'CUSTOM') ? block.getFieldValue('CUSTOM_PATH_VALUE') : type;
+  
   let code = 'if (minim == null) { minim = new Minim(this); out = minim.getLineOut(); }\n';
   code += 'samplerMap.put("' + name + '", new Sampler("' + path + '", 4, minim));\n';
   code += 'samplerGainMap.put("' + name + '", new Gain(0.f));\n';
   code += 'samplerMap.get("' + name + '").patch(samplerGainMap.get("' + name + '")).patch(out);\n';
   code += 'instrumentMap.put("' + name + '", "DRUM");\n';
+  code += 'instrumentADSR.put("' + name + '", new float[]{defAdsrA, defAdsrD, defAdsrS, defAdsrR});\n';
+  return code;
+});
+
+registerGenerator('sb_melodic_sampler', function(block) {
+  const name = Blockly.Processing.currentGenInstrumentName;
+  if (!name) return '// sb_melodic_sampler must be inside sb_instrument_container\n';
+  
+  const type = block.getFieldValue('TYPE');
+  let path = "";
+  if (type === 'PIANO') path = "piano";
+  else if (type === 'VIOLIN_PIZZ') path = "violin/violin-section-pizzicato";
+  else if (type === 'VIOLIN_ARCO') path = "violin/violin-section-vibrato-sustain";
+  else path = block.getFieldValue('CUSTOM_PATH_VALUE');
+
+  let code = 'if (minim == null) { minim = new Minim(this); out = minim.getLineOut(); }\n';
+  code += 'if (!melodicSamplers.containsKey("' + name + '")) melodicSamplers.put("' + name + '", new MelodicSampler(minim));\n';
+  code += 'melodicSamplers.get("' + name + '").loadSamples("' + path + '");\n';
+  code += 'instrumentMap.put("' + name + '", "MELODIC_SAMPLER");\n';
   code += 'instrumentADSR.put("' + name + '", new float[]{defAdsrA, defAdsrD, defAdsrS, defAdsrR});\n';
   return code;
 });
@@ -354,6 +442,12 @@ registerGenerator('sb_create_additive_synth', function(block) {
 registerGenerator('sb_select_current_instrument', function(block) {
   const name = block.getFieldValue('NAME');
   return `currentInstrument = "${name}";\n`;
+});
+
+registerGenerator('sb_set_instrument_volume', function(block) {
+  const name = block.getFieldValue('NAME');
+  const volume = Blockly.Processing.valueToCode(block, 'VOLUME', Blockly.Processing.ORDER_ATOMIC) || '100';
+  return `instrumentVolumes.put("${name}", (float)${volume} / 100.0f);\n`;
 });
 
 registerGenerator('sb_play_note', function(block) {
@@ -414,14 +508,15 @@ registerGenerator('sb_rhythm_sequence', function(block) {
   code += '        if (nextToken.equals("-")) sustainSteps++;\n';
   code += '        else break;\n';
   code += '      }\n';
-  code += '      float noteDur = stepMs * sustainSteps;\n';
-  code += '      if (!token.equals("-")) {\n';
-  code += '        if (instrumentMap.getOrDefault("' + source + '", "").equals("DRUM")) {\n';
-  code += '          if (token.equalsIgnoreCase("x")) {\n';
-  code += '             samplerGainMap.get("' + source + '").setValue(map(' + velocity + ', 0, 127, -40, 0));\n';
-  code += '             samplerMap.get("' + source + '").trigger();\n';
-  code += '          }\n';
-  code += '        } else {\n';
+          code += '      float noteDur = stepMs * sustainSteps;\n';
+          code += '      if (!token.equals("-")) {\n';
+          code += '        if (instrumentMap.getOrDefault("' + source + '", "").equals("DRUM")) {\n';
+          code += '          if (token.equalsIgnoreCase("x")) {\n';
+          code += '             float volScale = instrumentVolumes.getOrDefault("' + source + '", 1.0f);\n';
+          code += '             samplerGainMap.get("' + source + '").setValue(map(' + velocity + ' * volScale, 0, 127, -40, 0));\n';
+          code += '             samplerMap.get("' + source + '").trigger();\n';
+          code += '          }\n';
+          code += '        } else {\n';  ;
   code += '          String oldInst = currentInstrument;\n';
   code += '          currentInstrument = "' + source + '";\n';
   code += '          if (' + isChordMode + ') {\n';

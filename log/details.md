@@ -76,3 +76,12 @@
 - **Minim 初始化陷阱**：在 setup() 中呼叫 delay() 會卡死音訊執行緒，導致預備拍無聲。必須在獨立執行緒中處理，並在啟動前加入少量 sleep。
 - **旗標同步順序**：isCountingIn = true 必須在 setup() 的主流程中立即執行，若在執行緒內部設定，其他執行緒可能因為競爭條件 (Race Condition) 而搶先開始。
 - **音訊觸發時間**：adsr.noteOn() 與 noteOff() 中間必須有實質的 sleep (如 50ms)，否則音訊緩衝區來不及反應。
+
+## 2026-02-03 技術細節
+- **Blockly Mutator 陷阱**：若定義了 \domToMutation\ 就必須同時定義 \mutationToDom\，否則註冊時會報錯。
+- **Minim TickRate API**：\TickRate\ UGen 沒有 \setTickRate\ 方法，必須使用 \	r.value.setLastValue(rate)\ 來改變播放速度。
+- **Minim ADSR API**：\ADSR\ 沒有 \setAmplitude\ 方法，最大振幅需在建構函式第一參數或 \setParameters\ 中設定。
+- **產生器 Key 覆寫 Bug**：在 \_core.js\ 中原本使用代碼第一行作為 Key，這會導致多個內容相似的帽子積木（如多個 Thread）互相覆寫。已改用遞增 ID (\setup_0\, \setup_1\...) 解決。
+- **取樣器 Transient 保護**：為了保留真實鋼琴/小提琴的「擊槌感」，取樣器應跳過 ADS 設定（固定為 0/0/1.0），僅將 R (Release) 開放給使用者控制。
+- **執行緒競爭 (Race Condition)**：\draw()\ 中的 \exit()\ 判斷必須配合 \FrameCount > 60\，以給予背景執行緒充足的啟動時間，避免在音樂還沒開始播時就誤判結束。
+

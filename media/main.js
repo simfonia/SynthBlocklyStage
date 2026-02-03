@@ -253,8 +253,25 @@ async function init() {
         grid: { spacing: 20, length: 3, colour: '#ccc', snap: true },
         zoom: { controls: true, wheel: true, startScale: 1.0 },
         move: { scrollbars: true, drag: true, wheel: true },
-        disable: true
+        disable: true,
+        sounds: false // Disable by default to prevent NotAllowedError
     });
+
+    // Enable sounds after first user interaction
+    const unlockSounds = () => {
+        if (workspace && workspace.options) {
+            // Attempt to set sounds in both common locations
+            workspace.options.showSounds = true;
+            if (workspace.options.parentOptions) {
+                workspace.options.parentOptions.sounds = true;
+            }
+            console.log('[Audio] Sounds unlocked after interaction');
+        }
+        document.removeEventListener('click', unlockSounds);
+        document.removeEventListener('keydown', unlockSounds);
+    };
+    document.addEventListener('click', unlockSounds);
+    document.addEventListener('keydown', unlockSounds);
 
     let autoSaveTimeout = null;
 function triggerAutoSave() {

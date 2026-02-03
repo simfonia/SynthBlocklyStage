@@ -4,57 +4,93 @@
     <meta charset="UTF-8">
     <title>音源建立積木說明</title>
     <style>
-        body { font-family: sans-serif; line-height: 1.6; padding: 20px; color: #333; }
+        body { font-family: sans-serif; line-height: 1.6; padding: 20px; color: #333; max-width: 900px; margin: 0 auto; }
         h1 { color: #E74C3C; border-bottom: 3px solid #E74C3C; padding-bottom: 10px; }
         h2 { color: #444; border-bottom: 2px solid #eee; padding-bottom: 5px; margin-top: 30px; }
-        .type-box { margin-bottom: 20px; padding: 15px; background: #fdf2f2; border-radius: 8px; border-left: 5px solid #E74C3C; }
-        code { background: #eee; padding: 2px 4px; border-radius: 4px; font-family: monospace; }
+        .block-box { margin-bottom: 25px; padding: 15px; background: #fff5f5; border-radius: 8px; border-left: 5px solid #E74C3C; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        code { background: #eee; padding: 2px 4px; border-radius: 4px; font-family: 'Courier New', Courier, monospace; font-weight: bold; }
         .important { background-color: #fffbe6; border-left: 4px solid #ffc107; padding: 15px; margin: 15px 0; border-radius: 0 8px 8px 0; }
-        ul { padding-left: 20px; }
+        .tip { background-color: #e8f4fd; border-left: 4px solid #3498db; padding: 15px; margin: 15px 0; border-radius: 0 8px 8px 0; }
+        .custom-section { background-color: #f9f9f9; padding: 20px; border-radius: 10px; border: 1px dashed #ccc; margin-top: 40px; }
+        ul { padding-left: 25px; }
+        li { margin-bottom: 8px; }
     </style>
 </head>
 <body>
-    <h1>音源建立積木說明</h1>
-    <p>在 SynthBlockly Stage 中，一切聲音的起點都在「音源建立」分類。你可以透過這些積木初始化音訊引擎、載入樣本或建立虛擬合成器。</p>
+    <h1>音源建立 (Sound Sources)</h1>
+    <p>這裡是聲音的實驗室。在 SynthBlockly Stage 中，所有的聲響都必須先在這裡定義並賦予「樂器名稱」，才能在演奏區塊中使用。</p>
 
-    <div class="important">
-        <strong>核心規則：</strong> 必須先放入「啟動 Minim 音訊引擎」積木（通常放在 <code>setup</code> 區塊的最上方），其他的音訊功能才能運作。
-    </div>
-
-    <div class="type-box">
+    <div class="block-box">
         <h2>1. 啟動 Minim 音訊引擎</h2>
-        <p><strong>功能</strong>：喚醒 Processing 的底層音訊系統。</p>
-        <p>這就像是幫音響接上電源。它會自動準備好 <code>AudioOutput</code>，讓所有的合成器與樣本能發出聲音。</p>
+        <p><strong>這是所有音訊功能的開關。</strong> 必須將此積木放置在 <code>setup</code> 區塊的最上方。它會負責初始化電腦的音效卡，準備好輸出通道。</p>
     </div>
 
-    <div class="type-box">
-        <h2>2. 載入音訊樣本 (Sampler)</h2>
-        <p><strong>功能</strong>：將 <code>.wav</code> 或 <code>.mp3</code> 檔案載入記憶體。</p>
+    <div class="block-box">
+        <h2>2. 定義樂器 (容器)</h2>
+        <p>這是一個<strong>帽子積木</strong>，用於封裝一個樂器的所有設定。你需要在此設定樂器的「名稱」（例如：<code>MyPiano</code>）。</p>
+        <div class="important">
+            <strong>注意：</strong>一個容器內只能放置一個音源積木（波形、取樣器或合成器）。若放置多個，後方的積木會覆寫前方的設定。
+        </div>
+    </div>
+
+    <div class="block-box">
+        <h2>3. 設定 ADSR</h2>
+        <p>控制聲音的「能量形狀」。必須放在「定義樂器」容器內。</p>
         <ul>
-            <li><strong>名稱</strong>：給這個聲音起個名字（如 "kick"）。</li>
-            <li><strong>檔案路徑</strong>：檔案必須放在專案資料夾下的 <code>data/</code> 目錄中。</li>
+            <li><strong>A (Attack)</strong>：起音時間。從靜音到最大聲所需的時間。</li>
+            <li><strong>D (Decay)</strong>：衰減時間。達到峰值後降至維持音量的時間。</li>
+            <li><strong>S (Sustain)</strong>：維持音量。按住琴鍵時保持的音量大小（0.0 ~ 1.0）。</li>
+            <li><strong>R (Release)</strong>：釋音時間。放開琴鍵後，聲音消失所需的時間。</li>
         </ul>
-        <p>載入後，你可以使用演奏分類中的「觸發音訊播放」積木來播放它。</p>
     </div>
 
-    <div class="type-box">
-        <h2>3. 建立自訂合成器</h2>
-        <p><strong>功能</strong>：透過諧波或加法合成定義音色。</p>
-        <p>這些積木必須放在「定義樂器」容器內。樂器在舞台上的切換順序會嚴格遵守積木在工作區<strong>從上到下</strong>的排列順序。</p>
+    <div class="block-box">
+        <h2>4. 設定波形</h2>
+        <p>最基礎的減法合成音源。支援 <code>弦波 (Sine)</code>、<code>方波 (Square)</code>、<code>三角波 (Triangle)</code>、<code>鋸齒波 (Saw)</code>。</p>
     </div>
 
-    <div class="type-box">
-        <h2>4. 選取目前演奏樂器</h2>
-        <p><strong>功能</strong>：切換發聲目標。</p>
-        <p>此積木現在具備<strong>動態感應</strong>功能，下拉選單會自動顯示你目前定義的所有樂器名稱，無需手動輸入。</p>
+    <div class="block-box">
+        <h2>5. 諧波/加法合成器</h2>
+        <p>透過多個頻率分量組合出複雜音色。</p>
+        <ul>
+            <li><strong>諧波合成器</strong>：設定基頻及其倍頻的振幅。</li>
+            <li><strong>加法合成器</strong>：可自訂每個組件的波形、頻率倍率與振幅。</li>
+        </ul>
     </div>
 
-    <h2>波形與聽感小知識</h2>
-    <ul>
-        <li><strong>弦波 (Sine)</strong>：最純淨、柔和，像笛聲。</li>
-        <li><strong>三角波 (Triangle)</strong>：溫暖且帶有少量泛音，適合做為大部分合成器的基礎。</li>
-        <li><strong>方波 (Square)</strong>：中空、帶鼻音，適合 8-bit 電玩音效。</li>
-        <li><strong>鋸齒波 (Saw)</strong>：銳利、明亮，穿透力最強，適合 Bass 或強力的主奏。</li>
-    </ul>
+    <div class="block-box">
+        <h2>6. 旋律樂器取樣器 (Melodic Sampler)</h2>
+        <p>使用真實樂器的錄音檔案作為音源。系統會根據演奏的音高自動選擇最接近的樣本並變調。</p>
+        <div class="important">
+            <strong>ADSR 限制：</strong> 為了保留真實取樣的擊弦/擦弦細節，取樣器會<strong>跳過 A、D、S 設定</strong>，僅套用 <strong>Release (R)</strong> 餘韻。
+        </div>
+    </div>
+
+    <div class="block-box">
+        <h2>7. 打擊樂器取樣器 (Drum Sampler)</h2>
+        <p>專為鼓組、音效設計。為「固定音高」，不論演奏什麼音名，皆播放原始樣本。建議配合步進音序器使用。</p>
+    </div>
+
+    <div class="custom-section">
+        <h2>如何使用自訂取樣檔？</h2>
+        <p>若要使用自己的聲音檔案，請將檔案放入專案資料夾內的 <code>data/</code> 目錄中。</p>
+
+        <h3>A. 自訂打擊樂器 (Percussion)</h3>
+        <p>在積木下拉選單選擇 <code>CUSTOM...</code>，並在路徑欄位輸入相對於 <code>data/</code> 的路徑。</p>
+        <p>範例：檔案放在 <code>data/sfx/boom.wav</code>，路徑請填寫 <code>sfx/boom.wav</code>。</p>
+
+        <h3>B. 自訂旋律樂器 (Melodic)</h3>
+        <p>旋律取樣器需要<strong>一整個資料夾</strong>的樣本來達成高品質的音階。請建立一個專屬資料夾，並遵循以下規則：</p>
+        <ol>
+            <li><strong>命名規則</strong>：檔案名稱必須包含音名（如 <code>C4.mp3</code>, <code>Fs3.wav</code>, <code>Ab5.mp3</code>）。</li>
+            <li><strong>自動識別</strong>：系統會解析檔名中的音高資訊。</li>
+            <li><strong>智慧填充</strong>：你不需要錄製每個半音。如果你只有 C4 與 G4，當你演奏 E4 時，系統會自動選取 C4 並調高音高來演奏。</li>
+        </ol>
+        <p>在積木路徑欄位輸入該資料夾名稱（例如：<code>my_piano</code>）。</p>
+    </div>
+
+    <div class="tip">
+        <strong>提示：</strong> 您可以隨時調整 ADSR 或波形積木，舞台會即時反映變化。如果積木出現光暈或警告圖標，代表設定有衝突（例如名稱重複或音源過多）。
+    </div>
 </body>
 </html>

@@ -2,32 +2,37 @@
 
 ## 核心目錄
 - `src/`: VS Code 擴充功能 TypeScript 原始碼
-    - `extension.ts`: 擴充功能進入點、Webview 管理、Processing 執行控制與資源掛載。
-    - `media/`: Webview 資源
-    - `main.js`: Blockly 初始化、按鍵衝突檢查、說明文件攔截與 VS Code 通訊。
-    - `module_loader.js`: 動態載入積木定義與產生器。
-    - `style.css`: 工具列、Webview 版面樣式、以及積木衝突發光效果。
-    - `zh-hant.js`, `en.js`: 多語系語句定義。
-    - `docs/`: 積木說明文件 (HTML 格式，支援主題色對齊與 i18n)。
-        - `sound_sources_zh-hant.html`, `sound_sources_en.html`
-        - `performance_zh-hant.html`, `performance_en.html`
-        - `melody_zh-hant.html`, `melody_en.html`
-        - `custom_synth_zh-hant.html`, `custom_synth_en.html`
-        - `visual_stage_zh-hant.html`, `visual_stage_en.html`
-    - `blockly/`: 第三方 Blockly 套件與插件 (如 field-multilineinput.js)。    - `icons/`: 介面圖示 (PNG 格式，支援 1F1F1F/FE2F89 顏色切換)。
-    - `samples/`: 系統內建音訊取樣庫 (包含 jazzkit, piano, violin, sound 等分類)。
+    - `extension.ts`: 進入點、Webview 管理、Processing 控制。
+- `media/`: Webview 前端資源
+    - `main.js`: Blockly 初始化、音訊解鎖、按鍵衝突偵測。
+    - `module_loader.js`: 動態載入積木。
+    - `style.css`: 介面樣式與光暈效果。
+    - `toolbox.xml`: 工具箱積木配置。
+    - `zh-hant.js`, `en.js`: 多語系定義。
+    - `blockly/`: Blockly 核心庫與插件 (field-colour, field-multilineinput)。
     - `blocks/`: 積木定義
-        - `audio.js`, `audio_custom.js`, `live_show.js`, `serial.js`, `visual.js`, `midi.js`, `structure.js`, `ui.js`, `math.js`, `text.js`, `lists.js`, `variables.js`, `tools.js`
+        - `audio.js`: 音源、演奏、取樣器、音量、ADSR。
+        - `structure.js`: 基礎框架、偵測幀數。
+        - `visual.js`: 繪圖積木、設定幀率。
+        - `serial.js`, `midi.js`, `ui.js`, `math.js`, `text.js`, `lists.js`, `tools.js`.
     - `generators/`: Processing (Java) 產生器
-        - `_core.js`: 核心架構、變數宣告、輔助函式以及鍵盤事件佔位符替換。
-        - `audio.js`, `live_show.js`, `serial.js`, `visual.js`, `midi.js`, `structure.js`, `ui.js`, `math.js`, `text.js`, `lists.js`, `variables.js`, `functions.js`, `tools.js`
-- `examples/`: XML 範例專案庫
-    - `data/`: 全域共享音訊樣本與資源。
-    - `ex_03_Rock/`: 展示爵士鼓取樣器與 16 步進節奏序列。
-    - `08_Serial_KICK/`, `09_wah-wah/` ... 各式功能範例。
-- `log/`: 開發紀錄
-    - `todo.md`: 任務進度清單。
-    - `work/`: 每日詳細開發日誌。
-- `.vscodeignore`: 打包設定檔，已排除大型執行環境以精簡體積。
-- `package.json`: 擴充功能配置與指令定義。
-- `README.md`: 使用者環境安裝與快速上手指南。
+        - `_core.js`: 核心產碼架構與事件佔位符。
+        - `audio.js`: 演奏引擎與 MelodicSampler 類別。
+        - `visual.js`, `serial.js`, `midi.js`, `functions.js`, `variables.js`.
+    - `docs/`: 積木說明文件 (HTML)
+        - `sound_sources_zh-hant.html`: 取樣器與 ADSR 說明。
+        - `performance_zh-hant.html`, `melody_zh-hant.html` 等。
+    - `samples/`: 音訊取樣庫
+        - `piano/`, `violin/`, `drum/`, `jazzkit/`, `sound/`, `test/`.
+    - `icons/`: 介面圖示資源。
+- `examples/`: XML 範例庫
+    - `ex_00_play/`, `ex_01_Melody_and_Chord/`, `ex_02_instrument/`, `ex_03_Rock/`, `ex_04_sampler/`.
+    - `08_Serial_KICK/`, `09_wah-wah/`, `ex_91_MIDI/`.
+- `log/`: 紀錄檔
+    - `work/`: 每日開發日誌 (如 2026-02-03.md)。
+    - `handover.md`: 任務交接。
+    - `details.md`: 技術踩坑紀錄。
+    - `todo.md`: 任務清單。
+- `backup/`: 重要檔案版本備份。
+- `package.json`: 擴充功能配置。
+- `README.md`: 專案說明文件。
