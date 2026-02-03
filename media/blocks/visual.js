@@ -212,6 +212,17 @@ Blockly.defineBlocksWithJsonArray([
     "tooltip": "%{BKY_VISUAL_PIXEL_DENSITY_TOOLTIP}"
   },
   {
+    "type": "visual_frame_rate",
+    "message0": "%{BKY_VISUAL_FRAME_RATE}",
+    "args0": [
+      { "type": "input_value", "name": "FPS", "check": "Number" }
+    ],
+    "previousStatement": null,
+    "nextStatement": null,
+    "colour": "#3498DB",
+    "tooltip": "%{BKY_VISUAL_FRAME_RATE_TOOLTIP}"
+  },
+  {
     "type": "visual_stage_set_color",
     "message0": "%{BKY_VISUAL_STAGE_SET_COLOR}",
     "args0": [

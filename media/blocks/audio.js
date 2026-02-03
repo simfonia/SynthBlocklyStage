@@ -153,7 +153,23 @@ const getInstrumentDropdown = function() {
     }
   }
   if (options.length === 0) {
-    options.push(['(無樂器)', 'none']);
+    options.push([Blockly.Msg['AUDIO_SELECT_INSTRUMENT_DROPDOWN'] || '(選取樂器)', 'none']);
+  }
+  return options;
+};
+
+// --- DYNAMIC DROPDOWN FOR CHORDS ---
+const getChordDropdown = function() {
+  const chordBlocks = Blockly.getMainWorkspace().getBlocksByType('sb_define_chord');
+  const options = [];
+  for (let block of chordBlocks) {
+    const name = block.getFieldValue('NAME');
+    if (name) {
+      options.push([name, name]);
+    }
+  }
+  if (options.length === 0) {
+    options.push([Blockly.Msg['AUDIO_SELECT_CHORD_DROPDOWN'] || '(選取和弦)', 'none']);
   }
   return options;
 };
@@ -234,15 +250,20 @@ Blockly.defineBlocksWithJsonArray([
   },
   {
     "type": "sb_trigger_sample",
-    "message0": "觸發音訊播放 %1 力度 %2",
+    "message0": "%{BKY_AUDIO_TRIGGER_SAMPLE}",
     "args0": [
-      { "type": "field_input", "name": "NAME", "text": "kick" },
+      {
+        "type": "field_dropdown",
+        "name": "NAME",
+        "options": getInstrumentDropdown
+      },
+      { "type": "field_input", "name": "NOTE", "text": "C4Q" },
       { "type": "input_value", "name": "VELOCITY", "check": "Number" }
     ],
     "previousStatement": null,
     "nextStatement": null,
-    "colour": "%{BKY_SOUND_SOURCES_HUE}",
-    "tooltip": "立即播放指定的音訊樣本一次。"
+    "colour": "%{BKY_PERFORMANCE_HUE}",
+    "tooltip": "%{BKY_AUDIO_TRIGGER_SAMPLE_TOOLTIP}"
   },
   {
     "type": "sb_select_current_instrument",
@@ -300,7 +321,7 @@ Blockly.defineBlocksWithJsonArray([
     ],
     "previousStatement": null,
     "nextStatement": null,
-    "colour": "#FF6F00",
+    "colour": "%{BKY_PERFORMANCE_HUE}",
     "tooltip": "%{BKY_AUDIO_PLAY_MELODY_TOOLTIP}%{BKY_HELP_HINT}",
     "helpUrl": window.docsBaseUri + "melody_zh-hant.html"
   },
@@ -309,7 +330,11 @@ Blockly.defineBlocksWithJsonArray([
     "message0": "%{BKY_AUDIO_RHYTHM_SEQUENCE}",
     "args0": [
       { "type": "input_dummy" },
-      { "type": "field_input", "name": "SOURCE", "text": "Kick" },
+      {
+        "type": "field_dropdown",
+        "name": "SOURCE",
+        "options": getInstrumentDropdown
+      },
       {
         "type": "field_dropdown",
         "name": "CHORD_MODE",
@@ -361,6 +386,16 @@ Blockly.defineBlocksWithJsonArray([
     "tooltip": "%{BKY_AUDIO_TONE_LOOP_TOOLTIP}",
     "hat": true
   },
+  {
+    "type": "sb_perform",
+    "message0": "%{BKY_AUDIO_PERFORM_ONCE}",
+    "args0": [
+      { "type": "input_statement", "name": "DO" }
+    ],
+    "colour": "%{BKY_PERFORMANCE_HUE}",
+    "tooltip": "%{BKY_AUDIO_PERFORM_ONCE_TOOLTIP}",
+    "hat": true
+  },
     {
       "type": "sb_define_chord",
       "message0": "%{BKY_AUDIO_DEFINE_CHORD}",
@@ -378,7 +413,11 @@ Blockly.defineBlocksWithJsonArray([
           "type": "sb_play_chord_by_name",
           "message0": "%{BKY_AUDIO_PLAY_CHORD_BY_NAME}",
           "args0": [
-            { "type": "field_input", "name": "NAME", "text": "CM7" },
+            {
+              "type": "field_dropdown",
+              "name": "NAME",
+              "options": getChordDropdown
+            },
             { "type": "field_input", "name": "DUR", "text": "4n" },
             { "type": "input_value", "name": "VELOCITY", "check": "Number" }
           ],
@@ -414,6 +453,14 @@ Blockly.defineBlocksWithJsonArray([
     "output": "Boolean",
     "colour": "%{BKY_PERFORMANCE_HUE}",
     "tooltip": "%{BKY_AUDIO_IS_PLAYING_TOOLTIP}"
+  },
+  {
+    "type": "sb_wait_until_finished",
+    "message0": "%{BKY_AUDIO_WAIT_UNTIL_FINISHED}",
+    "previousStatement": null,
+    "nextStatement": null,
+    "colour": "%{BKY_PERFORMANCE_HUE}",
+    "tooltip": "%{BKY_AUDIO_WAIT_UNTIL_FINISHED_TOOLTIP}"
   }
 ]);
 

@@ -230,7 +230,15 @@
         </block>
         <!-- 定義和弦 -->
         <block type="sb_define_chord"></block>
-        <!-- 演奏旋律 -->
+        <!-- 播放單音 -->
+        <block type="sb_trigger_sample">
+            <value name="VELOCITY">
+                <shadow type="math_number">
+                    <field name="NUM">100</field>
+                </shadow>
+            </value>
+        </block>
+        <!-- 播放旋律 -->
         <block type="sb_play_melody"></block>
         <!-- 演奏和弦 -->
         <block type="sb_play_chord_by_name">
@@ -240,35 +248,8 @@
                 </shadow>
             </value>
         </block>
-
-        <block type="sb_play_note">
-            <value name="PITCH">
-                <shadow type="variables_get">
-                    <field name="VAR">pitch</field>
-                </shadow>
-            </value>
-            <value name="VELOCITY">
-                <shadow type="math_number">
-                    <field name="NUM">100</field>
-                </shadow>
-            </value>
-        </block>
-
-        <block type="sb_stop_note">
-            <value name="PITCH">
-                <shadow type="variables_get">
-                    <field name="VAR">pitch</field>
-                </shadow>
-            </value>
-        </block>
-        <block type="sb_trigger_sample">
-            <value name="VELOCITY">
-                <shadow type="math_number">
-                    <field name="NUM">100</field>
-                </shadow>
-            </value>
-        </block>
         <block type="sb_audio_is_playing"></block>
+        <block type="sb_wait_until_finished"></block>
         <block type="sb_rhythm_sequence">
             <value name="MEASURE">
                 <shadow type="math_number">
@@ -282,6 +263,7 @@
             </value>
         </block>
         <block type="sb_tone_loop"></block>
+        <block type="sb_perform"></block>
     </category>
 
     <sep></sep>
@@ -289,6 +271,14 @@
     <!-- 12. Visuals (Drawing) -->
     <category name="%{BKY_CAT_VISUAL}" colour="%{BKY_VISUAL_HUE}">
         <block type="visual_color_picker"></block>
+        <block type="processing_frame_count"></block>
+        <block type="visual_frame_rate">
+            <value name="FPS">
+                <shadow type="math_number">
+                    <field name="NUM">60</field>
+                </shadow>
+            </value>
+        </block>
         <block type="visual_size"></block>
         <block type="visual_pixel_density"></block>
         <block type="visual_constant"></block>

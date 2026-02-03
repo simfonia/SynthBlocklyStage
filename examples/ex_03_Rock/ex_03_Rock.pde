@@ -206,109 +206,13 @@ int pitchTranspose = 0;
     String melody; String inst;
     MelodyPlayer(String m, String i) { melody = m; inst = i; }
     public void run() {
+      try { Thread.sleep(200); } catch(Exception e) {} // Wait for UI
       synchronized(melodyLock) {
         activeMelodyCount++;
-        String oldInst = currentInstrument;
-        if (inst != null && !inst.equals("")) currentInstrument = inst;
-        
-              // Split by comma, space, tab, or newline
-        
-              String[] tokens = splitTokens(melody, ", \t\n\r");
-        
-              for (String t : tokens) {
-        
-                t = t.trim(); if (t.length() < 2) continue;
-        
-                
-        
-                float totalMs = 0;
-        
-                String noteName = "";
-        
-                
-        
-                // Support Ties (+) e.g. C4H+Q or C4H.+E
-        
-                String[] parts = t.split("\\+");
-        
-                for (int j = 0; j < parts.length; j++) {
-        
-                  String p = parts[j].trim();
-        
-                  if (p.length() == 0) continue;
-        
-                  
-        
-                  float multiplier = 1.0f;
-        
-                  if (p.endsWith(".")) {
-        
-                    multiplier = 1.5f;
-        
-                    p = p.substring(0, p.length() - 1);
-        
-                  } else if (p.endsWith("_T")) {
-        
-                    multiplier = 2.0f / 3.0f;
-        
-                    p = p.substring(0, p.length() - 2);
-        
-                  }
-        
-                  
-        
-                  char durChar = p.charAt(p.length() - 1);
-        
-                  String prefix = p.substring(0, p.length() - 1);
-        
-                  
-        
-                  // The first part of a tied note defines the pitch/chord
-        
-                  if (j == 0) noteName = prefix;
-        
-                  
-        
-                  float baseMs = 0;
-        
-                  if (durChar == 'W') baseMs = (60000.0f / bpm) * 4.0f;
-        
-                  else if (durChar == 'H') baseMs = (60000.0f / bpm) * 2.0f;
-        
-                  else if (durChar == 'Q') baseMs = (60000.0f / bpm);
-        
-                  else if (durChar == 'E') baseMs = (60000.0f / bpm) / 2.0f;
-        
-                  else if (durChar == 'S') baseMs = (60000.0f / bpm) / 4.0f;
-        
-                  
-        
-                  totalMs += (baseMs * multiplier);
-        
-                }
-        
-                
-        
-                if (noteName.length() > 0) {
-        
-                  if (chords.containsKey(noteName)) {
-        
-                    playChordByNameInternal(noteName, totalMs * 0.95f, 100);
-        
-                  } else {
-        
-                    int midi = noteToMidi(noteName);
-        
-                    if (midi >= 0) playNoteForDuration(midi, 100, totalMs * 0.95f);
-        
-                  }
-        
-                  try { Thread.sleep((long)totalMs); } catch (Exception e) {}
-        
-                }
-        
-              }
-        currentInstrument = oldInst;
+        String[] tokens = splitTokens(melody, ", \t\n\r");
+        for (String t : tokens) {
+          parseAndPlayNote(inst, t, 100);
+        }
         activeMelodyCount--;
       }
     }
@@ -316,6 +220,51 @@ int pitchTranspose = 0;
 
   void playMelodyInternal(String m, String i) {
     new MelodyPlayer(m, i).start();
+  }
+
+  void parseAndPlayNote(String name, String token, float vel) {
+    token = token.trim(); if (token.length() < 2) return;
+    activeMelodyCount++;
+    float totalMs = 0;
+    String noteName = "";
+    String[] parts = token.split("\\+");
+    for (int j = 0; j < parts.length; j++) {
+      String p = parts[j].trim();
+      if (p.length() == 0) continue;
+      float multiplier = 1.0f;
+      if (p.endsWith(".")) { multiplier = 1.5f; p = p.substring(0, p.length() - 1); }
+      else if (p.endsWith("_T")) { multiplier = 2.0f / 3.0f; p = p.substring(0, p.length() - 2); }
+      char durChar = p.charAt(p.length() - 1);
+      String prefix = p.substring(0, p.length() - 1);
+      if (j == 0) noteName = prefix;
+      float baseMs = 0;
+      if (durChar == 'W') baseMs = (60000.0f / bpm) * 4.0f;
+      else if (durChar == 'H') baseMs = (60000.0f / bpm) * 2.0f;
+      else if (durChar == 'Q') baseMs = (60000.0f / bpm);
+      else if (durChar == 'E') baseMs = (60000.0f / bpm) / 2.0f;
+      else if (durChar == 'S') baseMs = (60000.0f / bpm) / 4.0f;
+      totalMs += (baseMs * multiplier);
+    }
+    
+    if (noteName.length() > 0) {
+      String type = instrumentMap.getOrDefault(name, "DRUM");
+      if (type.equals("DRUM")) {
+        if (!noteName.equalsIgnoreCase("R") && samplerMap.containsKey(name)) {
+          samplerGainMap.get(name).setValue(map(vel, 0, 127, -40, 0));
+          samplerMap.get(name).trigger();
+        }
+      } else {
+        String oldInst = currentInstrument;
+        currentInstrument = name;
+        if (!noteName.equalsIgnoreCase("R")) {
+          if (chords.containsKey(noteName)) playChordByNameInternal(noteName, totalMs * 0.95f, vel);
+          else { int midi = noteToMidi(noteName); if (midi >= 0) playNoteForDuration(midi, vel, totalMs * 0.95f); }
+        }
+        currentInstrument = oldInst;
+      }
+      try { Thread.sleep((long)totalMs); } catch(Exception e) {}
+    }
+    activeMelodyCount--;
   }
 
   float durationToMs(String iv) {
@@ -470,7 +419,7 @@ void setup() {
     samplerMap.put("Kick", new Sampler("drum/kick.wav", 4, minim));
     samplerGainMap.put("Kick", new Gain(0.f));
     samplerMap.get("Kick").patch(samplerGainMap.get("Kick")).patch(out);
-    instrumentMap.put("Kick", "SAMPLER");
+    instrumentMap.put("Kick", "DRUM");
     instrumentADSR.put("Kick", new float[]{defAdsrA, defAdsrD, defAdsrS, defAdsrR});
     if (!instrumentMap.containsKey("Snare")) instrumentMap.put("Snare", "TRIANGLE");
   if (!instrumentADSR.containsKey("Snare")) instrumentADSR.put("Snare", new float[]{defAdsrA, defAdsrD, defAdsrS, defAdsrR});
@@ -478,7 +427,7 @@ void setup() {
     samplerMap.put("Snare", new Sampler("drum/snare.wav", 4, minim));
     samplerGainMap.put("Snare", new Gain(0.f));
     samplerMap.get("Snare").patch(samplerGainMap.get("Snare")).patch(out);
-    instrumentMap.put("Snare", "SAMPLER");
+    instrumentMap.put("Snare", "DRUM");
     instrumentADSR.put("Snare", new float[]{defAdsrA, defAdsrD, defAdsrS, defAdsrR});
     if (!instrumentMap.containsKey("HiHat")) instrumentMap.put("HiHat", "TRIANGLE");
   if (!instrumentADSR.containsKey("HiHat")) instrumentADSR.put("HiHat", new float[]{defAdsrA, defAdsrD, defAdsrS, defAdsrR});
@@ -486,16 +435,8 @@ void setup() {
     samplerMap.put("HiHat", new Sampler("drum/ch.wav", 4, minim));
     samplerGainMap.put("HiHat", new Gain(0.f));
     samplerMap.get("HiHat").patch(samplerGainMap.get("HiHat")).patch(out);
-    instrumentMap.put("HiHat", "SAMPLER");
+    instrumentMap.put("HiHat", "DRUM");
     instrumentADSR.put("HiHat", new float[]{defAdsrA, defAdsrD, defAdsrS, defAdsrR});
-    if (!instrumentMap.containsKey("Rimshot")) instrumentMap.put("Rimshot", "TRIANGLE");
-  if (!instrumentADSR.containsKey("Rimshot")) instrumentADSR.put("Rimshot", new float[]{defAdsrA, defAdsrD, defAdsrS, defAdsrR});
-    if (minim == null) { minim = new Minim(this); out = minim.getLineOut(); }
-    samplerMap.put("Rimshot", new Sampler("drum/rim.wav", 4, minim));
-    samplerGainMap.put("Rimshot", new Gain(0.f));
-    samplerMap.get("Rimshot").patch(samplerGainMap.get("Rimshot")).patch(out);
-    instrumentMap.put("Rimshot", "SAMPLER");
-    instrumentADSR.put("Rimshot", new float[]{defAdsrA, defAdsrD, defAdsrS, defAdsrR});
     if (!instrumentMap.containsKey("Synth")) instrumentMap.put("Synth", "TRIANGLE");
   if (!instrumentADSR.containsKey("Synth")) instrumentADSR.put("Synth", new float[]{defAdsrA, defAdsrD, defAdsrS, defAdsrR});
     instrumentMap.put("Synth", "SAW");
@@ -574,6 +515,8 @@ void setup() {
     bpm = (float)95;
     new Thread(new Runnable() {
       public void run() {
+        activeMelodyCount++;
+        try { Thread.sleep(200); } catch(Exception e) {}
         int timeout = 0;
         while(isCountingIn && timeout < 500) { try { Thread.sleep(10); timeout++; } catch(Exception e) {} }
         while (true) {
@@ -618,7 +561,7 @@ void setup() {
                   }
                   float noteDur = stepMs * sustainSteps;
                   if (!token.equals("-")) {
-                    if (samplerMap.containsKey("Kick")) {
+                    if (instrumentMap.getOrDefault("Kick", "").equals("DRUM")) {
                       if (token.equalsIgnoreCase("x")) {
                          samplerGainMap.get("Kick").setValue(map(110, 0, 127, -40, 0));
                          samplerMap.get("Kick").trigger();
@@ -670,7 +613,7 @@ void setup() {
                   }
                   float noteDur = stepMs * sustainSteps;
                   if (!token.equals("-")) {
-                    if (samplerMap.containsKey("Snare")) {
+                    if (instrumentMap.getOrDefault("Snare", "").equals("DRUM")) {
                       if (token.equalsIgnoreCase("x")) {
                          samplerGainMap.get("Snare").setValue(map(100, 0, 127, -40, 0));
                          samplerMap.get("Snare").trigger();
@@ -722,9 +665,9 @@ void setup() {
                   }
                   float noteDur = stepMs * sustainSteps;
                   if (!token.equals("-")) {
-                    if (samplerMap.containsKey("HiHat")) {
+                    if (instrumentMap.getOrDefault("HiHat", "").equals("DRUM")) {
                       if (token.equalsIgnoreCase("x")) {
-                         samplerGainMap.get("HiHat").setValue(map(80, 0, 127, -40, 0));
+                         samplerGainMap.get("HiHat").setValue(map(50, 0, 127, -40, 0));
                          samplerMap.get("HiHat").trigger();
                       }
                     } else {
@@ -732,63 +675,11 @@ void setup() {
                       currentInstrument = "HiHat";
                       if (false) {
                         if (token.equals("x")) token = "C";
-                        if (chords.containsKey(token)) playChordByNameInternal(token, noteDur * 0.9f, (float)80);
-                        else { int midi = noteToMidi(token); if (midi >= 0) playNoteForDuration(midi, (float)80, noteDur * 0.9f); }
+                        if (chords.containsKey(token)) playChordByNameInternal(token, noteDur * 0.9f, (float)50);
+                        else { int midi = noteToMidi(token); if (midi >= 0) playNoteForDuration(midi, (float)50, noteDur * 0.9f); }
                       } else {
-                        if (token.equalsIgnoreCase("x")) playNoteForDuration(60, (float)80, noteDur * 0.8f);
-                        else { int midi = noteToMidi(token); if (midi >= 0) playNoteForDuration(midi, (float)80, noteDur * 0.9f); }
-                      }
-                      currentInstrument = oldInst;
-                    }
-                  }
-                  try { Thread.sleep((long)stepMs); } catch(Exception e) {}
-                }
-              }
-            }).start();
-            new Thread(new Runnable() {
-              public void run() {
-                int timeout = 0;
-                while(isCountingIn && timeout < 500) { try { Thread.sleep(10); timeout++; } catch(Exception e) {} }
-                try { Thread.sleep((long)(((1-1) * 4 * 60000) / bpm)); } catch(Exception e) {}
-                String rawPattern = "..x. ..x. ..x. ..x.";
-                String[] steps;
-                if (rawPattern.contains(",")) {
-                  steps = rawPattern.split(",");
-                } else {
-                  String p = rawPattern.replace("|", "").replace(" ", "");
-                  steps = new String[p.length()];
-                  for(int i=0; i<p.length(); i++) steps[i] = String.valueOf(p.charAt(i));
-                }
-                float stepMs = (60000 / bpm) / 4;
-                for (int i=0; i<Math.min(steps.length, 16); i++) {
-                  String token = steps[i].trim();
-                  if (token.equals(".")) {
-                    try { Thread.sleep((long)stepMs); } catch(Exception e) {}
-                    continue;
-                  }
-                  int sustainSteps = 1;
-                  for (int j=i+1; j<Math.min(steps.length, 16); j++) {
-                    String nextToken = steps[j].trim();
-                    if (nextToken.equals("-")) sustainSteps++;
-                    else break;
-                  }
-                  float noteDur = stepMs * sustainSteps;
-                  if (!token.equals("-")) {
-                    if (samplerMap.containsKey("Rimshot")) {
-                      if (token.equalsIgnoreCase("x")) {
-                         samplerGainMap.get("Rimshot").setValue(map(70, 0, 127, -40, 0));
-                         samplerMap.get("Rimshot").trigger();
-                      }
-                    } else {
-                      String oldInst = currentInstrument;
-                      currentInstrument = "Rimshot";
-                      if (false) {
-                        if (token.equals("x")) token = "C";
-                        if (chords.containsKey(token)) playChordByNameInternal(token, noteDur * 0.9f, (float)70);
-                        else { int midi = noteToMidi(token); if (midi >= 0) playNoteForDuration(midi, (float)70, noteDur * 0.9f); }
-                      } else {
-                        if (token.equalsIgnoreCase("x")) playNoteForDuration(60, (float)70, noteDur * 0.8f);
-                        else { int midi = noteToMidi(token); if (midi >= 0) playNoteForDuration(midi, (float)70, noteDur * 0.9f); }
+                        if (token.equalsIgnoreCase("x")) playNoteForDuration(60, (float)50, noteDur * 0.8f);
+                        else { int midi = noteToMidi(token); if (midi >= 0) playNoteForDuration(midi, (float)50, noteDur * 0.9f); }
                       }
                       currentInstrument = oldInst;
                     }

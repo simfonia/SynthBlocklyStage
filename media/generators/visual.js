@@ -126,6 +126,11 @@ Blockly.Processing.forBlock["visual_pixel_density"] = function (block) {
   return "pixelDensity(displayDensity());\n";
 };
 
+Blockly.Processing.forBlock["visual_frame_rate"] = function (block) {
+  const fps = Blockly.Processing.valueToCode(block, "FPS", Blockly.Processing.ORDER_ATOMIC) || "60";
+  return "frameRate(" + fps + ");\n";
+};
+
 Blockly.Processing.forBlock['visual_stage_setup'] = function (block) {
   if (Blockly.Processing.injectAudioCore) {
     Blockly.Processing.injectAudioCore();

@@ -188,109 +188,13 @@ Blockly.Processing.injectAudioCore = function() {
     String melody; String inst;
     MelodyPlayer(String m, String i) { melody = m; inst = i; }
     public void run() {
+      try { Thread.sleep(200); } catch(Exception e) {} // Wait for UI
       synchronized(melodyLock) {
         activeMelodyCount++;
-        String oldInst = currentInstrument;
-        if (inst != null && !inst.equals("")) currentInstrument = inst;
-        
-              // Split by comma, space, tab, or newline
-        
-              String[] tokens = splitTokens(melody, ", \\t\\n\\r");
-        
-              for (String t : tokens) {
-        
-                t = t.trim(); if (t.length() < 2) continue;
-        
-                
-        
-                float totalMs = 0;
-        
-                String noteName = "";
-        
-                
-        
-                // Support Ties (+) e.g. C4H+Q or C4H.+E
-        
-                String[] parts = t.split("\\\\+");
-        
-                for (int j = 0; j < parts.length; j++) {
-        
-                  String p = parts[j].trim();
-        
-                  if (p.length() == 0) continue;
-        
-                  
-        
-                  float multiplier = 1.0f;
-        
-                  if (p.endsWith(".")) {
-        
-                    multiplier = 1.5f;
-        
-                    p = p.substring(0, p.length() - 1);
-        
-                  } else if (p.endsWith("_T")) {
-        
-                    multiplier = 2.0f / 3.0f;
-        
-                    p = p.substring(0, p.length() - 2);
-        
-                  }
-        
-                  
-        
-                  char durChar = p.charAt(p.length() - 1);
-        
-                  String prefix = p.substring(0, p.length() - 1);
-        
-                  
-        
-                  // The first part of a tied note defines the pitch/chord
-        
-                  if (j == 0) noteName = prefix;
-        
-                  
-        
-                  float baseMs = 0;
-        
-                  if (durChar == 'W') baseMs = (60000.0f / bpm) * 4.0f;
-        
-                  else if (durChar == 'H') baseMs = (60000.0f / bpm) * 2.0f;
-        
-                  else if (durChar == 'Q') baseMs = (60000.0f / bpm);
-        
-                  else if (durChar == 'E') baseMs = (60000.0f / bpm) / 2.0f;
-        
-                  else if (durChar == 'S') baseMs = (60000.0f / bpm) / 4.0f;
-        
-                  
-        
-                  totalMs += (baseMs * multiplier);
-        
-                }
-        
-                
-        
-                if (noteName.length() > 0) {
-        
-                  if (chords.containsKey(noteName)) {
-        
-                    playChordByNameInternal(noteName, totalMs * 0.95f, 100);
-        
-                  } else {
-        
-                    int midi = noteToMidi(noteName);
-        
-                    if (midi >= 0) playNoteForDuration(midi, 100, totalMs * 0.95f);
-        
-                  }
-        
-                  try { Thread.sleep((long)totalMs); } catch (Exception e) {}
-        
-                }
-        
-              }
-        currentInstrument = oldInst;
+        String[] tokens = splitTokens(melody, ", \\t\\n\\r");
+        for (String t : tokens) {
+          parseAndPlayNote(inst, t, 100);
+        }
         activeMelodyCount--;
       }
     }
@@ -298,6 +202,51 @@ Blockly.Processing.injectAudioCore = function() {
 
   void playMelodyInternal(String m, String i) {
     new MelodyPlayer(m, i).start();
+  }
+
+  void parseAndPlayNote(String name, String token, float vel) {
+    token = token.trim(); if (token.length() < 2) return;
+    activeMelodyCount++;
+    float totalMs = 0;
+    String noteName = "";
+    String[] parts = token.split("\\\\+");
+    for (int j = 0; j < parts.length; j++) {
+      String p = parts[j].trim();
+      if (p.length() == 0) continue;
+      float multiplier = 1.0f;
+      if (p.endsWith(".")) { multiplier = 1.5f; p = p.substring(0, p.length() - 1); }
+      else if (p.endsWith("_T")) { multiplier = 2.0f / 3.0f; p = p.substring(0, p.length() - 2); }
+      char durChar = p.charAt(p.length() - 1);
+      String prefix = p.substring(0, p.length() - 1);
+      if (j == 0) noteName = prefix;
+      float baseMs = 0;
+      if (durChar == 'W') baseMs = (60000.0f / bpm) * 4.0f;
+      else if (durChar == 'H') baseMs = (60000.0f / bpm) * 2.0f;
+      else if (durChar == 'Q') baseMs = (60000.0f / bpm);
+      else if (durChar == 'E') baseMs = (60000.0f / bpm) / 2.0f;
+      else if (durChar == 'S') baseMs = (60000.0f / bpm) / 4.0f;
+      totalMs += (baseMs * multiplier);
+    }
+    
+    if (noteName.length() > 0) {
+      String type = instrumentMap.getOrDefault(name, "DRUM");
+      if (type.equals("DRUM")) {
+        if (!noteName.equalsIgnoreCase("R") && samplerMap.containsKey(name)) {
+          samplerGainMap.get(name).setValue(map(vel, 0, 127, -40, 0));
+          samplerMap.get(name).trigger();
+        }
+      } else {
+        String oldInst = currentInstrument;
+        currentInstrument = name;
+        if (!noteName.equalsIgnoreCase("R")) {
+          if (chords.containsKey(noteName)) playChordByNameInternal(noteName, totalMs * 0.95f, vel);
+          else { int midi = noteToMidi(noteName); if (midi >= 0) playNoteForDuration(midi, vel, totalMs * 0.95f); }
+        }
+        currentInstrument = oldInst;
+      }
+      try { Thread.sleep((long)totalMs); } catch(Exception e) {}
+    }
+    activeMelodyCount--;
   }
 
   float durationToMs(String iv) {
@@ -357,22 +306,18 @@ registerGenerator('sb_drum_sampler', function(block) {
   code += 'samplerMap.put("' + name + '", new Sampler("' + path + '", 4, minim));\n';
   code += 'samplerGainMap.put("' + name + '", new Gain(0.f));\n';
   code += 'samplerMap.get("' + name + '").patch(samplerGainMap.get("' + name + '")).patch(out);\n';
-  code += 'instrumentMap.put("' + name + '", "SAMPLER");\n';
+  code += 'instrumentMap.put("' + name + '", "DRUM");\n';
   code += 'instrumentADSR.put("' + name + '", new float[]{defAdsrA, defAdsrD, defAdsrS, defAdsrR});\n';
   return code;
 });
 
 registerGenerator('sb_trigger_sample', function(block) {
+  Blockly.Processing.injectAudioCore();
   const name = block.getFieldValue('NAME');
   const velocity = Blockly.Processing.valueToCode(block, 'VELOCITY', Blockly.Processing.ORDER_ATOMIC) || '100';
+  const note = block.getFieldValue('NOTE') || 'C4Q';
   
-  return `if (samplerMap.containsKey("${name}")) {\n` +
-         `  samplerGainMap.get("${name}").setValue(map(${velocity}, 0, 127, -40, 0));\n` + 
-         `  samplerMap.get("${name}").trigger();\n` +
-         `} else if (${name} != null) {\n` + 
-         `  ${name}_gain.setValue(map(${velocity}, 0, 127, -40, 0));\n` + 
-         `  ${name}.trigger();\n` +
-         `}\n`;
+  return `parseAndPlayNote("${name}", "${note}", (float)${velocity});\n`;
 });
 
 registerGenerator('sb_create_harmonic_synth', function(block) {
@@ -471,7 +416,7 @@ registerGenerator('sb_rhythm_sequence', function(block) {
   code += '      }\n';
   code += '      float noteDur = stepMs * sustainSteps;\n';
   code += '      if (!token.equals("-")) {\n';
-  code += '        if (samplerMap.containsKey("' + source + '")) {\n';
+  code += '        if (instrumentMap.getOrDefault("' + source + '", "").equals("DRUM")) {\n';
   code += '          if (token.equalsIgnoreCase("x")) {\n';
   code += '             samplerGainMap.get("' + source + '").setValue(map(' + velocity + ', 0, 127, -40, 0));\n';
   code += '             samplerMap.get("' + source + '").trigger();\n';
@@ -539,6 +484,8 @@ registerGenerator('sb_tone_loop', function(block) {
   
   const code = `new Thread(new Runnable() {
     public void run() {
+      activeMelodyCount++;
+      try { Thread.sleep(200); } catch(Exception e) {}
       int timeout = 0;
       while(isCountingIn && timeout < 500) { try { Thread.sleep(10); timeout++; } catch(Exception e) {} }
       while (true) {
@@ -557,6 +504,25 @@ registerGenerator('sb_tone_loop', function(block) {
         ${branch.replace(/\n/g, '\n        ')}
         try { Thread.sleep((long)ms); } catch (Exception e) {}
       }
+    }
+  }).start();\n`;
+  
+  Blockly.Processing.provideSetup(code);
+  return "";
+});
+
+registerGenerator('sb_perform', function(block) {
+  Blockly.Processing.injectAudioCore();
+  const branch = Blockly.Processing.statementToCode(block, 'DO');
+  
+  const code = `new Thread(new Runnable() {
+    public void run() {
+      activeMelodyCount++;
+      try { Thread.sleep(200); } catch(Exception e) {}
+      int timeout = 0;
+      while(isCountingIn && timeout < 500) { try { Thread.sleep(10); timeout++; } catch(Exception e) {} }
+      ${branch.replace(/\n/g, '\n      ')}
+      activeMelodyCount--;
     }
   }).start();\n`;
   
@@ -614,6 +580,10 @@ registerGenerator('audio_current_sample_mix_get', function(block) {
 
 registerGenerator('sb_audio_is_playing', function(block) {
   return ['(activeMelodyCount > 0)', Blockly.Processing.ORDER_RELATIONAL];
+});
+
+registerGenerator('sb_wait_until_finished', function(block) {
+  return `while(activeMelodyCount > 0) { try { Thread.sleep(50); } catch(Exception e) {} }\n`;
 });
 
 // State tracker for container context

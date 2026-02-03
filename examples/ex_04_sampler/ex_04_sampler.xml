@@ -1,0 +1,290 @@
+<xml xmlns="https://developers.google.com/blockly/xml">
+  <block type="processing_setup" id="Jv3-%AxQrgzq^8;pwwhH" x="10" y="10">
+    <statement name="DO">
+      <block type="sb_minim_init" id="ghU*B?rx;#9Zledm}-~y">
+        <next>
+          <block type="visual_stage_setup" id="/Rti;ed8I|rEbGukh@$U">
+            <field name="W">1200</field>
+            <field name="H">400</field>
+            <field name="BG_COLOR">#000000</field>
+            <field name="FG_COLOR">#ff0096</field>
+            <next>
+              <block type="sb_transport_set_bpm" id="qwG2ea(r11Nx`FAeL:o@">
+                <value name="BPM">
+                  <shadow type="math_number" id="}vFB]#u;bZ[24PwR%jHe">
+                    <field name="NUM">120</field>
+                  </shadow>
+                </value>
+              </block>
+            </next>
+          </block>
+        </next>
+      </block>
+    </statement>
+  </block>
+  <block type="sb_instrument_container" id="gJqsx!(m0h~j=*#b?S41" x="10" y="210">
+    <field name="NAME">Synth</field>
+    <statement name="STACK">
+      <block type="sb_set_wave" id="raz9lPhjpD+};Ok}|~z:">
+        <field name="TYPE">SQUARE</field>
+      </block>
+    </statement>
+  </block>
+  <block type="sb_instrument_container" id="9/}qj8c]i{(O:/3I[.{Q" x="10" y="310">
+    <field name="NAME">clap</field>
+    <statement name="STACK">
+      <block type="sb_drum_sampler" id="oQDX:AbZ4}?N]U##N[bt">
+        <field name="PATH">drum/clap.wav</field>
+      </block>
+    </statement>
+  </block>
+  <block type="sb_perform" id="iL(;3l#n91x{%S3sTJ:%" x="10" y="410">
+    <statement name="DO">
+      <block type="controls_repeat_ext" id="p!)^EM,m9U2MMwCB:H1`">
+        <value name="TIMES">
+          <shadow type="math_number" id="Q3AhRES|e413+Dt:*w:a">
+            <field name="NUM">1</field>
+          </shadow>
+        </value>
+        <statement name="DO">
+          <block type="sb_trigger_sample" id="M4L6gvddaYDOPrtW6$ga">
+            <field name="NAME">Synth</field>
+            <field name="NOTE">G5Q</field>
+            <value name="VELOCITY">
+              <shadow type="math_number" id="cxc,GOeMtbOwB(VWQX,)">
+                <field name="NUM">50</field>
+              </shadow>
+            </value>
+            <next>
+              <block type="sb_trigger_sample" id="#V3dj~,q1f*KWa)whm[J">
+                <field name="NAME">Synth</field>
+                <field name="NOTE">E5Q</field>
+                <value name="VELOCITY">
+                  <shadow type="math_number" id="Ytm.{wYdq7r26f%PU$#?">
+                    <field name="NUM">50</field>
+                  </shadow>
+                </value>
+                <next>
+                  <block type="sb_trigger_sample" id="Q$Ms(8tG-jP![^oWWcmB">
+                    <field name="NAME">Synth</field>
+                    <field name="NOTE">E5Q</field>
+                    <value name="VELOCITY">
+                      <shadow type="math_number" id="nS7YWqSPKE1|dHVeZQ[V">
+                        <field name="NUM">50</field>
+                      </shadow>
+                    </value>
+                    <next>
+                      <block type="sb_trigger_sample" id="}MM(i2Tnv?zkWQQrwmr_">
+                        <field name="NAME">clap</field>
+                        <field name="NOTE">XQ</field>
+                        <value name="VELOCITY">
+                          <shadow type="math_number" id="$.Co?+?+?xal~5U:3]$m">
+                            <field name="NUM">100</field>
+                          </shadow>
+                        </value>
+                      </block>
+                    </next>
+                  </block>
+                </next>
+              </block>
+            </next>
+          </block>
+        </statement>
+        <next>
+          <block type="controls_repeat_ext" id=",gN8UTQm5KOlNFwD;I}B">
+            <value name="TIMES">
+              <shadow type="math_number" id="U!`0J7t,yun?d$HU,v*~">
+                <field name="NUM">1</field>
+              </shadow>
+            </value>
+            <statement name="DO">
+              <block type="sb_trigger_sample" id="plXn`j=JF.e/;HuwBPLq">
+                <field name="NAME">Synth</field>
+                <field name="NOTE">F5Q</field>
+                <value name="VELOCITY">
+                  <shadow type="math_number" id="uN7[#QlV[{fLP9WDl28.">
+                    <field name="NUM">50</field>
+                  </shadow>
+                </value>
+                <next>
+                  <block type="sb_trigger_sample" id="zeGPsn0Yk6Z6iv/Q$)o#">
+                    <field name="NAME">Synth</field>
+                    <field name="NOTE">D5Q</field>
+                    <value name="VELOCITY">
+                      <shadow type="math_number" id="3ZUXHg$8Rj%[Xp?M?_k6">
+                        <field name="NUM">50</field>
+                      </shadow>
+                    </value>
+                    <next>
+                      <block type="sb_trigger_sample" id="yvoM}$u%Pe.r$(n]`]b#">
+                        <field name="NAME">Synth</field>
+                        <field name="NOTE">D5Q</field>
+                        <value name="VELOCITY">
+                          <shadow type="math_number" id="4;@LCoGDOM=Zs}-(ukY]">
+                            <field name="NUM">50</field>
+                          </shadow>
+                        </value>
+                        <next>
+                          <block type="sb_trigger_sample" id="f^t=Z[#L;WBoKJJHQ[xM">
+                            <field name="NAME">clap</field>
+                            <field name="NOTE">XQ</field>
+                            <value name="VELOCITY">
+                              <shadow type="math_number" id="oLw$7WRw)QR=g7=HY2;;">
+                                <field name="NUM">100</field>
+                              </shadow>
+                            </value>
+                          </block>
+                        </next>
+                      </block>
+                    </next>
+                  </block>
+                </next>
+              </block>
+            </statement>
+          </block>
+        </next>
+      </block>
+    </statement>
+  </block>
+  <block type="sb_perform" id="Ky0,:V3q%$rAxVV,g2r5" x="10" y="770">
+    <statement name="DO">
+      <block type="controls_repeat_ext" id="4Ve(#,jes:Rj9E5z[~bT">
+        <value name="TIMES">
+          <shadow type="math_number" id="NXRzP!r-/5$8xL,*N!,=">
+            <field name="NUM">2</field>
+          </shadow>
+        </value>
+        <statement name="DO">
+          <block type="sb_trigger_sample" id="b2:M!d95]J=mGwiDrXjS">
+            <field name="NAME">Synth</field>
+            <field name="NOTE">C3E</field>
+            <value name="VELOCITY">
+              <shadow type="math_number" id="AUAx153n%2!|T2LpD*i+">
+                <field name="NUM">80</field>
+              </shadow>
+            </value>
+            <next>
+              <block type="sb_trigger_sample" id="-+Ljd-d@.u0Zi2Qk%J(C">
+                <field name="NAME">Synth</field>
+                <field name="NOTE">G3E</field>
+                <value name="VELOCITY">
+                  <shadow type="math_number" id="F8rr3gc.x|-.G56`3+]U">
+                    <field name="NUM">30</field>
+                  </shadow>
+                </value>
+                <next>
+                  <block type="sb_trigger_sample" id="=VHi!rHSn0SfAGw5Tn]~">
+                    <field name="NAME">Synth</field>
+                    <field name="NOTE">E3E</field>
+                    <value name="VELOCITY">
+                      <shadow type="math_number" id="|+PPVMftZ=FB4K_(Ov;F">
+                        <field name="NUM">30</field>
+                      </shadow>
+                    </value>
+                    <next>
+                      <block type="sb_trigger_sample" id="Yd_1Zf9a%~AJ9bnp_zLc">
+                        <field name="NAME">Synth</field>
+                        <field name="NOTE">G3E</field>
+                        <value name="VELOCITY">
+                          <shadow type="math_number" id="~bKFu$u?tMGbg+tsQ5*;">
+                            <field name="NUM">30</field>
+                          </shadow>
+                        </value>
+                      </block>
+                    </next>
+                  </block>
+                </next>
+              </block>
+            </next>
+          </block>
+        </statement>
+        <next>
+          <block type="controls_repeat_ext" id="Zt:4#HIy3WV78^bp7D2.">
+            <value name="TIMES">
+              <shadow type="math_number" id="qlhsQy#`.T68|N9oAZk+">
+                <field name="NUM">2</field>
+              </shadow>
+            </value>
+            <statement name="DO">
+              <block type="sb_trigger_sample" id="@v9dqiDPfSSd:eMW%;{;">
+                <field name="NAME">Synth</field>
+                <field name="NOTE">D3E</field>
+                <value name="VELOCITY">
+                  <shadow type="math_number" id="c`-RX!T(L{kja=ow6-tk">
+                    <field name="NUM">80</field>
+                  </shadow>
+                </value>
+                <next>
+                  <block type="sb_trigger_sample" id=".g-H4I0c=pGq;GpgZXm3">
+                    <field name="NAME">Synth</field>
+                    <field name="NOTE">G3E</field>
+                    <value name="VELOCITY">
+                      <shadow type="math_number" id=":ckW/5ZW`TND.h~}};~3">
+                        <field name="NUM">30</field>
+                      </shadow>
+                    </value>
+                    <next>
+                      <block type="sb_trigger_sample" id="{uD3d1#-b:L3]h+bYGn%">
+                        <field name="NAME">Synth</field>
+                        <field name="NOTE">F3E</field>
+                        <value name="VELOCITY">
+                          <shadow type="math_number" id="}F92MR3}tHIvslv|Yr4L">
+                            <field name="NUM">30</field>
+                          </shadow>
+                        </value>
+                        <next>
+                          <block type="sb_trigger_sample" id="hLqgehCR3{*{T5Mhm76m">
+                            <field name="NAME">Synth</field>
+                            <field name="NOTE">G3E</field>
+                            <value name="VELOCITY">
+                              <shadow type="math_number" id="~H7*N.Ex-G`$$vOwYk[V">
+                                <field name="NUM">30</field>
+                              </shadow>
+                            </value>
+                          </block>
+                        </next>
+                      </block>
+                    </next>
+                  </block>
+                </next>
+              </block>
+            </statement>
+          </block>
+        </next>
+      </block>
+    </statement>
+  </block>
+  <block type="processing_draw" id="V,WL;(TDQH:RR{oR2?hO" x="10" y="1130">
+    <statement name="DO">
+      <block type="controls_if" id="MsHB}p,0fW]esD5f1*S#">
+        <value name="IF0">
+          <block type="logic_compare" id="Yop!:unX2zMf`sMU93QO">
+            <field name="OP">GT</field>
+            <value name="A">
+              <block type="processing_frame_count" id="/O0/#3M/9eegTyA1E`]]"></block>
+            </value>
+            <value name="B">
+              <block type="math_number" id=",WPN-uULBGmP5LkeUV?l">
+                <field name="NUM">60</field>
+              </block>
+            </value>
+          </block>
+        </value>
+        <statement name="DO0">
+          <block type="controls_if" id="I-_$VF@zVAeI+}u/yuOn">
+            <value name="IF0">
+              <block type="logic_negate" id="A$MGQL_$-NexBc87^S]0">
+                <value name="BOOL">
+                  <block type="sb_audio_is_playing" id="KN)p~#k7#|YQXL]aykDE"></block>
+                </value>
+              </block>
+            </value>
+            <statement name="DO0">
+              <block type="processing_exit" id=")BJb3OLX:d[CxTN;lm.e"></block>
+            </statement>
+          </block>
+        </statement>
+      </block>
+    </statement>
+  </block>
+</xml>

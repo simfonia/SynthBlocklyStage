@@ -206,109 +206,13 @@ int pitchTranspose = 0;
     String melody; String inst;
     MelodyPlayer(String m, String i) { melody = m; inst = i; }
     public void run() {
+      try { Thread.sleep(200); } catch(Exception e) {} // Wait for UI
       synchronized(melodyLock) {
         activeMelodyCount++;
-        String oldInst = currentInstrument;
-        if (inst != null && !inst.equals("")) currentInstrument = inst;
-        
-              // Split by comma, space, tab, or newline
-        
-              String[] tokens = splitTokens(melody, ", \t\n\r");
-        
-              for (String t : tokens) {
-        
-                t = t.trim(); if (t.length() < 2) continue;
-        
-                
-        
-                float totalMs = 0;
-        
-                String noteName = "";
-        
-                
-        
-                // Support Ties (+) e.g. C4H+Q or C4H.+E
-        
-                String[] parts = t.split("\\+");
-        
-                for (int j = 0; j < parts.length; j++) {
-        
-                  String p = parts[j].trim();
-        
-                  if (p.length() == 0) continue;
-        
-                  
-        
-                  float multiplier = 1.0f;
-        
-                  if (p.endsWith(".")) {
-        
-                    multiplier = 1.5f;
-        
-                    p = p.substring(0, p.length() - 1);
-        
-                  } else if (p.endsWith("_T")) {
-        
-                    multiplier = 2.0f / 3.0f;
-        
-                    p = p.substring(0, p.length() - 2);
-        
-                  }
-        
-                  
-        
-                  char durChar = p.charAt(p.length() - 1);
-        
-                  String prefix = p.substring(0, p.length() - 1);
-        
-                  
-        
-                  // The first part of a tied note defines the pitch/chord
-        
-                  if (j == 0) noteName = prefix;
-        
-                  
-        
-                  float baseMs = 0;
-        
-                  if (durChar == 'W') baseMs = (60000.0f / bpm) * 4.0f;
-        
-                  else if (durChar == 'H') baseMs = (60000.0f / bpm) * 2.0f;
-        
-                  else if (durChar == 'Q') baseMs = (60000.0f / bpm);
-        
-                  else if (durChar == 'E') baseMs = (60000.0f / bpm) / 2.0f;
-        
-                  else if (durChar == 'S') baseMs = (60000.0f / bpm) / 4.0f;
-        
-                  
-        
-                  totalMs += (baseMs * multiplier);
-        
-                }
-        
-                
-        
-                if (noteName.length() > 0) {
-        
-                  if (chords.containsKey(noteName)) {
-        
-                    playChordByNameInternal(noteName, totalMs * 0.95f, 100);
-        
-                  } else {
-        
-                    int midi = noteToMidi(noteName);
-        
-                    if (midi >= 0) playNoteForDuration(midi, 100, totalMs * 0.95f);
-        
-                  }
-        
-                  try { Thread.sleep((long)totalMs); } catch (Exception e) {}
-        
-                }
-        
-              }
-        currentInstrument = oldInst;
+        String[] tokens = splitTokens(melody, ", \t\n\r");
+        for (String t : tokens) {
+          parseAndPlayNote(inst, t, 100);
+        }
         activeMelodyCount--;
       }
     }
@@ -316,6 +220,51 @@ int pitchTranspose = 0;
 
   void playMelodyInternal(String m, String i) {
     new MelodyPlayer(m, i).start();
+  }
+
+  void parseAndPlayNote(String name, String token, float vel) {
+    token = token.trim(); if (token.length() < 2) return;
+    activeMelodyCount++;
+    float totalMs = 0;
+    String noteName = "";
+    String[] parts = token.split("\\+");
+    for (int j = 0; j < parts.length; j++) {
+      String p = parts[j].trim();
+      if (p.length() == 0) continue;
+      float multiplier = 1.0f;
+      if (p.endsWith(".")) { multiplier = 1.5f; p = p.substring(0, p.length() - 1); }
+      else if (p.endsWith("_T")) { multiplier = 2.0f / 3.0f; p = p.substring(0, p.length() - 2); }
+      char durChar = p.charAt(p.length() - 1);
+      String prefix = p.substring(0, p.length() - 1);
+      if (j == 0) noteName = prefix;
+      float baseMs = 0;
+      if (durChar == 'W') baseMs = (60000.0f / bpm) * 4.0f;
+      else if (durChar == 'H') baseMs = (60000.0f / bpm) * 2.0f;
+      else if (durChar == 'Q') baseMs = (60000.0f / bpm);
+      else if (durChar == 'E') baseMs = (60000.0f / bpm) / 2.0f;
+      else if (durChar == 'S') baseMs = (60000.0f / bpm) / 4.0f;
+      totalMs += (baseMs * multiplier);
+    }
+    
+    if (noteName.length() > 0) {
+      String type = instrumentMap.getOrDefault(name, "DRUM");
+      if (type.equals("DRUM")) {
+        if (!noteName.equalsIgnoreCase("R") && samplerMap.containsKey(name)) {
+          samplerGainMap.get(name).setValue(map(vel, 0, 127, -40, 0));
+          samplerMap.get(name).trigger();
+        }
+      } else {
+        String oldInst = currentInstrument;
+        currentInstrument = name;
+        if (!noteName.equalsIgnoreCase("R")) {
+          if (chords.containsKey(noteName)) playChordByNameInternal(noteName, totalMs * 0.95f, vel);
+          else { int midi = noteToMidi(noteName); if (midi >= 0) playNoteForDuration(midi, vel, totalMs * 0.95f); }
+        }
+        currentInstrument = oldInst;
+      }
+      try { Thread.sleep((long)totalMs); } catch(Exception e) {}
+    }
+    activeMelodyCount--;
   }
 
   float durationToMs(String iv) {

@@ -26,15 +26,7 @@
       </block>
     </statement>
   </block>
-  <block type="sb_instrument_container" id="rim_inst_cont" x="10" y="430">
-    <field name="NAME">Rimshot</field>
-    <statement name="STACK">
-      <block type="sb_drum_sampler" id="rim_sampler">
-        <field name="PATH">drum/rim.wav</field>
-      </block>
-    </statement>
-  </block>
-  <block type="sb_instrument_container" id="9Tre!x/}-T/J=R]MiKnv" x="10" y="530">
+  <block type="sb_instrument_container" id="9Tre!x/}-T/J=R]MiKnv" x="10" y="430">
     <field name="NAME">Synth</field>
     <statement name="STACK">
       <block type="sb_set_wave" id="U,{Xirc~7WbIEzd1a5mv">
@@ -66,7 +58,7 @@
       </block>
     </statement>
   </block>
-  <block type="processing_setup" id="OBzOwK(=b(p^aq3NSzPm" x="10" y="750">
+  <block type="processing_setup" id="OBzOwK(=b(p^aq3NSzPm" x="10" y="650">
     <statement name="DO">
       <block type="sb_minim_init" id="s5^7vqid=KXB6T/pVtt-">
         <next>
@@ -108,7 +100,7 @@
       </block>
     </statement>
   </block>
-  <block type="sb_tone_loop" id=":3#mGP32w9C.v$EYpWYB" x="10" y="1030">
+  <block type="sb_tone_loop" id=":3#mGP32w9C.v$EYpWYB" x="10" y="930">
     <field name="INTERVAL">1m</field>
     <statement name="DO">
       <block type="sb_rhythm_sequence" id="zYs.T2F/WoLCCi.c{0`k">
@@ -147,7 +139,7 @@
                 <field name="PATTERN">x-x- x-x- x-x- x-x-</field>
                 <value name="VELOCITY">
                   <shadow type="math_number" id="ZA8Q7L.@*s4?Y*mih[}6">
-                    <field name="NUM">80</field>
+                    <field name="NUM">50</field>
                   </shadow>
                 </value>
                 <value name="MEASURE">
@@ -155,23 +147,6 @@
                     <field name="NUM">1</field>
                   </shadow>
                 </value>
-                <next>
-                  <block type="sb_rhythm_sequence" id="rim_seq">
-                    <field name="SOURCE">Rimshot</field>
-                    <field name="CHORD_MODE">FALSE</field>
-                    <field name="PATTERN">..x. ..x. ..x. ..x.</field>
-                    <value name="VELOCITY">
-                      <shadow type="math_number" id="XQQ_aXsg!iBc$xv7E8xD">
-                        <field name="NUM">70</field>
-                      </shadow>
-                    </value>
-                    <value name="MEASURE">
-                      <shadow type="math_number" id="~}C|T3o5q3d;iiE$=KZo">
-                        <field name="NUM">1</field>
-                      </shadow>
-                    </value>
-                  </block>
-                </next>
               </block>
             </next>
           </block>

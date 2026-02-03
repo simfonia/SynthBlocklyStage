@@ -87,8 +87,8 @@ Blockly.Processing.addImport = function(importStr) {
  */
 Blockly.Processing.provideSetup = function(code) {
   if (Blockly.Processing.setups_) {
-    var key = code.split('\n')[0]; // 用第一行當 key 避免重複
-    Blockly.Processing.setups_[key] = code;
+    var id = 'setup_' + Object.keys(Blockly.Processing.setups_).length;
+    Blockly.Processing.setups_[id] = code;
   }
 };
 
@@ -97,8 +97,8 @@ Blockly.Processing.provideSetup = function(code) {
  */
 Blockly.Processing.provideDraw = function(code) {
   if (Blockly.Processing.draws_) {
-    var key = code.split('\n')[0];
-    Blockly.Processing.draws_[key] = code;
+    var id = 'draw_' + Object.keys(Blockly.Processing.draws_).length;
+    Blockly.Processing.draws_[id] = code;
   }
 };
 

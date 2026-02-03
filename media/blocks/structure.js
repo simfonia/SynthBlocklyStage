@@ -68,3 +68,13 @@ Blockly.Blocks['processing_delay'] = {
     this.setTooltip(Blockly.Msg['STRUCTURE_DELAY_TOOLTIP']);
   }
 };
+
+Blockly.defineBlocksWithJsonArray([
+  {
+    "type": "processing_frame_count",
+    "message0": "%{BKY_STRUCTURE_FRAME_COUNT}",
+    "output": "Number",
+    "colour": "%{BKY_VISUAL_HUE}",
+    "tooltip": "%{BKY_STRUCTURE_FRAME_COUNT_TOOLTIP}"
+  }
+]);

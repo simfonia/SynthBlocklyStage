@@ -77,18 +77,6 @@
                                           <block type="sb_define_chord" id="25AJd.|*SoR`+h7n5%v_">
                                             <field name="NAME">GMaj</field>
                                             <field name="NOTES">G5,B5,D4</field>
-                                            <next>
-                                              <block type="sb_play_melody" id="/=(c%O^sP*XcozmLST:J">
-                                                <field name="INSTRUMENT">Piano</field>
-                                                <field name="MELODY">RQ   C4Q D4Q.   E4E &amp;#10;CM7H.+E              RE&amp;#10;RQ C5Q B4Q.  G4E&amp;#10;DmH      FM7H</field>
-                                                <next>
-                                                  <block type="sb_play_melody" id="$BXF1(}_crGKXsX2}m]n">
-                                                    <field name="INSTRUMENT">Piano</field>
-                                                    <field name="MELODY">RH   A3Q_T B3Q_T C4Q_T  &amp;#10;DmQ.     E4E FMadd6_CQ.    E4E&amp;#10;BdimQ.     A4E B3Q.    B4E&amp;#10;CM7W&amp;#10;RH</field>
-                                                  </block>
-                                                </next>
-                                              </block>
-                                            </next>
                                           </block>
                                         </next>
                                       </block>
@@ -110,19 +98,55 @@
       </block>
     </statement>
   </block>
-  <block type="processing_draw" id="eG3^mP1PD^v?[]WNgrsF" x="10" y="1010">
+  <block type="sb_perform" id="QSEqdFK29tm:XBlx+;$h" x="10" y="750">
     <statement name="DO">
-      <block type="controls_if" id=",_#nRym:I.P5]K*]]Z#A">
-        <value name="IF0">
-          <block type="logic_negate" id="m}b[8wl7j:9WYC.S.4sj">
-            <value name="BOOL">
-              <block type="sb_audio_is_playing" id="#6m8#`=17#m9h*8WmL!F"></block>
-            </value>
+      <block type="sb_play_melody" id="/=(c%O^sP*XcozmLST:J">
+        <field name="INSTRUMENT">Piano</field>
+        <field name="MELODY">RQ   C4Q D4Q.   E4E &amp;#10;CM7H.+E              RE&amp;#10;RQ C5Q B4Q.  G4E&amp;#10;DmH      FM7H</field>
+        <next>
+          <block type="sb_play_melody" id="$BXF1(}_crGKXsX2}m]n">
+            <field name="INSTRUMENT">Piano</field>
+            <field name="MELODY">RH   A3Q_T B3Q_T C4Q_T  &amp;#10;DmQ.     E4E FMadd6_CQ.    E4E&amp;#10;BdimQ.     A4E B3Q.    B4E&amp;#10;CM7W&amp;#10;RH</field>
           </block>
-        </value>
-        <statement name="DO0">
-          <block type="processing_exit" id="F}uAYwi#F0cKADQ1|(Aa"></block>
-        </statement>
+        </next>
+      </block>
+    </statement>
+  </block>
+  <block type="processing_draw" id="eG3^mP1PD^v?[]WNgrsF" x="10" y="1050">
+    <statement name="DO">
+      <block type="sb_comment" id="~ZCNie~QSS0c{w7E;9/9">
+        <field name="TEXT">延遲1秒(預設60 FPS)後再偵測旋律線，&amp;#10;讓視覺畫面先就緒。</field>
+        <next>
+          <block type="controls_if" id="1y,,D.-]qz0mi`ghQt#u">
+            <value name="IF0">
+              <block type="logic_compare" id="`A%:$v4sLSKk`GWPyye}">
+                <field name="OP">GT</field>
+                <value name="A">
+                  <block type="processing_frame_count" id="QNc*Yojfe0f(Rd}k}|h,"></block>
+                </value>
+                <value name="B">
+                  <block type="math_number" id="btjxF!/2fafhGo3U;!@V">
+                    <field name="NUM">60</field>
+                  </block>
+                </value>
+              </block>
+            </value>
+            <statement name="DO0">
+              <block type="controls_if" id=",_#nRym:I.P5]K*]]Z#A">
+                <value name="IF0">
+                  <block type="logic_negate" id="m}b[8wl7j:9WYC.S.4sj">
+                    <value name="BOOL">
+                      <block type="sb_audio_is_playing" id="#6m8#`=17#m9h*8WmL!F"></block>
+                    </value>
+                  </block>
+                </value>
+                <statement name="DO0">
+                  <block type="processing_exit" id="F}uAYwi#F0cKADQ1|(Aa"></block>
+                </statement>
+              </block>
+            </statement>
+          </block>
+        </next>
       </block>
     </statement>
   </block>
