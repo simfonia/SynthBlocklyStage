@@ -350,10 +350,14 @@ function triggerAutoSave() {
         });
     };
 
-    ['newButton', 'openButton', 'saveButton', 'setPathButton'].forEach(setupButtonHover);
+    ['newButton', 'examplesButton', 'openButton', 'saveButton', 'setPathButton'].forEach(setupButtonHover);
 
     document.getElementById('setPathButton')?.addEventListener('click', () => {
         vscode.postMessage({ command: 'setProcessingPath' });
+    });
+
+    document.getElementById('examplesButton')?.addEventListener('click', () => {
+        vscode.postMessage({ command: 'showExamples', isDirty: isDirty });
     });
 
     document.getElementById('openButton')?.addEventListener('click', () => {

@@ -85,3 +85,9 @@
 - **取樣器 Transient 保護**：為了保留真實鋼琴/小提琴的「擊槌感」，取樣器應跳過 ADS 設定（固定為 0/0/1.0），僅將 R (Release) 開放給使用者控制。
 - **執行緒競爭 (Race Condition)**：\draw()\ 中的 \exit()\ 判斷必須配合 \FrameCount > 60\，以給予背景執行緒充足的啟動時間，避免在音樂還沒開始播時就誤判結束。
 
+## 2026-02-04 技術細節
+- **並發修改異常 (ConcurrentModificationException)**：背景演奏執行緒與鍵盤事件同時操作 activeNotes 時，會導致 Java Exception。已將 activeNotes 型別改為 ConcurrentHashMap。
+- **音高衝突與複合 Key**：不同樂器演奏同音高會造成 ADSR 覆寫。解決方案是採用 "instrumentName_pitch" 作為複合 Key。
+- **鍵盤樂器記憶 (Keyboard Memory)**：若在按住期間切換樂器，釋放時會因 currentInstrument 已變更而導致 Stuck Note。已將 pcKeysHeld 改為 HashMap<Integer, String> 以記住原始樂器名。
+- **Java Thread 參數 final 化**：在產生的 Java 代碼中，傳遞給 Thread 的參數（如 instName）必須宣告為 final 才能在匿名內部類別中存取。
+- **Webview UI 邊界問題**：HTML 下拉選單無法超出 Webview。改用 VS Code 原生 showQuickPick 解決介面遮擋與搜尋需求。

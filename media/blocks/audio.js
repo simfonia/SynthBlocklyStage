@@ -388,8 +388,8 @@ Blockly.defineBlocksWithJsonArray([
         "type": "field_dropdown",
         "name": "CHORD_MODE",
         "options": [
-          ["單音/打擊", "FALSE"],
-          ["音名/和弦", "TRUE"]
+          ["%{BKY_AUDIO_RHYTHM_MODE_MONO}", "FALSE"],
+          ["%{BKY_AUDIO_RHYTHM_MODE_CHORD}", "TRUE"]
         ]
       },
       { "type": "input_value", "name": "MEASURE", "check": "Number" },
@@ -399,17 +399,20 @@ Blockly.defineBlocksWithJsonArray([
     "previousStatement": null,
     "nextStatement": null,
     "colour": "%{BKY_PERFORMANCE_HUE}",
-    "tooltip": "在指定小節演奏 16 格節奏。x: 擊打, -: 延續, .: 休止。"
+    "tooltip": "%{BKY_AUDIO_RHYTHM_SEQUENCE_TOOLTIP}"
   },
   {
     "type": "sb_transport_count_in",
     "message0": "%{BKY_AUDIO_COUNT_IN}",
     "args0": [
       { "type": "input_value", "name": "MEASURES", "check": "Number" },
+      { "type": "input_value", "name": "BEATS", "check": "Number" },
+      { "type": "input_value", "name": "BEAT_UNIT", "check": "Number" },
       { "type": "input_value", "name": "VELOCITY", "check": "Number" }
     ],
     "previousStatement": null,
     "nextStatement": null,
+    "inputsInline": true,
     "colour": "%{BKY_PERFORMANCE_HUE}",
     "tooltip": "在正式演奏前播放預備拍（節拍器聲音）。"
   },
@@ -648,7 +651,7 @@ Blockly.Blocks['sb_set_adsr'] = {
         .appendField("R (Release)");
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
-    this.setColour(Blockly.Msg['SOUND_SOURCES_HUE'] || "#E74C3C");
+    this.setColour(Blockly.Msg['INSTRUMENT_CONTROL_HUE'] || "#E74C3C");
     this.setTooltip(Blockly.Msg['SB_SET_ADSR_TOOLTIP']);
   },
   onchange: function() {

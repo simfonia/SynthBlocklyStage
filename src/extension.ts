@@ -111,6 +111,9 @@ class SynthBlocklyPanel {
                     case 'webviewReady':
                         this._handleWebviewReady();
                         return;
+                    case 'showExamples':
+                        this._handleShowExamples(message.isDirty);
+                        return;
                 }
             },
             null,
@@ -222,6 +225,60 @@ class SynthBlocklyPanel {
                 fileName: fileName,
                 fullPath: this._currentXmlPath
             });
+        }
+    }
+
+    private async _handleShowExamples(isDirty: boolean) {
+        const examplesDir = path.join(this._extensionUri.fsPath, 'examples');
+        if (!fs.existsSync(examplesDir)) {
+            vscode.window.showInformationMessage("No examples found.");
+            return;
+        }
+
+        // 掃描資料夾
+        const examples = fs.readdirSync(examplesDir).filter(dir => {
+            const fullPath = path.join(examplesDir, dir);
+            return fs.statSync(fullPath).isDirectory() && fs.existsSync(path.join(fullPath, `${dir}.xml`));
+        });
+
+        if (examples.length === 0) {
+            vscode.window.showInformationMessage("No examples found.");
+            return;
+        }
+
+        // 顯示 QuickPick
+        const selected = await vscode.window.showQuickPick(examples, {
+            placeHolder: "Select an example to load",
+            canPickMany: false
+        });
+
+        if (selected) {
+            // 如果選中了，直接載入
+            if (isDirty) {
+                const answer = await vscode.window.showWarningMessage(
+                    "You have unsaved changes. Are you sure you want to load an example?",
+                    { modal: true },
+                    "Discard Changes"
+                );
+                if (answer !== "Discard Changes") {
+                    return;
+                }
+            }
+
+            const exampleName = selected;
+            const examplePath = path.join(examplesDir, exampleName, `${exampleName}.xml`);
+            
+            if (fs.existsSync(examplePath)) {
+                this._currentXmlPath = examplePath;
+                const xml = fs.readFileSync(examplePath, 'utf8');
+                this._panel.title = `SynthBlockly: ${exampleName} (Example)`;
+                this._panel.webview.postMessage({ 
+                    command: 'initializeWorkspace', 
+                    xml: xml,
+                    fileName: `${exampleName}.xml`,
+                    fullPath: this._currentXmlPath
+                });
+            }
         }
     }
 
@@ -416,6 +473,7 @@ class SynthBlocklyPanel {
 <body>
     <div id="toolbar">
         <img id="newButton" class="toolbar-button" src="${iconUri}/new_24dp_1F1F1F.png" title="New Project">
+        <img id="examplesButton" class="toolbar-button" src="${iconUri}/examples_24dp_1F1F1F.png" title="Load Example">
         <img id="openButton" class="toolbar-button" src="${iconUri}/load_project_24dp_1F1F1F.png" title="Open Project">
         <img id="saveButton" class="toolbar-button" src="${iconUri}/save_as_24dp_1F1F1F.png" title="Save As">
         <img id="setPathButton" class="toolbar-button" src="${iconUri}/settings_24dp_1F1F1F.png" title="Set Processing Path">

@@ -163,7 +163,7 @@ Blockly.Processing.forBlock['visual_stage_setup'] = function (block) {
   g['myBus'] = "MidiBus myBus;";
   g['serialBaud'] = "int serialBaud = 115200;";
   g['serialPortVar'] = "Serial myPort;";
-  g['pcKeysHeld'] = "HashSet<Integer> pcKeysHeld = new HashSet<Integer>();";
+  g['pcKeysHeld'] = "HashMap<Integer, String> pcKeysHeld = new HashMap<Integer, String>();";
 
   g['stageBgColor'] = "int stageBgColor;";
   g['stageFgColor'] = "int stageFgColor;";
@@ -279,9 +279,9 @@ Blockly.Processing.forBlock['visual_stage_setup'] = function (block) {
     else if (k == '0') p = 75; else if (k == 'p') p = 76;
 
     if (p != -1) {
-      if (!pcKeysHeld.contains(p)) {
-        playNoteInternal(p, 100);
-        pcKeysHeld.add(p);
+      if (!pcKeysHeld.containsKey(p)) {
+        playNoteInternal(currentInstrument, p, 100);
+        pcKeysHeld.put(p, currentInstrument);
         logToScreen("Keyboard ON: MIDI " + p, 0);
       }
     }
@@ -299,9 +299,12 @@ Blockly.Processing.forBlock['visual_stage_setup'] = function (block) {
     else if (k == '0') p = 75; else if (k == 'p') p = 76;
 
     if (p != -1) {
-      stopNoteInternal(p);
-      pcKeysHeld.remove(p);
-      logToScreen("Keyboard OFF: MIDI " + p, 0);
+      if (pcKeysHeld.containsKey(p)) {
+        String inst = pcKeysHeld.get(p);
+        stopNoteInternal(inst, p);
+        pcKeysHeld.remove(p);
+        logToScreen("Keyboard OFF: MIDI " + p, 0);
+      }
     }
     {{KEY_RELEASED_EVENT_PLACEHOLDER}}
   }

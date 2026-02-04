@@ -18,13 +18,13 @@ Blockly.Processing.injectAudioCore = function() {
   g['minim'] = "Minim minim;";
   g['out'] = "AudioOutput out;";
   Blockly.Processing.addImport("import java.util.LinkedHashMap;");
+  Blockly.Processing.addImport("import java.util.concurrent.*;");
   g['instrumentMap'] = "LinkedHashMap<String, String> instrumentMap = new LinkedHashMap<String, String>();";
   g['instrumentADSR'] = "LinkedHashMap<String, float[]> instrumentADSR = new LinkedHashMap<String, float[]>();";
   g['instrumentVolumes'] = "HashMap<String, Float> instrumentVolumes = new HashMap<String, Float>();";
   g['chords'] = "HashMap<String, String[]> chords = new HashMap<String, String[]>();";
   g['currentInstrument'] = 'String currentInstrument = "default";';
   g['lastInstrument'] = 'String lastInstrument = "";';
-  g['activeNotes'] = "HashMap<Integer, ADSR> activeNotes = new HashMap<Integer, ADSR>();";
   g['harmonicPartials'] = "HashMap<String, float[]> harmonicPartials = new HashMap<String, float[]>();";
   g['additiveConfigs'] = "HashMap<String, List<SynthComponent>> additiveConfigs = new HashMap<String, List<SynthComponent>>();";
   g['samplerMap'] = "HashMap<String, Sampler> samplerMap = new HashMap<String, Sampler>();";
@@ -144,22 +144,30 @@ Blockly.Processing.injectAudioCore = function() {
     return Waves.TRIANGLE;
   }
 
-  void playNoteInternal(int p, float vel) {
+  // Global ConcurrentHashMap for thread safety and composite keys
+  ConcurrentHashMap<String, ADSR> activeNotes = new ConcurrentHashMap<String, ADSR>();
+
+  void playNoteInternal(String instName, int p, float vel) {
+    if (instName == null || instName.length() == 0) instName = currentInstrument;
     if (p < 0) return;
-    if (activeNotes.containsKey(p)) stopNoteInternal(p);
+    String key = instName + "_" + p;
+    
+    // Stop existing note of SAME instrument and SAME pitch
+    if (activeNotes.containsKey(key)) stopNoteInternal(instName, p);
     
     float masterAmp = map(vel, 0, 127, 0, 0.5f);
-    // 套用樂器個別音量 (預設為 1.0)
-    masterAmp *= instrumentVolumes.getOrDefault(currentInstrument, 1.0f);
+    masterAmp *= instrumentVolumes.getOrDefault(instName, 1.0f);
+    
+    float[] adsr = instrumentADSR.get(instName);
+    if (adsr == null) adsr = new float[]{defAdsrA, defAdsrD, defAdsrS, defAdsrR};
 
-    String type = instrumentMap.getOrDefault(currentInstrument, "TRIANGLE");
+    String type = instrumentMap.getOrDefault(instName, "TRIANGLE");
     if (type.equals("MELODIC_SAMPLER")) {
-      MelodicSampler ms = melodicSamplers.get(currentInstrument);
+      MelodicSampler ms = melodicSamplers.get(instName);
       if (ms != null) {
-        // 將計算好的 masterAmp 傳給取樣器
-        ADSR adsr = ms.trigger(p, masterAmp, adsrR);
-        if (adsr != null) {
-          activeNotes.put(p, adsr);
+        ADSR env = ms.trigger(p, masterAmp, adsr[3]);
+        if (env != null) {
+          activeNotes.put(key, env);
           adsrTimer = millis(); adsrState = 1;
         }
       }
@@ -167,14 +175,12 @@ Blockly.Processing.injectAudioCore = function() {
     }
     
     float baseFreq = mtof((float)p);
-    
-    // Use LIVE values from UI Sliders for active performance
-    ADSR adsr = new ADSR(1.0, adsrA, adsrD, adsrS, adsrR);
+    ADSR env = new ADSR(1.0, adsr[0], adsr[1], adsr[2], adsr[3]);
     
     Summer mixer = new Summer(); 
     
     if (type.equals("HARMONIC")) {
-      float[] partials = harmonicPartials.get(currentInstrument);
+      float[] partials = harmonicPartials.get(instName);
       if (partials != null) {
         for (int i = 0; i < partials.length; i++) {
           if (partials[i] > 0) {
@@ -183,33 +189,35 @@ Blockly.Processing.injectAudioCore = function() {
           }
         }
       }
-      mixer.patch(adsr);
+      mixer.patch(env);
     } else if (type.equals("ADDITIVE")) {
-      List<SynthComponent> configs = additiveConfigs.get(currentInstrument);
+      List<SynthComponent> configs = additiveConfigs.get(instName);
       if (configs != null) {
         for (SynthComponent comp : configs) {
           Oscil osc = new Oscil(baseFreq * comp.ratio, comp.amp * masterAmp, getWaveform(comp.waveType));
           osc.patch(mixer);
         }
       }
-      mixer.patch(adsr);
+      mixer.patch(env);
     } else {
       Oscil wave = new Oscil(baseFreq, masterAmp, getWaveform(type));
-      wave.patch(adsr);
+      wave.patch(env);
     }
     
-    adsr.patch(out);
-    adsr.noteOn();
-    activeNotes.put(p, adsr);
+    env.patch(out);
+    env.noteOn();
+    activeNotes.put(key, env);
     adsrTimer = millis(); adsrState = 1;
   }
 
-  void stopNoteInternal(int p) {
-    ADSR adsr = activeNotes.get(p);
+  void stopNoteInternal(String instName, int p) {
+    if (instName == null || instName.length() == 0) instName = currentInstrument;
+    String key = instName + "_" + p;
+    ADSR adsr = activeNotes.get(key);
     if (adsr != null) {
       adsr.unpatchAfterRelease(out);
       adsr.noteOff();
-      activeNotes.remove(p);
+      activeNotes.remove(key);
       adsrTimer = millis(); adsrState = 2;
     }
   }
@@ -240,24 +248,24 @@ Blockly.Processing.injectAudioCore = function() {
     }
   }
 
-  void playNoteForDuration(int p, float vel, final float durationMs) {
+  void playNoteForDuration(final String instName, int p, float vel, final float durationMs) {
     if (p < 0) return;
-    playNoteInternal(p, vel);
+    playNoteInternal(instName, p, vel);
     final int pitch = p;
     new Thread(new Runnable() {
       public void run() {
         try { Thread.sleep((long)durationMs); } catch (Exception e) {}
-        stopNoteInternal(pitch);
+        stopNoteInternal(instName, pitch);
       }
     }).start();
   }
 
-  void playChordByNameInternal(String name, float durationMs, float vel) {
+  void playChordByNameInternal(String instName, String name, float durationMs, float vel) {
     String[] notes = chords.get(name);
     if (notes != null) {
       for (String n : notes) {
         int midi = noteToMidi(n);
-        if (midi >= 0) playNoteForDuration(midi, vel, durationMs);
+        if (midi >= 0) playNoteForDuration(instName, midi, vel, durationMs);
       }
     }
   }
@@ -302,13 +310,10 @@ Blockly.Processing.injectAudioCore = function() {
           samplerMap.get(name).trigger();
         }
       } else {
-        String oldInst = currentInstrument;
-        currentInstrument = name;
         if (!noteName.equalsIgnoreCase("R")) {
-          if (chords.containsKey(noteName)) playChordByNameInternal(noteName, totalMs * 0.95f, vel);
-          else { int midi = noteToMidi(noteName); if (midi >= 0) playNoteForDuration(midi, vel, totalMs * 0.95f); }
+          if (chords.containsKey(noteName)) playChordByNameInternal(name, noteName, totalMs * 0.95f, vel);
+          else { int midi = noteToMidi(noteName); if (midi >= 0) playNoteForDuration(name, midi, vel, totalMs * 0.95f); }
         }
-        currentInstrument = oldInst;
       }
       try { Thread.sleep((long)totalMs); } catch(Exception e) {}
     }
@@ -454,7 +459,7 @@ registerGenerator('sb_play_note', function(block) {
   Blockly.Processing.injectAudioCore();
   const pitch = Blockly.Processing.valueToCode(block, 'PITCH', Blockly.Processing.ORDER_ATOMIC) || '60';
   const velocity = Blockly.Processing.valueToCode(block, 'VELOCITY', Blockly.Processing.ORDER_ATOMIC) || '100';
-  return `playNoteInternal((int)${pitch}, (float)${velocity});\n`;
+  return `playNoteInternal(currentInstrument, (int)${pitch}, (float)${velocity});\n`;
 });
 
 registerGenerator('sb_stop_note', function(block) {
@@ -487,14 +492,27 @@ registerGenerator('sb_rhythm_sequence', function(block) {
   code += '    while(isCountingIn && timeout < 500) { try { Thread.sleep(10); timeout++; } catch(Exception e) {} }\n';
   code += '    try { Thread.sleep((long)(((' + measure + '-1) * 4 * 60000) / bpm)); } catch(Exception e) {}\n';
   code += '    String rawPattern = "' + pattern + '";\n';
-  code += '    String[] steps;\n';
+  code += '    ArrayList<String> parsed = new ArrayList<String>();\n';
   code += '    if (rawPattern.contains(",")) {\n';
-  code += '      steps = rawPattern.split(",");\n';
+  code += '      String[] parts = rawPattern.split(",");\n';
+  code += '      for(String p : parts) parsed.add(p.trim());\n';
   code += '    } else {\n';
-  code += '      String p = rawPattern.replace("|", "").replace(" ", "");\n';
-  code += '      steps = new String[p.length()];\n';
-  code += '      for(int i=0; i<p.length(); i++) steps[i] = String.valueOf(p.charAt(i));\n';
+  code += '      String raw = rawPattern.replace("|", " ");\n';
+  code += '      StringBuilder buf = new StringBuilder();\n';
+  code += '      for (int i=0; i<raw.length(); i++) {\n';
+  code += '        char c = raw.charAt(i);\n';
+  code += '        if (c == \' \') {\n';
+  code += '          if (buf.length() > 0) { parsed.add(buf.toString()); buf.setLength(0); }\n';
+  code += '        } else if (c == \'.\' || c == \'-\') {\n';
+  code += '          if (buf.length() > 0) { parsed.add(buf.toString()); buf.setLength(0); }\n';
+  code += '          parsed.add(String.valueOf(c));\n';
+  code += '        } else {\n';
+  code += '          buf.append(c);\n';
+  code += '        }\n';
+  code += '      }\n';
+  code += '      if (buf.length() > 0) parsed.add(buf.toString());\n';
   code += '    }\n';
+  code += '    String[] steps = parsed.toArray(new String[0]);\n';
   code += '    float stepMs = (60000 / bpm) / 4;\n';
   code += '    for (int i=0; i<Math.min(steps.length, 16); i++) {\n';
   code += '      String token = steps[i].trim();\n';
@@ -516,18 +534,15 @@ registerGenerator('sb_rhythm_sequence', function(block) {
           code += '             samplerGainMap.get("' + source + '").setValue(map(' + velocity + ' * volScale, 0, 127, -40, 0));\n';
           code += '             samplerMap.get("' + source + '").trigger();\n';
           code += '          }\n';
-          code += '        } else {\n';  ;
-  code += '          String oldInst = currentInstrument;\n';
-  code += '          currentInstrument = "' + source + '";\n';
+          code += '        } else {\n';
   code += '          if (' + isChordMode + ') {\n';
   code += '            if (token.equals("x")) token = "C";\n';
-  code += '            if (chords.containsKey(token)) playChordByNameInternal(token, noteDur * 0.9f, (float)' + velocity + ');\n';
-  code += '            else { int midi = noteToMidi(token); if (midi >= 0) playNoteForDuration(midi, (float)' + velocity + ', noteDur * 0.9f); }\n';
+  code += '            if (chords.containsKey(token)) playChordByNameInternal("' + source + '", token, noteDur * 0.9f, (float)' + velocity + ');\n';
+  code += '            else { int midi = noteToMidi(token); if (midi >= 0) playNoteForDuration("' + source + '", midi, (float)' + velocity + ', noteDur * 0.9f); }\n';
   code += '          } else {\n';
-  code += '            if (token.equalsIgnoreCase("x")) playNoteForDuration(60, (float)' + velocity + ', noteDur * 0.8f);\n';
-  code += '            else { int midi = noteToMidi(token); if (midi >= 0) playNoteForDuration(midi, (float)' + velocity + ', noteDur * 0.9f); }\n';
+  code += '            if (token.equalsIgnoreCase("x")) playNoteForDuration("' + source + '", 60, (float)' + velocity + ', noteDur * 0.8f);\n';
+  code += '            else { int midi = noteToMidi(token); if (midi >= 0) playNoteForDuration("' + source + '", midi, (float)' + velocity + ', noteDur * 0.9f); }\n';
   code += '          }\n';
-  code += '          currentInstrument = oldInst;\n';
   code += '        }\n';
   code += '      }\n';
   code += '      try { Thread.sleep((long)stepMs); } catch(Exception e) {}\n';
@@ -540,6 +555,8 @@ registerGenerator('sb_rhythm_sequence', function(block) {
 registerGenerator('sb_transport_count_in', function(block) {
   Blockly.Processing.injectAudioCore();
   const measures = Blockly.Processing.valueToCode(block, 'MEASURES', Blockly.Processing.ORDER_ATOMIC) || '1';
+  const beats = Blockly.Processing.valueToCode(block, 'BEATS', Blockly.Processing.ORDER_ATOMIC) || '4';
+  const beatUnit = Blockly.Processing.valueToCode(block, 'BEAT_UNIT', Blockly.Processing.ORDER_ATOMIC) || '4';
   const velocity = Blockly.Processing.valueToCode(block, 'VELOCITY', Blockly.Processing.ORDER_ATOMIC) || '100';
   
   const setupCode = `isCountingIn = true;
@@ -547,11 +564,12 @@ registerGenerator('sb_transport_count_in', function(block) {
     public void run() {
       try {
         Thread.sleep(1000); 
-        logToScreen("--- COUNT IN START ---", 1);
+        logToScreen("--- COUNT IN START (" + ${beats} + "/" + ${beatUnit} + ") ---", 1);
+        float beatDelay = (60000.0f / bpm) * (4.0f / ${beatUnit});
         for (int m=0; m<${measures}; m++) {
-          for (int b=0; b<4; b++) {
+          for (int b=0; b<(int)${beats}; b++) {
             playClick((b==0 ? 880.0f : 440.0f), (float)${velocity});
-            Thread.sleep((long)(60000.0f/bpm));
+            Thread.sleep((long)beatDelay);
           }
         }
       } catch (Exception e) {
