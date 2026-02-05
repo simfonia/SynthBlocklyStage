@@ -1,8 +1,8 @@
 <xml xmlns="https://developers.google.com/blockly/xml">
   <block type="sb_comment" id="f@L)!ssPW$J-,Ap%;3ac" x="10" y="10">
-    <field name="TEXT">此範例展示如何使用真實樂器的音色&amp;#10;&amp;#10;請切換Lead樂器中的音源，&amp;#10;體驗合成器與取樣器的不同感受。&amp;#10;旋律取樣器只對ADSR中的R有效。</field>
+    <field name="TEXT">此範例展示如何使用真實樂器的音色&amp;#10;&amp;#10;請切換Lead樂器中的音源，&amp;#10;體驗合成器與取樣器的不同感受。&amp;#10;旋律取樣器只對ADSR中的R有效。&amp;#10;&amp;#10;注意：&amp;#10;本範例兩個聲部音高沒有重疊，&amp;#10;若有重疊，最好為每個聲部配置專屬樂器，&amp;#10;否則同音時，ADSR會互相干擾。</field>
   </block>
-  <block type="processing_setup" id="Jv3-%AxQrgzq^8;pwwhH" x="10" y="150">
+  <block type="processing_setup" id="Jv3-%AxQrgzq^8;pwwhH" x="10" y="250">
     <statement name="DO">
       <block type="sb_minim_init" id="ghU*B?rx;#9Zledm}-~y">
         <next>
@@ -25,7 +25,7 @@
       </block>
     </statement>
   </block>
-  <block type="sb_instrument_container" id="gJqsx!(m0h~j=*#b?S41" x="10" y="350">
+  <block type="sb_instrument_container" id="gJqsx!(m0h~j=*#b?S41" x="10" y="450">
     <field name="NAME">Lead</field>
     <statement name="STACK">
       <block type="sb_set_wave" id="Z0|[Q7}FkYoeF1LtS|Xu" disabled-reasons="MANUALLY_DISABLED">
@@ -73,7 +73,7 @@
       </block>
     </statement>
   </block>
-  <block type="sb_instrument_container" id="9/}qj8c]i{(O:/3I[.{Q" x="10" y="650">
+  <block type="sb_instrument_container" id="9/}qj8c]i{(O:/3I[.{Q" x="10" y="750">
     <field name="NAME">clap</field>
     <statement name="STACK">
       <block type="sb_drum_sampler" id="oQDX:AbZ4}?N]U##N[bt">
@@ -92,7 +92,7 @@
       </block>
     </statement>
   </block>
-  <block type="sb_perform" id="iL(;3l#n91x{%S3sTJ:%" x="10" y="770">
+  <block type="sb_perform" id="iL(;3l#n91x{%S3sTJ:%" x="10" y="870">
     <statement name="DO">
       <block type="controls_repeat_ext" id="p!)^EM,m9U2MMwCB:H1`">
         <value name="TIMES">
@@ -200,7 +200,7 @@
       </block>
     </statement>
   </block>
-  <block type="sb_perform" id="Ky0,:V3q%$rAxVV,g2r5" x="10" y="1130">
+  <block type="sb_perform" id="Ky0,:V3q%$rAxVV,g2r5" x="10" y="1230">
     <statement name="DO">
       <block type="controls_repeat_ext" id="4Ve(#,jes:Rj9E5z[~bT">
         <value name="TIMES">
@@ -308,7 +308,7 @@
       </block>
     </statement>
   </block>
-  <block type="processing_draw" id="V,WL;(TDQH:RR{oR2?hO" x="10" y="1490">
+  <block type="processing_draw" id="V,WL;(TDQH:RR{oR2?hO" x="10" y="1590">
     <statement name="DO">
       <block type="controls_if" id="MsHB}p,0fW]esD5f1*S#">
         <value name="IF0">

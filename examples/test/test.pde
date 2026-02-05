@@ -486,8 +486,148 @@ void logToScreen(String msg, int type) {
     
   }
 
+void do_something() {
+  new Thread(new Runnable() {
+    public void run() {
+      int timeout = 0;
+      while(isCountingIn && timeout < 500) { try { Thread.sleep(10); timeout++; } catch(Exception e) {} }
+      try { Thread.sleep((long)(((1-1) * 4 * 60000) / bpm)); } catch(Exception e) {}
+      String rawPattern = "x--- x--- x--- x---";
+      ArrayList<String> parsed = new ArrayList<String>();
+      if (rawPattern.contains(",")) {
+        String[] parts = rawPattern.split(",");
+        for(String p : parts) parsed.add(p.trim());
+      } else {
+        String raw = rawPattern.replace("|", " ");
+        StringBuilder buf = new StringBuilder();
+        for (int i=0; i<raw.length(); i++) {
+          char c = raw.charAt(i);
+          if (c == ' ') {
+            if (buf.length() > 0) { parsed.add(buf.toString()); buf.setLength(0); }
+          } else if (c == '.' || c == '-') {
+            if (buf.length() > 0) { parsed.add(buf.toString()); buf.setLength(0); }
+            parsed.add(String.valueOf(c));
+          } else {
+            buf.append(c);
+          }
+        }
+        if (buf.length() > 0) parsed.add(buf.toString());
+      }
+      String[] steps = parsed.toArray(new String[0]);
+      float stepMs = (60000 / bpm) / 4;
+      for (int i=0; i<Math.min(steps.length, 16); i++) {
+        String token = steps[i].trim();
+        if (token.equals(".")) {
+          try { Thread.sleep((long)stepMs); } catch(Exception e) {}
+          continue;
+        }
+        int sustainSteps = 1;
+        for (int j=i+1; j<Math.min(steps.length, 16); j++) {
+          String nextToken = steps[j].trim();
+          if (nextToken.equals("-")) sustainSteps++;
+          else break;
+        }
+        float noteDur = stepMs * sustainSteps;
+        if (!token.equals("-")) {
+          if (instrumentMap.getOrDefault("MySynth", "").equals("DRUM")) {
+            if (token.equalsIgnoreCase("x")) {
+               float volScale = instrumentVolumes.getOrDefault("MySynth", 1.0f);
+               samplerGainMap.get("MySynth").setValue(map(100 * volScale, 0, 127, -40, 0));
+               samplerMap.get("MySynth").trigger();
+            }
+          } else {
+            if (false) {
+              if (token.equals("x")) token = "C";
+              if (chords.containsKey(token)) playChordByNameInternal("MySynth", token, noteDur * 0.9f, (float)100);
+              else { int midi = noteToMidi(token); if (midi >= 0) playNoteForDuration("MySynth", midi, (float)100, noteDur * 0.9f); }
+            } else {
+              if (token.equalsIgnoreCase("x")) playNoteForDuration("MySynth", 60, (float)100, noteDur * 0.8f);
+              else { int midi = noteToMidi(token); if (midi >= 0) playNoteForDuration("MySynth", midi, (float)100, noteDur * 0.9f); }
+            }
+          }
+        }
+        try { Thread.sleep((long)stepMs); } catch(Exception e) {}
+      }
+    }
+  }).start();
+}
+
+void do_something2() {
+  new Thread(new Runnable() {
+    public void run() {
+      int timeout = 0;
+      while(isCountingIn && timeout < 500) { try { Thread.sleep(10); timeout++; } catch(Exception e) {} }
+      try { Thread.sleep((long)(((2-1) * 4 * 60000) / bpm)); } catch(Exception e) {}
+      String rawPattern = "x-X- x-X- x-x- x-x-";
+      ArrayList<String> parsed = new ArrayList<String>();
+      if (rawPattern.contains(",")) {
+        String[] parts = rawPattern.split(",");
+        for(String p : parts) parsed.add(p.trim());
+      } else {
+        String raw = rawPattern.replace("|", " ");
+        StringBuilder buf = new StringBuilder();
+        for (int i=0; i<raw.length(); i++) {
+          char c = raw.charAt(i);
+          if (c == ' ') {
+            if (buf.length() > 0) { parsed.add(buf.toString()); buf.setLength(0); }
+          } else if (c == '.' || c == '-') {
+            if (buf.length() > 0) { parsed.add(buf.toString()); buf.setLength(0); }
+            parsed.add(String.valueOf(c));
+          } else {
+            buf.append(c);
+          }
+        }
+        if (buf.length() > 0) parsed.add(buf.toString());
+      }
+      String[] steps = parsed.toArray(new String[0]);
+      float stepMs = (60000 / bpm) / 4;
+      for (int i=0; i<Math.min(steps.length, 16); i++) {
+        String token = steps[i].trim();
+        if (token.equals(".")) {
+          try { Thread.sleep((long)stepMs); } catch(Exception e) {}
+          continue;
+        }
+        int sustainSteps = 1;
+        for (int j=i+1; j<Math.min(steps.length, 16); j++) {
+          String nextToken = steps[j].trim();
+          if (nextToken.equals("-")) sustainSteps++;
+          else break;
+        }
+        float noteDur = stepMs * sustainSteps;
+        if (!token.equals("-")) {
+          if (instrumentMap.getOrDefault("MySynth", "").equals("DRUM")) {
+            if (token.equalsIgnoreCase("x")) {
+               float volScale = instrumentVolumes.getOrDefault("MySynth", 1.0f);
+               samplerGainMap.get("MySynth").setValue(map(100 * volScale, 0, 127, -40, 0));
+               samplerMap.get("MySynth").trigger();
+            }
+          } else {
+            if (false) {
+              if (token.equals("x")) token = "C";
+              if (chords.containsKey(token)) playChordByNameInternal("MySynth", token, noteDur * 0.9f, (float)100);
+              else { int midi = noteToMidi(token); if (midi >= 0) playNoteForDuration("MySynth", midi, (float)100, noteDur * 0.9f); }
+            } else {
+              if (token.equalsIgnoreCase("x")) playNoteForDuration("MySynth", 60, (float)100, noteDur * 0.8f);
+              else { int midi = noteToMidi(token); if (midi >= 0) playNoteForDuration("MySynth", midi, (float)100, noteDur * 0.9f); }
+            }
+          }
+        }
+        try { Thread.sleep((long)stepMs); } catch(Exception e) {}
+      }
+    }
+  }).start();
+}
+
 void setup() {
-  minim = new Minim(this);
+  if (!instrumentMap.containsKey("MySynth")) instrumentMap.put("MySynth", "TRIANGLE");
+  if (!instrumentADSR.containsKey("MySynth")) instrumentADSR.put("MySynth", new float[]{defAdsrA, defAdsrD, defAdsrS, defAdsrR});
+    if (minim == null) { minim = new Minim(this); out = minim.getLineOut(); }
+    samplerMap.put("MySynth", new Sampler("drum/clap.wav", 4, minim));
+    samplerGainMap.put("MySynth", new Gain(0.f));
+    samplerMap.get("MySynth").patch(samplerGainMap.get("MySynth")).patch(out);
+    instrumentMap.put("MySynth", "DRUM");
+    instrumentADSR.put("MySynth", new float[]{defAdsrA, defAdsrD, defAdsrS, defAdsrR});
+    minim = new Minim(this);
   out = minim.getLineOut();
   currentInstrument = "";
     size(1600, 600);
@@ -538,64 +678,16 @@ void setup() {
   cp5.addButton("copyLogs").setPosition(1405, 5).setSize(90, 25).setCaptionLabel("COPY LOG");
   cp5.addButton("clearLogs").setPosition(1500, 5).setSize(90, 25).setCaptionLabel("CLEAR LOG");
   logToScreen("System Initialized.", 0);
-    bpm = (float)120;
-    if (!instrumentMap.containsKey("Lead")) instrumentMap.put("Lead", "TRIANGLE");
-  if (!instrumentADSR.containsKey("Lead")) instrumentADSR.put("Lead", new float[]{defAdsrA, defAdsrD, defAdsrS, defAdsrR});
-    if (minim == null) { minim = new Minim(this); out = minim.getLineOut(); }
-    if (!melodicSamplers.containsKey("Lead")) melodicSamplers.put("Lead", new MelodicSampler(minim));
-    melodicSamplers.get("Lead").loadSamples("piano");
-    instrumentMap.put("Lead", "MELODIC_SAMPLER");
-    instrumentADSR.put("Lead", new float[]{defAdsrA, defAdsrD, defAdsrS, defAdsrR});
-    instrumentVolumes.put("Lead", (float)100 / 100.0f);
-    if (!instrumentMap.containsKey("clap")) instrumentMap.put("clap", "TRIANGLE");
-  if (!instrumentADSR.containsKey("clap")) instrumentADSR.put("clap", new float[]{defAdsrA, defAdsrD, defAdsrS, defAdsrR});
-    if (minim == null) { minim = new Minim(this); out = minim.getLineOut(); }
-    samplerMap.put("clap", new Sampler("drum/clap.wav", 4, minim));
-    samplerGainMap.put("clap", new Gain(0.f));
-    samplerMap.get("clap").patch(samplerGainMap.get("clap")).patch(out);
-    instrumentMap.put("clap", "DRUM");
-    instrumentADSR.put("clap", new float[]{defAdsrA, defAdsrD, defAdsrS, defAdsrR});
-    instrumentVolumes.put("clap", (float)90 / 100.0f);
+    do_something();
+    delay((int)((60 / 120) * 4));
+    do_something2();
+    delay((int)((60 / 120) * 4));
     new Thread(new Runnable() {
       public void run() {
         activeMelodyCount++;
         try { Thread.sleep(200); } catch(Exception e) {}
         int timeout = 0;
         while(isCountingIn && timeout < 500) { try { Thread.sleep(10); timeout++; } catch(Exception e) {} }
-          for (int count = 0; count < 1; count++) {
-            parseAndPlayNote("Lead", "G5Q", (float)50);
-            parseAndPlayNote("Lead", "E5Q", (float)50);
-            parseAndPlayNote("Lead", "E5Q", (float)50);
-            parseAndPlayNote("clap", "XQ", (float)100);
-          }
-          for (int count2 = 0; count2 < 1; count2++) {
-            parseAndPlayNote("Lead", "F5Q", (float)50);
-            parseAndPlayNote("Lead", "D5Q", (float)50);
-            parseAndPlayNote("Lead", "D5Q", (float)50);
-            parseAndPlayNote("clap", "XQ", (float)100);
-          }
-        
-        activeMelodyCount--;
-      }
-    }).start();
-    new Thread(new Runnable() {
-      public void run() {
-        activeMelodyCount++;
-        try { Thread.sleep(200); } catch(Exception e) {}
-        int timeout = 0;
-        while(isCountingIn && timeout < 500) { try { Thread.sleep(10); timeout++; } catch(Exception e) {} }
-          for (int count3 = 0; count3 < 2; count3++) {
-            parseAndPlayNote("Lead", "C3E", (float)80);
-            parseAndPlayNote("Lead", "G3E", (float)30);
-            parseAndPlayNote("Lead", "E3E", (float)30);
-            parseAndPlayNote("Lead", "G3E", (float)30);
-          }
-          for (int count4 = 0; count4 < 2; count4++) {
-            parseAndPlayNote("Lead", "D3E", (float)80);
-            parseAndPlayNote("Lead", "G3E", (float)30);
-            parseAndPlayNote("Lead", "F3E", (float)30);
-            parseAndPlayNote("Lead", "G3E", (float)30);
-          }
         
         activeMelodyCount--;
       }
@@ -668,9 +760,4 @@ void draw() {
     }
   }
   updateInstrumentUISync();
-    if (frameCount > 60) {
-      if (!((activeMelodyCount > 0))) {
-        exit();
-      }
-    }
 }

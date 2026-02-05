@@ -6,6 +6,7 @@
     <field name="NAME">Kick</field>
     <statement name="STACK">
       <block type="sb_drum_sampler" id="4,yTcOLLDP4pICCnN632">
+        <mutation type="drum/kick.wav"></mutation>
         <field name="PATH">drum/kick.wav</field>
       </block>
     </statement>
@@ -14,6 +15,7 @@
     <field name="NAME">Snare</field>
     <statement name="STACK">
       <block type="sb_drum_sampler" id="-/a}hQl8|xAeZPWI%3@8">
+        <mutation type="drum/snare.wav"></mutation>
         <field name="PATH">drum/snare.wav</field>
       </block>
     </statement>
@@ -22,6 +24,7 @@
     <field name="NAME">HiHat</field>
     <statement name="STACK">
       <block type="sb_drum_sampler" id="jzMH(PrPao1~A3RdL9.|">
+        <mutation type="drum/ch.wav"></mutation>
         <field name="PATH">drum/ch.wav</field>
       </block>
     </statement>
@@ -78,14 +81,24 @@
                       </shadow>
                     </value>
                     <next>
-                      <block type="sb_transport_count_in" id="ZCAL(U;j:%sR~GUErM(H">
+                      <block type="sb_transport_count_in" id="|WD?@)Kze@(X_:_}.VL{">
                         <value name="MEASURES">
-                          <shadow type="math_number" id="|DpY(fl9h:my(uutYykD">
+                          <shadow type="math_number" id="zTW/`fD$n!3J7XgHC=XY">
                             <field name="NUM">1</field>
                           </shadow>
                         </value>
+                        <value name="BEATS">
+                          <shadow type="math_number" id="sMP?^$X040fvM4Nvpfmt">
+                            <field name="NUM">4</field>
+                          </shadow>
+                        </value>
+                        <value name="BEAT_UNIT">
+                          <shadow type="math_number" id="UF)Vcdmu9eX;{A-*|t]x">
+                            <field name="NUM">4</field>
+                          </shadow>
+                        </value>
                         <value name="VELOCITY">
-                          <shadow type="math_number" id="Uh/DJHlkl.nfD#3Ya)J~">
+                          <shadow type="math_number" id="_,mum@)z#|H7cdu%I3$3">
                             <field name="NUM">100</field>
                           </shadow>
                         </value>

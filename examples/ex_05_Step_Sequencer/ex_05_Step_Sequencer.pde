@@ -18,6 +18,7 @@ import themidibus.*;
 AudioOutput out;
 ControlP5 cp5;
 FFT fft;
+Gain masterGainUGen;
 HashMap<Integer, String> pcKeysHeld = new HashMap<Integer, String>();
 HashMap<String, Float> instrumentVolumes = new HashMap<String, Float>();
 HashMap<String, Gain> samplerGainMap = new HashMap<String, Gain>();
@@ -36,6 +37,7 @@ Sampler snare;
 Serial myPort;
 String currentInstrument = "default";
 String lastInstrument = "";
+Summer mainMixer;
 boolean isMidiMode = false;
 boolean showADSR = true;
 boolean showLog = true;
@@ -69,12 +71,13 @@ int pitchTranspose = 0;
     TreeMap<Integer, Sampler> samples = new TreeMap<Integer, Sampler>();
     TreeMap<Integer, TickRate> rates = new TreeMap<Integer, TickRate>();
     TreeMap<Integer, ADSR> adsrs = new TreeMap<Integer, ADSR>();
-    Summer mixer = new Summer();
+    Summer localMixer = new Summer();
     Minim m;
     
     MelodicSampler(Minim minim) { 
       this.m = minim; 
-      mixer.patch(out);
+      checkMainMixer();
+      localMixer.patch(mainMixer);
     }
     
     void loadSamples(String folder) {
@@ -93,7 +96,7 @@ int pitchTranspose = 0;
             TickRate tr = new TickRate(1.f);
             ADSR a = new ADSR(1.0, 0.001f, 0.001f, 1.0f, 0.5f); // 預設 R=0.5
             tr.setInterpolation(true);
-            s.patch(tr).patch(a).patch(mixer);
+            s.patch(tr).patch(a).patch(localMixer);
             samples.put(midi, s);
             rates.put(midi, tr);
             adsrs.put(midi, a);
@@ -122,6 +125,16 @@ int pitchTranspose = 0;
         return a;
       }
       return null;
+    }
+  }
+
+  void checkMainMixer() {
+    if (minim == null) minim = new Minim(this);
+    if (out == null) out = minim.getLineOut();
+    if (mainMixer == null) {
+      mainMixer = new Summer();
+      masterGainUGen = new Gain(0.f);
+      mainMixer.patch(masterGainUGen).patch(out);
     }
   }
 
@@ -186,7 +199,9 @@ int pitchTranspose = 0;
         ADSR env = ms.trigger(p, masterAmp, adsr[3]);
         if (env != null) {
           activeNotes.put(key, env);
-          adsrTimer = millis(); adsrState = 1;
+          if (instName.equals(currentInstrument) && !instName.equals("")) {
+            adsrTimer = millis(); adsrState = 1;
+          }
         }
       }
       return;
@@ -195,7 +210,7 @@ int pitchTranspose = 0;
     float baseFreq = mtof((float)p);
     ADSR env = new ADSR(1.0, adsr[0], adsr[1], adsr[2], adsr[3]);
     
-    Summer mixer = new Summer(); 
+    Summer noteMixer = new Summer(); 
     
     if (type.equals("HARMONIC")) {
       float[] partials = harmonicPartials.get(instName);
@@ -203,29 +218,31 @@ int pitchTranspose = 0;
         for (int i = 0; i < partials.length; i++) {
           if (partials[i] > 0) {
             Oscil osc = new Oscil(baseFreq * (i + 1), partials[i] * masterAmp, Waves.SINE);
-            osc.patch(mixer);
+            osc.patch(noteMixer);
           }
         }
       }
-      mixer.patch(env);
+      noteMixer.patch(env);
     } else if (type.equals("ADDITIVE")) {
       List<SynthComponent> configs = additiveConfigs.get(instName);
       if (configs != null) {
         for (SynthComponent comp : configs) {
           Oscil osc = new Oscil(baseFreq * comp.ratio, comp.amp * masterAmp, getWaveform(comp.waveType));
-          osc.patch(mixer);
+          osc.patch(noteMixer);
         }
       }
-      mixer.patch(env);
+      noteMixer.patch(env);
     } else {
       Oscil wave = new Oscil(baseFreq, masterAmp, getWaveform(type));
       wave.patch(env);
     }
     
-    env.patch(out);
+    env.patch(mainMixer);
     env.noteOn();
     activeNotes.put(key, env);
-    adsrTimer = millis(); adsrState = 1;
+    if (instName.equals(currentInstrument) && !instName.equals("")) {
+      adsrTimer = millis(); adsrState = 1;
+    }
   }
 
   void stopNoteInternal(String instName, int p) {
@@ -233,10 +250,12 @@ int pitchTranspose = 0;
     String key = instName + "_" + p;
     ADSR adsr = activeNotes.get(key);
     if (adsr != null) {
-      adsr.unpatchAfterRelease(out);
+      adsr.unpatchAfterRelease(mainMixer);
       adsr.noteOff();
       activeNotes.remove(key);
-      adsrTimer = millis(); adsrState = 2;
+      if (instName.equals(currentInstrument) && !instName.equals("")) {
+        adsrTimer = millis(); adsrState = 2;
+      }
     }
   }
 
@@ -261,6 +280,7 @@ int pitchTranspose = 0;
         if (cp5.getController("adsrS") != null) cp5.getController("adsrS").setValue(adsrS);
         if (cp5.getController("adsrR") != null) cp5.getController("adsrR").setValue(adsrR);
       }
+      adsrState = 0; // Reset light dot on instrument switch
       logToScreen("Instrument Switched: " + currentInstrument, 1);
       lastInstrument = currentInstrument;
     }
@@ -353,17 +373,18 @@ int pitchTranspose = 0;
   }
 
   void playClick(float freq, float v) {
+    checkMainMixer();
     if (out == null) return;
-    float amp = map(v, 0, 127, 0, 0.8f);
-    // Use SQUARE wave for a more sharp, percussive click
-    Oscil wave = new Oscil(freq, amp, Waves.SQUARE);
-    ADSR adsr = new ADSR(1.0, 0.001f, 0.02f, 0.0f, 0.02f);
-    wave.patch(adsr).patch(out);
+    float amp = map(v, 0, 127, 0, 1.0f);
+    // Use TRIANGLE wave for better visibility on oscilloscope
+    Oscil wave = new Oscil(freq, amp, Waves.TRIANGLE);
+    // Increase duration to ~100ms to ensure frame capture
+    ADSR adsr = new ADSR(1.0, 0.01f, 0.05f, 0.0f, 0.05f);
+    wave.patch(adsr).patch(mainMixer);
     adsr.noteOn();
-    // Since this is called from the count-in thread, a short sleep here is safe and necessary
-    try { Thread.sleep(50); } catch(Exception e) {} 
+    try { Thread.sleep(80); } catch(Exception e) {} 
     adsr.noteOff();
-    adsr.unpatchAfterRelease(out);
+    adsr.unpatchAfterRelease(mainMixer);
   }
 
 void logToScreen(String msg, int type) {
@@ -493,7 +514,7 @@ void setup() {
     instrumentADSR.put("Sax", new float[]{(float)0.2, (float)0.1, (float)0.8, (float)0.1});
     if (!instrumentMap.containsKey("Piano")) instrumentMap.put("Piano", "TRIANGLE");
   if (!instrumentADSR.containsKey("Piano")) instrumentADSR.put("Piano", new float[]{defAdsrA, defAdsrD, defAdsrS, defAdsrR});
-    if (minim == null) { minim = new Minim(this); out = minim.getLineOut(); }
+    checkMainMixer();
     if (!melodicSamplers.containsKey("Piano")) melodicSamplers.put("Piano", new MelodicSampler(minim));
     melodicSamplers.get("Piano").loadSamples("piano");
     instrumentMap.put("Piano", "MELODIC_SAMPLER");
@@ -506,37 +527,35 @@ void setup() {
     instrumentADSR.put("Bass", new float[]{(float)0.01, (float)0.5, (float)0, (float)0.5});
     if (!instrumentMap.containsKey("Clap")) instrumentMap.put("Clap", "TRIANGLE");
   if (!instrumentADSR.containsKey("Clap")) instrumentADSR.put("Clap", new float[]{defAdsrA, defAdsrD, defAdsrS, defAdsrR});
-    if (minim == null) { minim = new Minim(this); out = minim.getLineOut(); }
+    checkMainMixer();
     samplerMap.put("Clap", new Sampler("drum/clap.wav", 4, minim));
     samplerGainMap.put("Clap", new Gain(0.f));
-    samplerMap.get("Clap").patch(samplerGainMap.get("Clap")).patch(out);
+    samplerMap.get("Clap").patch(samplerGainMap.get("Clap")).patch(mainMixer);
     instrumentMap.put("Clap", "DRUM");
     instrumentADSR.put("Clap", new float[]{defAdsrA, defAdsrD, defAdsrS, defAdsrR});
     if (!instrumentMap.containsKey("Kick")) instrumentMap.put("Kick", "TRIANGLE");
   if (!instrumentADSR.containsKey("Kick")) instrumentADSR.put("Kick", new float[]{defAdsrA, defAdsrD, defAdsrS, defAdsrR});
-    if (minim == null) { minim = new Minim(this); out = minim.getLineOut(); }
+    checkMainMixer();
     samplerMap.put("Kick", new Sampler("drum/kick.wav", 4, minim));
     samplerGainMap.put("Kick", new Gain(0.f));
-    samplerMap.get("Kick").patch(samplerGainMap.get("Kick")).patch(out);
+    samplerMap.get("Kick").patch(samplerGainMap.get("Kick")).patch(mainMixer);
     instrumentMap.put("Kick", "DRUM");
     instrumentADSR.put("Kick", new float[]{defAdsrA, defAdsrD, defAdsrS, defAdsrR});
     if (!instrumentMap.containsKey("CHiHat")) instrumentMap.put("CHiHat", "TRIANGLE");
   if (!instrumentADSR.containsKey("CHiHat")) instrumentADSR.put("CHiHat", new float[]{defAdsrA, defAdsrD, defAdsrS, defAdsrR});
-    if (minim == null) { minim = new Minim(this); out = minim.getLineOut(); }
+    checkMainMixer();
     samplerMap.put("CHiHat", new Sampler("drum/ch.wav", 4, minim));
     samplerGainMap.put("CHiHat", new Gain(0.f));
-    samplerMap.get("CHiHat").patch(samplerGainMap.get("CHiHat")).patch(out);
+    samplerMap.get("CHiHat").patch(samplerGainMap.get("CHiHat")).patch(mainMixer);
     instrumentMap.put("CHiHat", "DRUM");
     instrumentADSR.put("CHiHat", new float[]{defAdsrA, defAdsrD, defAdsrS, defAdsrR});
-    minim = new Minim(this);
-  out = minim.getLineOut();
-  currentInstrument = "";
+    checkMainMixer();
     size(1600, 600);
   pixelDensity(displayDensity());
   stageBgColor = color(0, 0, 0);
   stageFgColor = color(255, 0, 150);
-  minim = new Minim(this);
-  out = minim.getLineOut();
+  checkMainMixer();
+  adsrState = 0;
   fft = new FFT(out.bufferSize(), out.sampleRate());
   cp5 = new ControlP5(this);
   cp5.setFont(createFont("Arial", 16));
@@ -1264,7 +1283,7 @@ void setup() {
 
 void draw() {
   pushStyle(); colorMode(HSB, 255); stageFgColor = color(fgHue, 255, 255); popStyle();
-  out.setGain(masterGain); noStroke(); fill(30); rect(0, 400, width, 200);
+  masterGainUGen.setValue(masterGain); noStroke(); fill(30); rect(0, 400, width, 200);
   // Draw rainbow bar behind fgHue slider
   pushStyle(); for (int i = 0; i < 150; i++) { colorMode(HSB, 150); stroke(i, 150, 150); line(20 + i, 572, 20 + i, 575); } popStyle();
   colorMode(RGB, 255); float currentVisualW = showLog ? 1200.0 : width;

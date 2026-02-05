@@ -1,0 +1,148 @@
+<xml xmlns="https://developers.google.com/blockly/xml">
+  <block type="sb_instrument_container" id="2G4{uR;G=}O]ioUYkQW{" x="350" y="30">
+    <field name="NAME">MySynth</field>
+    <statement name="STACK">
+      <block type="sb_drum_sampler" id="z!R-|f1K@Dx.f`_mK.(9">
+        <mutation type="drum/clap.wav"></mutation>
+        <field name="PATH">drum/clap.wav</field>
+      </block>
+    </statement>
+  </block>
+  <block type="processing_setup" id="!i4S9[|T(%*zCh8;FjOa" x="90" y="90">
+    <statement name="DO">
+      <block type="sb_minim_init" id="C+NX%g3qK^+^pQxS=q,Y">
+        <next>
+          <block type="visual_stage_setup" id="G5)-?(D#[9yeu+f)Db2m">
+            <field name="W">1200</field>
+            <field name="H">400</field>
+            <field name="BG_COLOR">#000000</field>
+            <field name="FG_COLOR">#ff0096</field>
+            <next>
+              <block type="procedures_callnoreturn" id="]1[pp|{XI/`R1@#Xet55">
+                <mutation name="do something"></mutation>
+                <next>
+                  <block type="processing_delay" id="r-V%TC#~U)f7I9d%.~E9">
+                    <value name="MS">
+                      <shadow type="math_number" id=".`A(zRye$#WKz!|^#?NN">
+                        <field name="NUM">1000</field>
+                      </shadow>
+                      <block type="math_arithmetic" id="q.W~TI;/wu]x7dZ)+fFc">
+                        <field name="OP">MULTIPLY</field>
+                        <value name="A">
+                          <shadow type="math_number" id="@,YVj(wD)Kc_d1~aD21G">
+                            <field name="NUM">1</field>
+                          </shadow>
+                          <block type="math_arithmetic" id="D,6pgLIr)7]?|pH#l)].">
+                            <field name="OP">DIVIDE</field>
+                            <value name="A">
+                              <shadow type="math_number" id="me57dD*U:wi]r3:f0)gy">
+                                <field name="NUM">60</field>
+                              </shadow>
+                            </value>
+                            <value name="B">
+                              <shadow type="math_number" id="{Lf[JZPiE[K6D,IO|A/I">
+                                <field name="NUM">120</field>
+                              </shadow>
+                            </value>
+                          </block>
+                        </value>
+                        <value name="B">
+                          <shadow type="math_number" id="D|?MjPxe(!*)Xd1LqabU">
+                            <field name="NUM">4</field>
+                          </shadow>
+                        </value>
+                      </block>
+                    </value>
+                    <next>
+                      <block type="procedures_callnoreturn" id="YKoEsH2?JUPnpXx+`J2g">
+                        <mutation name="do something2"></mutation>
+                        <next>
+                          <block type="processing_delay" id="fa`rN?a)oA-3YF9.Y10s">
+                            <value name="MS">
+                              <shadow type="math_number" id=".`A(zRye$#WKz!|^#?NN">
+                                <field name="NUM">1000</field>
+                              </shadow>
+                              <block type="math_arithmetic" id="`iS6A6Kkl0q#}Rps{A1w">
+                                <field name="OP">MULTIPLY</field>
+                                <value name="A">
+                                  <shadow type="math_number" id="@,YVj(wD)Kc_d1~aD21G">
+                                    <field name="NUM">1</field>
+                                  </shadow>
+                                  <block type="math_arithmetic" id="B!(P;7(V$(/2#U_tB)|Z">
+                                    <field name="OP">DIVIDE</field>
+                                    <value name="A">
+                                      <shadow type="math_number" id="KDt*#O%,OLml9P{),lCZ">
+                                        <field name="NUM">60</field>
+                                      </shadow>
+                                    </value>
+                                    <value name="B">
+                                      <shadow type="math_number" id="{q6q4nss6ULXS8kYtA#(">
+                                        <field name="NUM">120</field>
+                                      </shadow>
+                                    </value>
+                                  </block>
+                                </value>
+                                <value name="B">
+                                  <shadow type="math_number" id="Y;m@D:zh:X6h`C4J|)yk">
+                                    <field name="NUM">4</field>
+                                  </shadow>
+                                </value>
+                              </block>
+                            </value>
+                          </block>
+                        </next>
+                      </block>
+                    </next>
+                  </block>
+                </next>
+              </block>
+            </next>
+          </block>
+        </next>
+      </block>
+    </statement>
+  </block>
+  <block type="procedures_defnoreturn" id="~79=:$)zGv[vD/u/jdhW" x="430" y="130">
+    <field name="NAME">do something</field>
+    <comment pinned="false" h="80" w="160">Describe this function...</comment>
+    <statement name="STACK">
+      <block type="sb_rhythm_sequence" id="nh|Np=QT0?=Y^`yTaO,P">
+        <field name="SOURCE">MySynth</field>
+        <field name="CHORD_MODE">FALSE</field>
+        <field name="PATTERN">x--- x--- x--- x---</field>
+        <value name="VELOCITY">
+          <shadow type="math_number" id="{@1t?^~E-]h:vudwD!wM">
+            <field name="NUM">100</field>
+          </shadow>
+        </value>
+        <value name="MEASURE">
+          <shadow type="math_number" id="#^jpc)O-m:pV~8NgLOlR">
+            <field name="NUM">1</field>
+          </shadow>
+        </value>
+      </block>
+    </statement>
+  </block>
+  <block type="procedures_defnoreturn" id="7MlB+seUP]eLq_6wVO#~" x="430" y="250">
+    <field name="NAME">do something2</field>
+    <comment pinned="false" h="80" w="160">Describe this function...</comment>
+    <statement name="STACK">
+      <block type="sb_rhythm_sequence" id="=^^_eU8#;3GtTxAFac6)">
+        <field name="SOURCE">MySynth</field>
+        <field name="CHORD_MODE">FALSE</field>
+        <field name="PATTERN">x-X- x-X- x-x- x-x-</field>
+        <value name="VELOCITY">
+          <shadow type="math_number" id="]Ihbiz3T^d3?Kb2lPdBS">
+            <field name="NUM">100</field>
+          </shadow>
+        </value>
+        <value name="MEASURE">
+          <shadow type="math_number" id="Bb4IBy:~aA-(LZ7RD37D">
+            <field name="NUM">2</field>
+          </shadow>
+        </value>
+      </block>
+    </statement>
+  </block>
+  <block type="sb_perform" id="m6~Ttda~6(f2%#G#GsN}" x="90" y="270"></block>
+</xml>

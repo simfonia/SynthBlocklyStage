@@ -320,8 +320,8 @@ Blockly.Processing.forBlock['visual_stage_setup'] = function (block) {
     "pixelDensity(displayDensity());\n" +
     "stageBgColor = " + Blockly.Processing.hexToJavaColor(bgColorHex) + ";\n" +
     "stageFgColor = " + Blockly.Processing.hexToJavaColor(fgColorHex) + ";\n" +
-    "minim = new Minim(this);\n" +
-    "out = minim.getLineOut();\n" +
+    "checkMainMixer();\n" +
+    "adsrState = 0;\n" +
     "fft = new FFT(out.bufferSize(), out.sampleRate());\n" +
     "cp5 = new ControlP5(this);\n" +
     "cp5.setFont(createFont(\"Arial\", 16));\n" +
@@ -380,7 +380,7 @@ Blockly.Processing.forBlock['visual_stage_setup'] = function (block) {
   Blockly.Processing.provideSetup(setupCode);
 
   var drawCode = "pushStyle(); colorMode(HSB, 255); stageFgColor = color(fgHue, 255, 255); popStyle();\n"
-    + "out.setGain(masterGain); noStroke(); fill(30); rect(0, " + h + ", width, " + panelH + ");\n"
+    + "masterGainUGen.setValue(masterGain); noStroke(); fill(30); rect(0, " + h + ", width, " + panelH + ");\n"
     + "// Draw rainbow bar behind fgHue slider\n"
     + "pushStyle(); for (int i = 0; i < 150; i++) { colorMode(HSB, 150); stroke(i, 150, 150); line(20 + i, " + (uiY + 125 + 15 + 2) + ", 20 + i, " + (uiY + 125 + 15 + 5) + "); } popStyle();\n"
     + "colorMode(RGB, 255); float currentVisualW = showLog ? " + w + ".0 : width;\n"

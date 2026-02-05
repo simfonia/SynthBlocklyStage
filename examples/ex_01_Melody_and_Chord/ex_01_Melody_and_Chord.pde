@@ -11,13 +11,14 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.concurrent.*;
 import processing.serial.*;
 import themidibus.*;
 
 AudioOutput out;
 ControlP5 cp5;
 FFT fft;
-HashMap<Integer, ADSR> activeNotes = new HashMap<Integer, ADSR>();
+HashMap<Integer, String> pcKeysHeld = new HashMap<Integer, String>();
 HashMap<String, Float> instrumentVolumes = new HashMap<String, Float>();
 HashMap<String, Gain> samplerGainMap = new HashMap<String, Gain>();
 HashMap<String, List<SynthComponent>> additiveConfigs = new HashMap<String, List<SynthComponent>>();
@@ -25,7 +26,6 @@ HashMap<String, MelodicSampler> melodicSamplers = new HashMap<String, MelodicSam
 HashMap<String, Sampler> samplerMap = new HashMap<String, Sampler>();
 HashMap<String, String[]> chords = new HashMap<String, String[]>();
 HashMap<String, float[]> harmonicPartials = new HashMap<String, float[]>();
-HashSet<Integer> pcKeysHeld = new HashSet<Integer>();
 LinkedHashMap<String, String> instrumentMap = new LinkedHashMap<String, String>();
 LinkedHashMap<String, float[]> instrumentADSR = new LinkedHashMap<String, float[]>();
 MidiBus myBus;
@@ -162,22 +162,30 @@ int pitchTranspose = 0;
     return Waves.TRIANGLE;
   }
 
-  void playNoteInternal(int p, float vel) {
+  // Global ConcurrentHashMap for thread safety and composite keys
+  ConcurrentHashMap<String, ADSR> activeNotes = new ConcurrentHashMap<String, ADSR>();
+
+  void playNoteInternal(String instName, int p, float vel) {
+    if (instName == null || instName.length() == 0) instName = currentInstrument;
     if (p < 0) return;
-    if (activeNotes.containsKey(p)) stopNoteInternal(p);
+    String key = instName + "_" + p;
+    
+    // Stop existing note of SAME instrument and SAME pitch
+    if (activeNotes.containsKey(key)) stopNoteInternal(instName, p);
     
     float masterAmp = map(vel, 0, 127, 0, 0.5f);
-    // 套用樂器個別音量 (預設為 1.0)
-    masterAmp *= instrumentVolumes.getOrDefault(currentInstrument, 1.0f);
+    masterAmp *= instrumentVolumes.getOrDefault(instName, 1.0f);
+    
+    float[] adsr = instrumentADSR.get(instName);
+    if (adsr == null) adsr = new float[]{defAdsrA, defAdsrD, defAdsrS, defAdsrR};
 
-    String type = instrumentMap.getOrDefault(currentInstrument, "TRIANGLE");
+    String type = instrumentMap.getOrDefault(instName, "TRIANGLE");
     if (type.equals("MELODIC_SAMPLER")) {
-      MelodicSampler ms = melodicSamplers.get(currentInstrument);
+      MelodicSampler ms = melodicSamplers.get(instName);
       if (ms != null) {
-        // 將計算好的 masterAmp 傳給取樣器
-        ADSR adsr = ms.trigger(p, masterAmp, adsrR);
-        if (adsr != null) {
-          activeNotes.put(p, adsr);
+        ADSR env = ms.trigger(p, masterAmp, adsr[3]);
+        if (env != null) {
+          activeNotes.put(key, env);
           adsrTimer = millis(); adsrState = 1;
         }
       }
@@ -185,14 +193,12 @@ int pitchTranspose = 0;
     }
     
     float baseFreq = mtof((float)p);
-    
-    // Use LIVE values from UI Sliders for active performance
-    ADSR adsr = new ADSR(1.0, adsrA, adsrD, adsrS, adsrR);
+    ADSR env = new ADSR(1.0, adsr[0], adsr[1], adsr[2], adsr[3]);
     
     Summer mixer = new Summer(); 
     
     if (type.equals("HARMONIC")) {
-      float[] partials = harmonicPartials.get(currentInstrument);
+      float[] partials = harmonicPartials.get(instName);
       if (partials != null) {
         for (int i = 0; i < partials.length; i++) {
           if (partials[i] > 0) {
@@ -201,33 +207,35 @@ int pitchTranspose = 0;
           }
         }
       }
-      mixer.patch(adsr);
+      mixer.patch(env);
     } else if (type.equals("ADDITIVE")) {
-      List<SynthComponent> configs = additiveConfigs.get(currentInstrument);
+      List<SynthComponent> configs = additiveConfigs.get(instName);
       if (configs != null) {
         for (SynthComponent comp : configs) {
           Oscil osc = new Oscil(baseFreq * comp.ratio, comp.amp * masterAmp, getWaveform(comp.waveType));
           osc.patch(mixer);
         }
       }
-      mixer.patch(adsr);
+      mixer.patch(env);
     } else {
       Oscil wave = new Oscil(baseFreq, masterAmp, getWaveform(type));
-      wave.patch(adsr);
+      wave.patch(env);
     }
     
-    adsr.patch(out);
-    adsr.noteOn();
-    activeNotes.put(p, adsr);
+    env.patch(out);
+    env.noteOn();
+    activeNotes.put(key, env);
     adsrTimer = millis(); adsrState = 1;
   }
 
-  void stopNoteInternal(int p) {
-    ADSR adsr = activeNotes.get(p);
+  void stopNoteInternal(String instName, int p) {
+    if (instName == null || instName.length() == 0) instName = currentInstrument;
+    String key = instName + "_" + p;
+    ADSR adsr = activeNotes.get(key);
     if (adsr != null) {
       adsr.unpatchAfterRelease(out);
       adsr.noteOff();
-      activeNotes.remove(p);
+      activeNotes.remove(key);
       adsrTimer = millis(); adsrState = 2;
     }
   }
@@ -258,24 +266,24 @@ int pitchTranspose = 0;
     }
   }
 
-  void playNoteForDuration(int p, float vel, final float durationMs) {
+  void playNoteForDuration(final String instName, int p, float vel, final float durationMs) {
     if (p < 0) return;
-    playNoteInternal(p, vel);
+    playNoteInternal(instName, p, vel);
     final int pitch = p;
     new Thread(new Runnable() {
       public void run() {
         try { Thread.sleep((long)durationMs); } catch (Exception e) {}
-        stopNoteInternal(pitch);
+        stopNoteInternal(instName, pitch);
       }
     }).start();
   }
 
-  void playChordByNameInternal(String name, float durationMs, float vel) {
+  void playChordByNameInternal(String instName, String name, float durationMs, float vel) {
     String[] notes = chords.get(name);
     if (notes != null) {
       for (String n : notes) {
         int midi = noteToMidi(n);
-        if (midi >= 0) playNoteForDuration(midi, vel, durationMs);
+        if (midi >= 0) playNoteForDuration(instName, midi, vel, durationMs);
       }
     }
   }
@@ -320,13 +328,10 @@ int pitchTranspose = 0;
           samplerMap.get(name).trigger();
         }
       } else {
-        String oldInst = currentInstrument;
-        currentInstrument = name;
         if (!noteName.equalsIgnoreCase("R")) {
-          if (chords.containsKey(noteName)) playChordByNameInternal(noteName, totalMs * 0.95f, vel);
-          else { int midi = noteToMidi(noteName); if (midi >= 0) playNoteForDuration(midi, vel, totalMs * 0.95f); }
+          if (chords.containsKey(noteName)) playChordByNameInternal(name, noteName, totalMs * 0.95f, vel);
+          else { int midi = noteToMidi(noteName); if (midi >= 0) playNoteForDuration(name, midi, vel, totalMs * 0.95f); }
         }
-        currentInstrument = oldInst;
       }
       try { Thread.sleep((long)totalMs); } catch(Exception e) {}
     }
@@ -451,9 +456,9 @@ void logToScreen(String msg, int type) {
     else if (k == '0') p = 75; else if (k == 'p') p = 76;
 
     if (p != -1) {
-      if (!pcKeysHeld.contains(p)) {
-        playNoteInternal(p, 100);
-        pcKeysHeld.add(p);
+      if (!pcKeysHeld.containsKey(p)) {
+        playNoteInternal(currentInstrument, p, 100);
+        pcKeysHeld.put(p, currentInstrument);
         logToScreen("Keyboard ON: MIDI " + p, 0);
       }
     }
@@ -471,12 +476,23 @@ void logToScreen(String msg, int type) {
     else if (k == '0') p = 75; else if (k == 'p') p = 76;
 
     if (p != -1) {
-      stopNoteInternal(p);
-      pcKeysHeld.remove(p);
-      logToScreen("Keyboard OFF: MIDI " + p, 0);
+      if (pcKeysHeld.containsKey(p)) {
+        String inst = pcKeysHeld.get(p);
+        stopNoteInternal(inst, p);
+        pcKeysHeld.remove(p);
+        logToScreen("Keyboard OFF: MIDI " + p, 0);
+      }
     }
     
   }
+
+void do_something() {
+  playMelodyInternal("RQ   C4Q D4Q.   E4E  CM7H.+E              RE RQ C5Q B4Q.  G4E DmH      FM7H", "Piano");
+}
+
+void do_something2() {
+  playMelodyInternal("RH   A3Q_T B3Q_T C4Q_T   DmQ.     E4E FMadd6_CQ.    E4E BdimQ.     A4E B3Q.    B4E CM7W RH", "Piano");
+}
 
 void setup() {
   if (!instrumentMap.containsKey("Piano")) instrumentMap.put("Piano", "TRIANGLE");
@@ -548,8 +564,8 @@ void setup() {
         try { Thread.sleep(200); } catch(Exception e) {}
         int timeout = 0;
         while(isCountingIn && timeout < 500) { try { Thread.sleep(10); timeout++; } catch(Exception e) {} }
-          playMelodyInternal("RQ   C4Q D4Q.   E4E  CM7H.+E              RE RQ C5Q B4Q.  G4E DmH      FM7H", "Piano");
-          playMelodyInternal("RH   A3Q_T B3Q_T C4Q_T   DmQ.     E4E FMadd6_CQ.    E4E BdimQ.     A4E B3Q.    B4E CM7W RH", "Piano");
+          do_something();
+          do_something2();
         
         activeMelodyCount--;
       }

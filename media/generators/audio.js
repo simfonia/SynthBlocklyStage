@@ -25,6 +25,8 @@ Blockly.Processing.injectAudioCore = function() {
   g['chords'] = "HashMap<String, String[]> chords = new HashMap<String, String[]>();";
   g['currentInstrument'] = 'String currentInstrument = "default";';
   g['lastInstrument'] = 'String lastInstrument = "";';
+  g['mainMixer'] = "Summer mainMixer;";
+  g['masterGainUGen'] = "Gain masterGainUGen;";
   g['harmonicPartials'] = "HashMap<String, float[]> harmonicPartials = new HashMap<String, float[]>();";
   g['additiveConfigs'] = "HashMap<String, List<SynthComponent>> additiveConfigs = new HashMap<String, List<SynthComponent>>();";
   g['samplerMap'] = "HashMap<String, Sampler> samplerMap = new HashMap<String, Sampler>();";
@@ -51,12 +53,13 @@ Blockly.Processing.injectAudioCore = function() {
     TreeMap<Integer, Sampler> samples = new TreeMap<Integer, Sampler>();
     TreeMap<Integer, TickRate> rates = new TreeMap<Integer, TickRate>();
     TreeMap<Integer, ADSR> adsrs = new TreeMap<Integer, ADSR>();
-    Summer mixer = new Summer();
+    Summer localMixer = new Summer();
     Minim m;
     
     MelodicSampler(Minim minim) { 
       this.m = minim; 
-      mixer.patch(out);
+      checkMainMixer();
+      localMixer.patch(mainMixer);
     }
     
     void loadSamples(String folder) {
@@ -75,7 +78,7 @@ Blockly.Processing.injectAudioCore = function() {
             TickRate tr = new TickRate(1.f);
             ADSR a = new ADSR(1.0, 0.001f, 0.001f, 1.0f, 0.5f); // 預設 R=0.5
             tr.setInterpolation(true);
-            s.patch(tr).patch(a).patch(mixer);
+            s.patch(tr).patch(a).patch(localMixer);
             samples.put(midi, s);
             rates.put(midi, tr);
             adsrs.put(midi, a);
@@ -104,6 +107,16 @@ Blockly.Processing.injectAudioCore = function() {
         return a;
       }
       return null;
+    }
+  }
+
+  void checkMainMixer() {
+    if (minim == null) minim = new Minim(this);
+    if (out == null) out = minim.getLineOut();
+    if (mainMixer == null) {
+      mainMixer = new Summer();
+      masterGainUGen = new Gain(0.f);
+      mainMixer.patch(masterGainUGen).patch(out);
     }
   }
 
@@ -168,7 +181,9 @@ Blockly.Processing.injectAudioCore = function() {
         ADSR env = ms.trigger(p, masterAmp, adsr[3]);
         if (env != null) {
           activeNotes.put(key, env);
-          adsrTimer = millis(); adsrState = 1;
+          if (instName.equals(currentInstrument) && !instName.equals("")) {
+            adsrTimer = millis(); adsrState = 1;
+          }
         }
       }
       return;
@@ -177,7 +192,7 @@ Blockly.Processing.injectAudioCore = function() {
     float baseFreq = mtof((float)p);
     ADSR env = new ADSR(1.0, adsr[0], adsr[1], adsr[2], adsr[3]);
     
-    Summer mixer = new Summer(); 
+    Summer noteMixer = new Summer(); 
     
     if (type.equals("HARMONIC")) {
       float[] partials = harmonicPartials.get(instName);
@@ -185,29 +200,31 @@ Blockly.Processing.injectAudioCore = function() {
         for (int i = 0; i < partials.length; i++) {
           if (partials[i] > 0) {
             Oscil osc = new Oscil(baseFreq * (i + 1), partials[i] * masterAmp, Waves.SINE);
-            osc.patch(mixer);
+            osc.patch(noteMixer);
           }
         }
       }
-      mixer.patch(env);
+      noteMixer.patch(env);
     } else if (type.equals("ADDITIVE")) {
       List<SynthComponent> configs = additiveConfigs.get(instName);
       if (configs != null) {
         for (SynthComponent comp : configs) {
           Oscil osc = new Oscil(baseFreq * comp.ratio, comp.amp * masterAmp, getWaveform(comp.waveType));
-          osc.patch(mixer);
+          osc.patch(noteMixer);
         }
       }
-      mixer.patch(env);
+      noteMixer.patch(env);
     } else {
       Oscil wave = new Oscil(baseFreq, masterAmp, getWaveform(type));
       wave.patch(env);
     }
     
-    env.patch(out);
+    env.patch(mainMixer);
     env.noteOn();
     activeNotes.put(key, env);
-    adsrTimer = millis(); adsrState = 1;
+    if (instName.equals(currentInstrument) && !instName.equals("")) {
+      adsrTimer = millis(); adsrState = 1;
+    }
   }
 
   void stopNoteInternal(String instName, int p) {
@@ -215,10 +232,12 @@ Blockly.Processing.injectAudioCore = function() {
     String key = instName + "_" + p;
     ADSR adsr = activeNotes.get(key);
     if (adsr != null) {
-      adsr.unpatchAfterRelease(out);
+      adsr.unpatchAfterRelease(mainMixer);
       adsr.noteOff();
       activeNotes.remove(key);
-      adsrTimer = millis(); adsrState = 2;
+      if (instName.equals(currentInstrument) && !instName.equals("")) {
+        adsrTimer = millis(); adsrState = 2;
+      }
     }
   }
 
@@ -243,6 +262,7 @@ Blockly.Processing.injectAudioCore = function() {
         if (cp5.getController("adsrS") != null) cp5.getController("adsrS").setValue(adsrS);
         if (cp5.getController("adsrR") != null) cp5.getController("adsrR").setValue(adsrR);
       }
+      adsrState = 0; // Reset light dot on instrument switch
       logToScreen("Instrument Switched: " + currentInstrument, 1);
       lastInstrument = currentInstrument;
     }
@@ -335,17 +355,18 @@ Blockly.Processing.injectAudioCore = function() {
   }
 
   void playClick(float freq, float v) {
+    checkMainMixer();
     if (out == null) return;
-    float amp = map(v, 0, 127, 0, 0.8f);
-    // Use SQUARE wave for a more sharp, percussive click
-    Oscil wave = new Oscil(freq, amp, Waves.SQUARE);
-    ADSR adsr = new ADSR(1.0, 0.001f, 0.02f, 0.0f, 0.02f);
-    wave.patch(adsr).patch(out);
+    float amp = map(v, 0, 127, 0, 1.0f);
+    // Use TRIANGLE wave for better visibility on oscilloscope
+    Oscil wave = new Oscil(freq, amp, Waves.TRIANGLE);
+    // Increase duration to ~100ms to ensure frame capture
+    ADSR adsr = new ADSR(1.0, 0.01f, 0.05f, 0.0f, 0.05f);
+    wave.patch(adsr).patch(mainMixer);
     adsr.noteOn();
-    // Since this is called from the count-in thread, a short sleep here is safe and necessary
-    try { Thread.sleep(50); } catch(Exception e) {} 
+    try { Thread.sleep(80); } catch(Exception e) {} 
     adsr.noteOff();
-    adsr.unpatchAfterRelease(out);
+    adsr.unpatchAfterRelease(mainMixer);
   }
   `;
 };
@@ -365,7 +386,9 @@ registerGenerator('sb_minim_init', function(block) {
   Blockly.Processing.global_vars_['sample_kick'] = "Sampler kick;";
   Blockly.Processing.global_vars_['sample_snare'] = "Sampler snare;";
   
-  Blockly.Processing.provideSetup('minim = new Minim(this);\nout = minim.getLineOut();\ncurrentInstrument = "";');
+  Blockly.Processing.provideSetup(`
+  checkMainMixer();
+  `);
   return '';
 });
 
@@ -376,10 +399,10 @@ registerGenerator('sb_drum_sampler', function(block) {
   const type = block.getFieldValue('PATH');
   const path = (type === 'CUSTOM') ? block.getFieldValue('CUSTOM_PATH_VALUE') : type;
   
-  let code = 'if (minim == null) { minim = new Minim(this); out = minim.getLineOut(); }\n';
+  let code = 'checkMainMixer();\n';
   code += 'samplerMap.put("' + name + '", new Sampler("' + path + '", 4, minim));\n';
   code += 'samplerGainMap.put("' + name + '", new Gain(0.f));\n';
-  code += 'samplerMap.get("' + name + '").patch(samplerGainMap.get("' + name + '")).patch(out);\n';
+  code += 'samplerMap.get("' + name + '").patch(samplerGainMap.get("' + name + '")).patch(mainMixer);\n';
   code += 'instrumentMap.put("' + name + '", "DRUM");\n';
   code += 'instrumentADSR.put("' + name + '", new float[]{defAdsrA, defAdsrD, defAdsrS, defAdsrR});\n';
   return code;
@@ -396,7 +419,7 @@ registerGenerator('sb_melodic_sampler', function(block) {
   else if (type === 'VIOLIN_ARCO') path = "violin/violin-section-vibrato-sustain";
   else path = block.getFieldValue('CUSTOM_PATH_VALUE');
 
-  let code = 'if (minim == null) { minim = new Minim(this); out = minim.getLineOut(); }\n';
+  let code = 'checkMainMixer();\n';
   code += 'if (!melodicSamplers.containsKey("' + name + '")) melodicSamplers.put("' + name + '", new MelodicSampler(minim));\n';
   code += 'melodicSamplers.get("' + name + '").loadSamples("' + path + '");\n';
   code += 'instrumentMap.put("' + name + '", "MELODIC_SAMPLER");\n';

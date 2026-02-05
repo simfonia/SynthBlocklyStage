@@ -1,0 +1,669 @@
+<xml xmlns="https://developers.google.com/blockly/xml">
+  <block type="sb_comment" id="tO.4qa=%dE+LBNIN=g0X" x="50" y="-50">
+    <field name="TEXT">【Bossa Nova AABAB 曲式】&amp;#10;&amp;#10;此範例展示利用函式構建精準的樂曲結構。&amp;#10;1. A 段：4 小節循環 (Dm7-G7-CM7-A7)。&amp;#10;2. B 段：2 小節終止式。&amp;#10;3. 曲式安排：主程式呼叫 A -&gt; A -&gt; B -&gt; A -&gt; B。&amp;#10;&amp;#10;技巧：在呼叫函式後加上「等待 Nm」，可確保段落間的舖路機完美銜接。</field>
+  </block>
+  <block type="sb_instrument_container" id="UPARf$SN7Hc^brNI|x[?" x="50" y="170">
+    <field name="NAME">Sax</field>
+    <statement name="STACK">
+      <block type="sb_set_wave" id="I{SYT:P~im]XVyP[*mMp">
+        <field name="TYPE">SAW</field>
+        <next>
+          <block type="sb_set_adsr" id="BG3)0b{%Cp9*YvzhD]Lm">
+            <value name="A">
+              <shadow type="math_number" id="jt51~xAr0dNZOgBCEEwS">
+                <field name="NUM">0.2</field>
+              </shadow>
+            </value>
+            <value name="D">
+              <shadow type="math_number" id="hG6f/BGRc62U+SMmGpp7">
+                <field name="NUM">0.1</field>
+              </shadow>
+            </value>
+            <value name="S">
+              <shadow type="math_number" id=";mN@T)SyJAt?@MI8[Wcy">
+                <field name="NUM">0.8</field>
+              </shadow>
+            </value>
+            <value name="R">
+              <shadow type="math_number" id="}aFJLC{}bK1y5|j250s}">
+                <field name="NUM">0.1</field>
+              </shadow>
+            </value>
+          </block>
+        </next>
+      </block>
+    </statement>
+  </block>
+  <block type="sb_instrument_container" id="dLoRi|:7RIClSWj#1Gkq" x="350" y="170">
+    <field name="NAME">Piano</field>
+    <statement name="STACK">
+      <block type="sb_melodic_sampler" id="PR(JOs(d%e]cd6yG:7lD">
+        <mutation type="PIANO"></mutation>
+        <field name="TYPE">PIANO</field>
+        <next>
+          <block type="sb_set_adsr" id="CePa+P3IY+wi=DU;J7(U">
+            <value name="A">
+              <shadow type="math_number" id="u%8:A=5z2(;$qzb)Yw]1">
+                <field name="NUM">0.01</field>
+              </shadow>
+            </value>
+            <value name="D">
+              <shadow type="math_number" id="hBSCDH,puF]h5],Zq$wN">
+                <field name="NUM">0.1</field>
+              </shadow>
+            </value>
+            <value name="S">
+              <shadow type="math_number" id="4X9)+7sX4_HQE!s]zzl1">
+                <field name="NUM">0.5</field>
+              </shadow>
+            </value>
+            <value name="R">
+              <shadow type="math_number" id="za;mI$+@,#xZ1e9Vc/Bk">
+                <field name="NUM">0.3</field>
+              </shadow>
+            </value>
+          </block>
+        </next>
+      </block>
+    </statement>
+  </block>
+  <block type="sb_instrument_container" id="KPnCs|Jj~t(n(7U2t84#" x="50" y="390">
+    <field name="NAME">Bass</field>
+    <statement name="STACK">
+      <block type="sb_set_wave" id="9KNARKN1o@p%R{Q](O+}">
+        <field name="TYPE">SAW</field>
+        <next>
+          <block type="sb_set_instrument_volume" id="KQ+u[kN{qMKz9X2U^YaM">
+            <field name="NAME">Sax</field>
+            <value name="VOLUME">
+              <shadow type="math_number" id="KM;54f7+e|Ya|p7tB+BP">
+                <field name="NUM">70</field>
+              </shadow>
+            </value>
+            <next>
+              <block type="sb_set_adsr" id="~|^%:z5I(l6t2q2gQnO=">
+                <value name="A">
+                  <shadow type="math_number" id="Y_kr?Oc*s8k]uM1$l`zR">
+                    <field name="NUM">0.01</field>
+                  </shadow>
+                </value>
+                <value name="D">
+                  <shadow type="math_number" id="k+p-4,Gx4|G~]QN;JjkC">
+                    <field name="NUM">0.5</field>
+                  </shadow>
+                </value>
+                <value name="S">
+                  <shadow type="math_number" id="mqz~7[,|xFV2d.*mMq(;">
+                    <field name="NUM">0</field>
+                  </shadow>
+                </value>
+                <value name="R">
+                  <shadow type="math_number" id="=N/q5!_bnZfdqv3V0Y6p">
+                    <field name="NUM">0.5</field>
+                  </shadow>
+                </value>
+              </block>
+            </next>
+          </block>
+        </next>
+      </block>
+    </statement>
+  </block>
+  <block type="sb_instrument_container" id="^x~gy9A5T?OSWu]Qf@Z:" x="350" y="390">
+    <field name="NAME">Clap</field>
+    <statement name="STACK">
+      <block type="sb_drum_sampler" id="`*T}W@0]pJ!VVPFEVazq">
+        <mutation type="drum/clap.wav"></mutation>
+        <field name="PATH">drum/clap.wav</field>
+      </block>
+    </statement>
+  </block>
+  <block type="sb_instrument_container" id="@n%)WaWefW,99*}ju!fk" x="350" y="490">
+    <field name="NAME">Kick</field>
+    <statement name="STACK">
+      <block type="sb_drum_sampler" id="MCoqFN8$s_._6T^nWi{[">
+        <mutation type="drum/kick.wav"></mutation>
+        <field name="PATH">drum/kick.wav</field>
+      </block>
+    </statement>
+  </block>
+  <block type="sb_instrument_container" id="gnIOb2Dk8h4qe%~=n)h8" x="350" y="590">
+    <field name="NAME">CHiHat</field>
+    <statement name="STACK">
+      <block type="sb_drum_sampler" id="n/q0R2r:F:$Ixe3}w)p7">
+        <mutation type="drum/ch.wav"></mutation>
+        <field name="PATH">drum/ch.wav</field>
+      </block>
+    </statement>
+  </block>
+  <block type="processing_setup" id="l$M?}M-EE9X)Ou,e_}D}" x="50" y="670">
+    <statement name="DO">
+      <block type="sb_minim_init" id="?iRH9*,#+Z!?cv2Qq=0D">
+        <next>
+          <block type="visual_stage_setup" id="^de4a[jWa5s!kQ79SpDj">
+            <field name="W">1200</field>
+            <field name="H">400</field>
+            <field name="BG_COLOR">#000000</field>
+            <field name="FG_COLOR">#ff0096</field>
+            <next>
+              <block type="sb_select_current_instrument" id=":@-Y]7jy]9ed#9^glK.K">
+                <field name="NAME">Sax</field>
+                <next>
+                  <block type="sb_transport_set_bpm" id="?9xxdTU!uE5az$CV]8k%">
+                    <value name="BPM">
+                      <shadow type="math_number" id="=;P[(SV@nSeVN(z}(Wkz">
+                        <field name="NUM">105</field>
+                      </shadow>
+                    </value>
+                    <next>
+                      <block type="sb_define_chord" id="Nh[0KT1F8W[eGW`iBlQE">
+                        <field name="NAME">Dm7</field>
+                        <field name="NOTES">D4,F4,A4,C5</field>
+                        <next>
+                          <block type="sb_define_chord" id="w2JTB:S+0Euq]=dZiu-9">
+                            <field name="NAME">G7</field>
+                            <field name="NOTES">G3,B3,D4,F4</field>
+                            <next>
+                              <block type="sb_define_chord" id="i%;.f0|I~U`;:4/t+}em">
+                                <field name="NAME">CM7</field>
+                                <field name="NOTES">C4,E4,G4,B4</field>
+                                <next>
+                                  <block type="sb_define_chord" id="8:[3cFp=m]Z,gE@31USi">
+                                    <field name="NAME">A7</field>
+                                    <field name="NOTES">A3,C#4,E4,G4</field>
+                                    <next>
+                                      <block type="sb_define_chord" id="4fa18:xj~pf7lwpMM++`">
+                                        <field name="NAME">CM7_End</field>
+                                        <field name="NOTES">C3,G3,C4,E4,G4,B4</field>
+                                        <next>
+                                          <block type="sb_transport_count_in" id="s9NW$-az2D=IMV)?Y$FF">
+                                            <value name="MEASURES">
+                                              <shadow type="math_number" id="04G+4+$6pB(={k96=-Ze">
+                                                <field name="NUM">1</field>
+                                              </shadow>
+                                            </value>
+                                            <value name="BEATS">
+                                              <shadow type="math_number" id="9}~Dy?e_BsHsLwhw?/,c">
+                                                <field name="NUM">4</field>
+                                              </shadow>
+                                            </value>
+                                            <value name="BEAT_UNIT">
+                                              <shadow type="math_number" id="43w$NCKJD2yE.hjmflab">
+                                                <field name="NUM">4</field>
+                                              </shadow>
+                                            </value>
+                                            <value name="VELOCITY">
+                                              <shadow type="math_number" id="IB7[JN%/*nT]-}yWatHf">
+                                                <field name="NUM">100</field>
+                                              </shadow>
+                                            </value>
+                                          </block>
+                                        </next>
+                                      </block>
+                                    </next>
+                                  </block>
+                                </next>
+                              </block>
+                            </next>
+                          </block>
+                        </next>
+                      </block>
+                    </next>
+                  </block>
+                </next>
+              </block>
+            </next>
+          </block>
+        </next>
+      </block>
+    </statement>
+  </block>
+  <block type="procedures_defnoreturn" id="GLDlz_q.zG!*P+iJZ]9Z" x="50" y="1070">
+    <field name="NAME">A</field>
+    <comment pinned="false" h="80" w="160">Describe this function...</comment>
+    <statement name="STACK">
+      <block type="sb_rhythm_sequence" id="I@l]#f~tZTSxw_B~|GYR">
+        <field name="SOURCE">Clap</field>
+        <field name="CHORD_MODE">FALSE</field>
+        <field name="PATTERN">x--- --x- --x- x---</field>
+        <value name="VELOCITY">
+          <shadow type="math_number" id="BuSe8JxH2b`rXXRBUSaz">
+            <field name="NUM">100</field>
+          </shadow>
+        </value>
+        <value name="MEASURE">
+          <shadow type="math_number" id="{k%T2^]tsE(j8qAs!BP+">
+            <field name="NUM">1</field>
+          </shadow>
+        </value>
+        <next>
+          <block type="sb_rhythm_sequence" id="B]FEx@K6EFiOocg`a)+p">
+            <field name="SOURCE">Piano</field>
+            <field name="CHORD_MODE">TRUE</field>
+            <field name="PATTERN">Dm7... Dm7--- ..Dm7. ..Dm7.</field>
+            <value name="VELOCITY">
+              <shadow type="math_number" id="OFQeEjt^7EMy;DXR]?Mk">
+                <field name="NUM">100</field>
+              </shadow>
+            </value>
+            <value name="MEASURE">
+              <shadow type="math_number" id="ZF8TJ0T:d_sjtFFD^B,)">
+                <field name="NUM">1</field>
+              </shadow>
+            </value>
+            <next>
+              <block type="sb_rhythm_sequence" id="*,^-|N#n}.^2*mQV6qa/">
+                <field name="SOURCE">Bass</field>
+                <field name="CHORD_MODE">FALSE</field>
+                <field name="PATTERN">D2--- ---- A2--- ----</field>
+                <value name="VELOCITY">
+                  <shadow type="math_number" id="4/22w1!p,odZ8n8FoGVW">
+                    <field name="NUM">100</field>
+                  </shadow>
+                </value>
+                <value name="MEASURE">
+                  <shadow type="math_number" id="B.,MMC1Cw9:*QEV_@l_}">
+                    <field name="NUM">1</field>
+                  </shadow>
+                </value>
+                <next>
+                  <block type="sb_rhythm_sequence" id="*mOjc/jy4S,u@({@6Jax">
+                    <field name="SOURCE">Kick</field>
+                    <field name="CHORD_MODE">FALSE</field>
+                    <field name="PATTERN">x--- --x- --x- x---</field>
+                    <value name="VELOCITY">
+                      <shadow type="math_number" id="(.Mrdh(1w/;}7(sE{.Fi">
+                        <field name="NUM">150</field>
+                      </shadow>
+                    </value>
+                    <value name="MEASURE">
+                      <shadow type="math_number" id="^83a1Fk@eC{M^,!~$ZT3">
+                        <field name="NUM">2</field>
+                      </shadow>
+                    </value>
+                    <next>
+                      <block type="sb_rhythm_sequence" id="P$|:N10a1D*U5`ME@Cc`">
+                        <field name="SOURCE">Piano</field>
+                        <field name="CHORD_MODE">TRUE</field>
+                        <field name="PATTERN">..G7. ..G7. ---- G7...</field>
+                        <value name="VELOCITY">
+                          <shadow type="math_number" id="!e:K=5!$YJu|UPOMr]O1">
+                            <field name="NUM">100</field>
+                          </shadow>
+                        </value>
+                        <value name="MEASURE">
+                          <shadow type="math_number" id="Yv::|ykf%kPv9I,!{V%I">
+                            <field name="NUM">2</field>
+                          </shadow>
+                        </value>
+                        <next>
+                          <block type="sb_rhythm_sequence" id="d.9=AB#KJU=p42#hbY8D">
+                            <field name="SOURCE">Bass</field>
+                            <field name="CHORD_MODE">FALSE</field>
+                            <field name="PATTERN">G1--- ---- D2--- ----</field>
+                            <value name="VELOCITY">
+                              <shadow type="math_number" id="LPE6L[~CLl_)HQOSWkMI">
+                                <field name="NUM">100</field>
+                              </shadow>
+                            </value>
+                            <value name="MEASURE">
+                              <shadow type="math_number" id="p:c*M?5[`K-pdmdJ?D{:">
+                                <field name="NUM">2</field>
+                              </shadow>
+                            </value>
+                            <next>
+                              <block type="sb_rhythm_sequence" id="%W%/YTO.olcSow~IidUL">
+                                <field name="SOURCE">Piano</field>
+                                <field name="CHORD_MODE">TRUE</field>
+                                <field name="PATTERN">CM7... CM7--- ..CM7. ..CM7.</field>
+                                <value name="VELOCITY">
+                                  <shadow type="math_number" id="Z^4uM7SPWi._h*(gltA-">
+                                    <field name="NUM">100</field>
+                                  </shadow>
+                                </value>
+                                <value name="MEASURE">
+                                  <shadow type="math_number" id="sYZ!2L(==_}vk-0CuNm5">
+                                    <field name="NUM">3</field>
+                                  </shadow>
+                                </value>
+                                <next>
+                                  <block type="sb_rhythm_sequence" id="k|o,Zzrn7NWT+^@DVTMq">
+                                    <field name="SOURCE">Bass</field>
+                                    <field name="CHORD_MODE">FALSE</field>
+                                    <field name="PATTERN">C2--- ---- G2--- ----</field>
+                                    <value name="VELOCITY">
+                                      <shadow type="math_number" id="2ij~f5F%XH^5e8X0HzOZ">
+                                        <field name="NUM">100</field>
+                                      </shadow>
+                                    </value>
+                                    <value name="MEASURE">
+                                      <shadow type="math_number" id=".$VB?6_%Iy[1OUsauMVc">
+                                        <field name="NUM">3</field>
+                                      </shadow>
+                                    </value>
+                                    <next>
+                                      <block type="sb_rhythm_sequence" id="~JjI)8D3iWAOt7%JsPYC">
+                                        <field name="SOURCE">Piano</field>
+                                        <field name="CHORD_MODE">TRUE</field>
+                                        <field name="PATTERN">..A7. ..A7. ---- A7...</field>
+                                        <value name="VELOCITY">
+                                          <shadow type="math_number" id="doBF2@rtRVX/g~{{Fs*a">
+                                            <field name="NUM">100</field>
+                                          </shadow>
+                                        </value>
+                                        <value name="MEASURE">
+                                          <shadow type="math_number" id="X|Lq8{q.{//91(50M~UC">
+                                            <field name="NUM">4</field>
+                                          </shadow>
+                                        </value>
+                                        <next>
+                                          <block type="sb_rhythm_sequence" id="1-1aeMc|Mv(M;z@b8EZ^">
+                                            <field name="SOURCE">Bass</field>
+                                            <field name="CHORD_MODE">FALSE</field>
+                                            <field name="PATTERN">A1--- ---- E2--- ----</field>
+                                            <value name="VELOCITY">
+                                              <shadow type="math_number" id="ljX2bl*5)YnI|R%onn9S">
+                                                <field name="NUM">100</field>
+                                              </shadow>
+                                            </value>
+                                            <value name="MEASURE">
+                                              <shadow type="math_number" id="yEP(JvuE#iwTG,nT.s1)">
+                                                <field name="NUM">4</field>
+                                              </shadow>
+                                            </value>
+                                          </block>
+                                        </next>
+                                      </block>
+                                    </next>
+                                  </block>
+                                </next>
+                              </block>
+                            </next>
+                          </block>
+                        </next>
+                      </block>
+                    </next>
+                  </block>
+                </next>
+              </block>
+            </next>
+          </block>
+        </next>
+      </block>
+    </statement>
+  </block>
+  <block type="procedures_defnoreturn" id="/#KeeB8n!tV8S*EWN#L-" x="50" y="1510">
+    <field name="NAME">B</field>
+    <comment pinned="false" h="80" w="160">Describe this function...</comment>
+    <statement name="STACK">
+      <block type="sb_rhythm_sequence" id="JQd;RY1wO@xdDSB==2-r">
+        <field name="SOURCE">Piano</field>
+        <field name="CHORD_MODE">TRUE</field>
+        <field name="PATTERN">Dm7--- ---- G7--- ----</field>
+        <value name="VELOCITY">
+          <shadow type="math_number" id="wwi?zw,tgZ%es:[|y2q=">
+            <field name="NUM">100</field>
+          </shadow>
+        </value>
+        <value name="MEASURE">
+          <shadow type="math_number" id="g_pA1$+L6UqW~P+9$Z~J">
+            <field name="NUM">1</field>
+          </shadow>
+        </value>
+        <next>
+          <block type="sb_rhythm_sequence" id="ELJ@aPIdy-c-1Uua9|NE">
+            <field name="SOURCE">Bass</field>
+            <field name="CHORD_MODE">FALSE</field>
+            <field name="PATTERN">D2--- ---- G1--- ----</field>
+            <value name="VELOCITY">
+              <shadow type="math_number" id="6)x[@SFeWN2+ZY72aspd">
+                <field name="NUM">100</field>
+              </shadow>
+            </value>
+            <value name="MEASURE">
+              <shadow type="math_number" id="ObD*-99!.HEFU}7jQSQ^">
+                <field name="NUM">1</field>
+              </shadow>
+            </value>
+            <next>
+              <block type="sb_rhythm_sequence" id="~gLvt20$=j@J91%_-!@D">
+                <field name="SOURCE">Piano</field>
+                <field name="CHORD_MODE">TRUE</field>
+                <field name="PATTERN">CM7_End--- ---- ---- ----</field>
+                <value name="VELOCITY">
+                  <shadow type="math_number" id="OPoS*ue1QL6h/CU21$cC">
+                    <field name="NUM">100</field>
+                  </shadow>
+                </value>
+                <value name="MEASURE">
+                  <shadow type="math_number" id="anTh,|]sM[24$hE7?:1~">
+                    <field name="NUM">2</field>
+                  </shadow>
+                </value>
+                <next>
+                  <block type="sb_rhythm_sequence" id="]B3hT^MtxXty@@#jVq~.">
+                    <field name="SOURCE">Bass</field>
+                    <field name="CHORD_MODE">FALSE</field>
+                    <field name="PATTERN">C2--- ---- ---- ----</field>
+                    <value name="VELOCITY">
+                      <shadow type="math_number" id="6~a_+o@ulHgE#H,YfeGz">
+                        <field name="NUM">100</field>
+                      </shadow>
+                    </value>
+                    <value name="MEASURE">
+                      <shadow type="math_number" id="Q`~/J`AExq;a65O]|B|F">
+                        <field name="NUM">2</field>
+                      </shadow>
+                    </value>
+                  </block>
+                </next>
+              </block>
+            </next>
+          </block>
+        </next>
+      </block>
+    </statement>
+  </block>
+  <block type="sb_perform" id="Wj5bn6h!~{JAE]pLYgI+" x="50" y="1730">
+    <statement name="DO">
+      <block type="procedures_callnoreturn" id="P)9:P0~2!PIAI~D.u[8f">
+        <mutation name="A"></mutation>
+        <next>
+          <block type="processing_delay" id="u~P{WK|ujrAR4WbMtSh3">
+            <value name="MS">
+              <shadow type="math_number" id="{nj(g5lMt?+4)M[G`hG.">
+                <field name="NUM">1000</field>
+              </shadow>
+              <block type="math_arithmetic" id="@yLl~Ncj#*^{[k]c%F5d">
+                <field name="OP">MULTIPLY</field>
+                <value name="A">
+                  <shadow type="math_number" id="O}_?yCJwzL`aK-+4VSSZ">
+                    <field name="NUM">1</field>
+                  </shadow>
+                  <block type="math_arithmetic" id="/P!v!-JR4oqV$XcL(w]?">
+                    <field name="OP">DIVIDE</field>
+                    <value name="A">
+                      <shadow type="math_number" id="@U`4X(xdu5}Y}/qrfk(2">
+                        <field name="NUM">60</field>
+                      </shadow>
+                    </value>
+                    <value name="B">
+                      <shadow type="math_number" id="}(npt!C]a;1Z~YPV(ucM">
+                        <field name="NUM">105</field>
+                      </shadow>
+                    </value>
+                  </block>
+                </value>
+                <value name="B">
+                  <shadow type="math_number" id="1u*g%ZigXIM[s]k[/Z*,">
+                    <field name="NUM">16000</field>
+                  </shadow>
+                </value>
+              </block>
+            </value>
+            <next>
+              <block type="procedures_callnoreturn" id="My,|lEYW!pt|rHUBezrD">
+                <mutation name="A"></mutation>
+                <next>
+                  <block type="processing_delay" id="0v*iwNNo,HxXDjR(-x5l">
+                    <value name="MS">
+                      <shadow type="math_number" id="{nj(g5lMt?+4)M[G`hG.">
+                        <field name="NUM">1000</field>
+                      </shadow>
+                      <block type="math_arithmetic" id="yhqQ4=opca?s*v8.W/Ja">
+                        <field name="OP">MULTIPLY</field>
+                        <value name="A">
+                          <shadow type="math_number" id="O}_?yCJwzL`aK-+4VSSZ">
+                            <field name="NUM">1</field>
+                          </shadow>
+                          <block type="math_arithmetic" id="}E|uG`_;9;jyryACwKLD">
+                            <field name="OP">DIVIDE</field>
+                            <value name="A">
+                              <shadow type="math_number" id="]@!LvMivb]BW}o#rCAs_">
+                                <field name="NUM">60</field>
+                              </shadow>
+                            </value>
+                            <value name="B">
+                              <shadow type="math_number" id="W+i9(|kS55p=Z)bDiEBb">
+                                <field name="NUM">105</field>
+                              </shadow>
+                            </value>
+                          </block>
+                        </value>
+                        <value name="B">
+                          <shadow type="math_number" id=":LuD;p-:EPwD9Ob_UuVd">
+                            <field name="NUM">16000</field>
+                          </shadow>
+                        </value>
+                      </block>
+                    </value>
+                    <next>
+                      <block type="procedures_callnoreturn" id="R5,KW-ShfY(e)k5x%-YR">
+                        <mutation name="B"></mutation>
+                        <next>
+                          <block type="processing_delay" id="M`nWxBH.wKsH6!Kp#jPS">
+                            <value name="MS">
+                              <shadow type="math_number" id="{nj(g5lMt?+4)M[G`hG.">
+                                <field name="NUM">1000</field>
+                              </shadow>
+                              <block type="math_arithmetic" id="XFDMZoyHk*Vfj+|,1k2}">
+                                <field name="OP">MULTIPLY</field>
+                                <value name="A">
+                                  <shadow type="math_number" id="O}_?yCJwzL`aK-+4VSSZ">
+                                    <field name="NUM">1</field>
+                                  </shadow>
+                                  <block type="math_arithmetic" id="boFnM3R=PXe0X.MaAnzS">
+                                    <field name="OP">DIVIDE</field>
+                                    <value name="A">
+                                      <shadow type="math_number" id="OmFF9YOo5^g1X$a(3Yut">
+                                        <field name="NUM">60</field>
+                                      </shadow>
+                                    </value>
+                                    <value name="B">
+                                      <shadow type="math_number" id="e-Hg^|QhL70Jpt3q!r3W">
+                                        <field name="NUM">105</field>
+                                      </shadow>
+                                    </value>
+                                  </block>
+                                </value>
+                                <value name="B">
+                                  <shadow type="math_number" id="!}9i]A87*jp?nESiM|qH">
+                                    <field name="NUM">8000</field>
+                                  </shadow>
+                                </value>
+                              </block>
+                            </value>
+                            <next>
+                              <block type="procedures_callnoreturn" id="o0iFX|zh]o!.|$;rNYyr">
+                                <mutation name="A"></mutation>
+                                <next>
+                                  <block type="processing_delay" id="MY%1j=Q;=LkbA84~$F9.">
+                                    <value name="MS">
+                                      <shadow type="math_number" id="{nj(g5lMt?+4)M[G`hG.">
+                                        <field name="NUM">1000</field>
+                                      </shadow>
+                                      <block type="math_arithmetic" id="gNU~?+!x-s3}T||_aJov">
+                                        <field name="OP">MULTIPLY</field>
+                                        <value name="A">
+                                          <shadow type="math_number" id="O}_?yCJwzL`aK-+4VSSZ">
+                                            <field name="NUM">1</field>
+                                          </shadow>
+                                          <block type="math_arithmetic" id="@#VhA=KiuUf2t(u9hkGA">
+                                            <field name="OP">DIVIDE</field>
+                                            <value name="A">
+                                              <shadow type="math_number" id="E#j.MAOGQW1~h.NAteb{">
+                                                <field name="NUM">60</field>
+                                              </shadow>
+                                            </value>
+                                            <value name="B">
+                                              <shadow type="math_number" id="4zBKLQYd;4_7GiK)#$Dd">
+                                                <field name="NUM">105</field>
+                                              </shadow>
+                                            </value>
+                                          </block>
+                                        </value>
+                                        <value name="B">
+                                          <shadow type="math_number" id="PisyjtIFB3Jhg%Br:q11">
+                                            <field name="NUM">16000</field>
+                                          </shadow>
+                                        </value>
+                                      </block>
+                                    </value>
+                                    <next>
+                                      <block type="procedures_callnoreturn" id="1o|Lg}G`G=#T.]t%r6Om">
+                                        <mutation name="B"></mutation>
+                                        <next>
+                                          <block type="processing_delay" id="6U;G,1ApxNTz$${oM*zr">
+                                            <value name="MS">
+                                              <shadow type="math_number" id="{nj(g5lMt?+4)M[G`hG.">
+                                                <field name="NUM">1000</field>
+                                              </shadow>
+                                              <block type="math_arithmetic" id="|,##@Y1cBA.7VX*{zn5Z">
+                                                <field name="OP">MULTIPLY</field>
+                                                <value name="A">
+                                                  <shadow type="math_number" id="O}_?yCJwzL`aK-+4VSSZ">
+                                                    <field name="NUM">1</field>
+                                                  </shadow>
+                                                  <block type="math_arithmetic" id=";xt..3tFqgw531bBip%W">
+                                                    <field name="OP">DIVIDE</field>
+                                                    <value name="A">
+                                                      <shadow type="math_number" id="9slTR^~rJ/aJ[,L`EmGu">
+                                                        <field name="NUM">60</field>
+                                                      </shadow>
+                                                    </value>
+                                                    <value name="B">
+                                                      <shadow type="math_number" id="SBnN6+*w+q}mCq12Iu.l">
+                                                        <field name="NUM">105</field>
+                                                      </shadow>
+                                                    </value>
+                                                  </block>
+                                                </value>
+                                                <value name="B">
+                                                  <shadow type="math_number" id="2~xge;GTjJnmTS|6:hYF">
+                                                    <field name="NUM">8000</field>
+                                                  </shadow>
+                                                </value>
+                                              </block>
+                                            </value>
+                                          </block>
+                                        </next>
+                                      </block>
+                                    </next>
+                                  </block>
+                                </next>
+                              </block>
+                            </next>
+                          </block>
+                        </next>
+                      </block>
+                    </next>
+                  </block>
+                </next>
+              </block>
+            </next>
+          </block>
+        </next>
+      </block>
+    </statement>
+  </block>
+</xml>
