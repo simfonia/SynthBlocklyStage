@@ -3,13 +3,6 @@
     <category name="%{BKY_CAT_STRUCTURE}" colour="%{BKY_STRUCTURE_HUE}">
         <block type="processing_setup"></block>
         <block type="processing_draw"></block>
-        <block type="processing_delay">
-            <value name="MS">
-                <shadow type="math_number">
-                    <field name="NUM">1000</field>
-                </shadow>
-            </value>
-        </block>
         <block type="processing_exit"></block>
     </category>
 
@@ -267,6 +260,13 @@
         </block>
         <block type="sb_audio_is_playing"></block>
         <block type="sb_wait_until_finished"></block>
+        <block type="sb_wait_musical">
+            <value name="VALUE">
+                <shadow type="math_number">
+                    <field name="NUM">1</field>
+                </shadow>
+            </value>
+        </block>
         <block type="sb_rhythm_sequence">
             <value name="MEASURE">
                 <shadow type="math_number">

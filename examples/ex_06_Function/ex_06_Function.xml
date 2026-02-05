@@ -464,197 +464,22 @@
       </block>
     </statement>
   </block>
-  <block type="sb_perform" id="Wj5bn6h!~{JAE]pLYgI+" x="50" y="1730">
+  <block type="sb_perform" id="yl{JIF[Y;%Bo;@nt^3A+" x="50" y="1730">
     <statement name="DO">
-      <block type="procedures_callnoreturn" id="P)9:P0~2!PIAI~D.u[8f">
+      <block type="procedures_callnoreturn" id="bAR@ImJi=ChEJ4l1{pQo">
         <mutation name="A"></mutation>
         <next>
-          <block type="processing_delay" id="u~P{WK|ujrAR4WbMtSh3">
-            <value name="MS">
-              <shadow type="math_number" id="{nj(g5lMt?+4)M[G`hG.">
-                <field name="NUM">1000</field>
-              </shadow>
-              <block type="math_arithmetic" id="@yLl~Ncj#*^{[k]c%F5d">
-                <field name="OP">MULTIPLY</field>
-                <value name="A">
-                  <shadow type="math_number" id="O}_?yCJwzL`aK-+4VSSZ">
-                    <field name="NUM">1</field>
-                  </shadow>
-                  <block type="math_arithmetic" id="/P!v!-JR4oqV$XcL(w]?">
-                    <field name="OP">DIVIDE</field>
-                    <value name="A">
-                      <shadow type="math_number" id="@U`4X(xdu5}Y}/qrfk(2">
-                        <field name="NUM">60</field>
-                      </shadow>
-                    </value>
-                    <value name="B">
-                      <shadow type="math_number" id="}(npt!C]a;1Z~YPV(ucM">
-                        <field name="NUM">105</field>
-                      </shadow>
-                    </value>
-                  </block>
-                </value>
-                <value name="B">
-                  <shadow type="math_number" id="1u*g%ZigXIM[s]k[/Z*,">
-                    <field name="NUM">16000</field>
-                  </shadow>
-                </value>
-              </block>
-            </value>
+          <block type="procedures_callnoreturn" id="e!.|(_m4rhML.P/PhZ?M">
+            <mutation name="A"></mutation>
             <next>
-              <block type="procedures_callnoreturn" id="My,|lEYW!pt|rHUBezrD">
-                <mutation name="A"></mutation>
+              <block type="procedures_callnoreturn" id="e!+-xs[;Otw*Mt!V$qmT">
+                <mutation name="B"></mutation>
                 <next>
-                  <block type="processing_delay" id="0v*iwNNo,HxXDjR(-x5l">
-                    <value name="MS">
-                      <shadow type="math_number" id="{nj(g5lMt?+4)M[G`hG.">
-                        <field name="NUM">1000</field>
-                      </shadow>
-                      <block type="math_arithmetic" id="yhqQ4=opca?s*v8.W/Ja">
-                        <field name="OP">MULTIPLY</field>
-                        <value name="A">
-                          <shadow type="math_number" id="O}_?yCJwzL`aK-+4VSSZ">
-                            <field name="NUM">1</field>
-                          </shadow>
-                          <block type="math_arithmetic" id="}E|uG`_;9;jyryACwKLD">
-                            <field name="OP">DIVIDE</field>
-                            <value name="A">
-                              <shadow type="math_number" id="]@!LvMivb]BW}o#rCAs_">
-                                <field name="NUM">60</field>
-                              </shadow>
-                            </value>
-                            <value name="B">
-                              <shadow type="math_number" id="W+i9(|kS55p=Z)bDiEBb">
-                                <field name="NUM">105</field>
-                              </shadow>
-                            </value>
-                          </block>
-                        </value>
-                        <value name="B">
-                          <shadow type="math_number" id=":LuD;p-:EPwD9Ob_UuVd">
-                            <field name="NUM">16000</field>
-                          </shadow>
-                        </value>
-                      </block>
-                    </value>
+                  <block type="procedures_callnoreturn" id="4]#_.*~h.?J8n`bWnzyF">
+                    <mutation name="A"></mutation>
                     <next>
-                      <block type="procedures_callnoreturn" id="R5,KW-ShfY(e)k5x%-YR">
+                      <block type="procedures_callnoreturn" id="e)#Omae9^3v=t:II.FhA">
                         <mutation name="B"></mutation>
-                        <next>
-                          <block type="processing_delay" id="M`nWxBH.wKsH6!Kp#jPS">
-                            <value name="MS">
-                              <shadow type="math_number" id="{nj(g5lMt?+4)M[G`hG.">
-                                <field name="NUM">1000</field>
-                              </shadow>
-                              <block type="math_arithmetic" id="XFDMZoyHk*Vfj+|,1k2}">
-                                <field name="OP">MULTIPLY</field>
-                                <value name="A">
-                                  <shadow type="math_number" id="O}_?yCJwzL`aK-+4VSSZ">
-                                    <field name="NUM">1</field>
-                                  </shadow>
-                                  <block type="math_arithmetic" id="boFnM3R=PXe0X.MaAnzS">
-                                    <field name="OP">DIVIDE</field>
-                                    <value name="A">
-                                      <shadow type="math_number" id="OmFF9YOo5^g1X$a(3Yut">
-                                        <field name="NUM">60</field>
-                                      </shadow>
-                                    </value>
-                                    <value name="B">
-                                      <shadow type="math_number" id="e-Hg^|QhL70Jpt3q!r3W">
-                                        <field name="NUM">105</field>
-                                      </shadow>
-                                    </value>
-                                  </block>
-                                </value>
-                                <value name="B">
-                                  <shadow type="math_number" id="!}9i]A87*jp?nESiM|qH">
-                                    <field name="NUM">8000</field>
-                                  </shadow>
-                                </value>
-                              </block>
-                            </value>
-                            <next>
-                              <block type="procedures_callnoreturn" id="o0iFX|zh]o!.|$;rNYyr">
-                                <mutation name="A"></mutation>
-                                <next>
-                                  <block type="processing_delay" id="MY%1j=Q;=LkbA84~$F9.">
-                                    <value name="MS">
-                                      <shadow type="math_number" id="{nj(g5lMt?+4)M[G`hG.">
-                                        <field name="NUM">1000</field>
-                                      </shadow>
-                                      <block type="math_arithmetic" id="gNU~?+!x-s3}T||_aJov">
-                                        <field name="OP">MULTIPLY</field>
-                                        <value name="A">
-                                          <shadow type="math_number" id="O}_?yCJwzL`aK-+4VSSZ">
-                                            <field name="NUM">1</field>
-                                          </shadow>
-                                          <block type="math_arithmetic" id="@#VhA=KiuUf2t(u9hkGA">
-                                            <field name="OP">DIVIDE</field>
-                                            <value name="A">
-                                              <shadow type="math_number" id="E#j.MAOGQW1~h.NAteb{">
-                                                <field name="NUM">60</field>
-                                              </shadow>
-                                            </value>
-                                            <value name="B">
-                                              <shadow type="math_number" id="4zBKLQYd;4_7GiK)#$Dd">
-                                                <field name="NUM">105</field>
-                                              </shadow>
-                                            </value>
-                                          </block>
-                                        </value>
-                                        <value name="B">
-                                          <shadow type="math_number" id="PisyjtIFB3Jhg%Br:q11">
-                                            <field name="NUM">16000</field>
-                                          </shadow>
-                                        </value>
-                                      </block>
-                                    </value>
-                                    <next>
-                                      <block type="procedures_callnoreturn" id="1o|Lg}G`G=#T.]t%r6Om">
-                                        <mutation name="B"></mutation>
-                                        <next>
-                                          <block type="processing_delay" id="6U;G,1ApxNTz$${oM*zr">
-                                            <value name="MS">
-                                              <shadow type="math_number" id="{nj(g5lMt?+4)M[G`hG.">
-                                                <field name="NUM">1000</field>
-                                              </shadow>
-                                              <block type="math_arithmetic" id="|,##@Y1cBA.7VX*{zn5Z">
-                                                <field name="OP">MULTIPLY</field>
-                                                <value name="A">
-                                                  <shadow type="math_number" id="O}_?yCJwzL`aK-+4VSSZ">
-                                                    <field name="NUM">1</field>
-                                                  </shadow>
-                                                  <block type="math_arithmetic" id=";xt..3tFqgw531bBip%W">
-                                                    <field name="OP">DIVIDE</field>
-                                                    <value name="A">
-                                                      <shadow type="math_number" id="9slTR^~rJ/aJ[,L`EmGu">
-                                                        <field name="NUM">60</field>
-                                                      </shadow>
-                                                    </value>
-                                                    <value name="B">
-                                                      <shadow type="math_number" id="SBnN6+*w+q}mCq12Iu.l">
-                                                        <field name="NUM">105</field>
-                                                      </shadow>
-                                                    </value>
-                                                  </block>
-                                                </value>
-                                                <value name="B">
-                                                  <shadow type="math_number" id="2~xge;GTjJnmTS|6:hYF">
-                                                    <field name="NUM">8000</field>
-                                                  </shadow>
-                                                </value>
-                                              </block>
-                                            </value>
-                                          </block>
-                                        </next>
-                                      </block>
-                                    </next>
-                                  </block>
-                                </next>
-                              </block>
-                            </next>
-                          </block>
-                        </next>
                       </block>
                     </next>
                   </block>

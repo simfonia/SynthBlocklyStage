@@ -488,7 +488,7 @@ registerGenerator('sb_play_note', function(block) {
 registerGenerator('sb_stop_note', function(block) {
   Blockly.Processing.injectAudioCore();
   const pitch = Blockly.Processing.valueToCode(block, 'PITCH', Blockly.Processing.ORDER_ATOMIC) || '60';
-  return `stopNoteInternal((int)${pitch});\n`;
+  return `stopNoteInternal(currentInstrument, (int)${pitch});\n`;
 });
 
 registerGenerator('sb_play_melody', function(block) {
@@ -685,6 +685,26 @@ registerGenerator('sb_play_chord_by_name', function(block) {
   playChordByNameInternal("${name}", ms, (float)${velocity});
 }
 `;
+});
+
+registerGenerator('sb_wait_musical', function(block) {
+  const val = Blockly.Processing.valueToCode(block, 'VALUE', Blockly.Processing.ORDER_ATOMIC) || '1';
+  const unit = block.getFieldValue('UNIT');
+  
+  let code = "";
+  if (unit === 'BEATS') {
+    code = `delay((int)((float)(${val}) * 60000.0f / bpm));\n`;
+  } else if (unit === 'MEASURES') {
+    code = `delay((int)((float)(${val}) * 4.0f * 60000.0f / bpm));\n`;
+  } else if (unit === 'SECONDS') {
+    code = `delay((int)((float)(${val}) * 1000.0f));\n`;
+  } else if (unit === 'MICROS') {
+    code = `try { long totalMicros = (long)(${val}); Thread.sleep(totalMicros / 1000, (int)((totalMicros % 1000) * 1000)); } catch(Exception e) {}\n`;
+  } else {
+    // Default MS
+    code = `delay((int)(${val}));\n`;
+  }
+  return code;
 });
 
 // Legacy / Utility fallback

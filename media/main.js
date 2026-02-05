@@ -5,6 +5,21 @@
 
 import { loadModules } from './module_loader.js';
 
+// --- VS Code Bridge for Dialogs ---
+const dialogCallbacks = new Map();
+let dialogIdCounter = 0;
+
+Blockly.dialog.setPrompt(function(message, defaultValue, callback) {
+    const id = `dialog_${dialogIdCounter++}`;
+    dialogCallbacks.set(id, callback);
+    vscode.postMessage({
+        command: 'showPrompt',
+        message: message,
+        defaultValue: defaultValue,
+        id: id
+    });
+});
+
 // --- Blockly API Polyfills (v12 to v13 compatibility) ---
 if (Blockly.Workspace.prototype.getAllVariables === undefined) {
   Blockly.Workspace.prototype.getAllVariables = function() {
@@ -406,6 +421,13 @@ function triggerAutoSave() {
                 // Check if this is a fresh new project (empty/default XML)
                 const isNew = message.xml.includes('<xml xmlns="https://developers.google.com/blockly/xml"></xml>');
                 loadXmlToWorkspace(message.xml, !isNew, message.fileName, message.fullPath);
+                break;
+            case 'promptResponse':
+                const callback = dialogCallbacks.get(message.id);
+                if (callback) {
+                    callback(message.value);
+                    dialogCallbacks.delete(message.id);
+                }
                 break;
         }
     });

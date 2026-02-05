@@ -1,0 +1,172 @@
+<xml xmlns="https://developers.google.com/blockly/xml">
+  <block type="processing_setup" x="20" y="20">
+    <statement name="DO">
+      <block type="sb_minim_init">
+        <next>
+          <block type="visual_stage_setup">
+            <field name="W">800</field>
+            <field name="H">400</field>
+            <field name="BG_COLOR">#000000</field>
+            <field name="FG_COLOR">#00FF96</field>
+            <next>
+              <block type="sb_transport_set_bpm">
+                <value name="BPM">
+                  <shadow type="math_number">
+                    <field name="NUM">120</field>
+                  </shadow>
+                </value>
+              </block>
+            </next>
+          </block>
+        </next>
+      </block>
+    </statement>
+  </block>
+  <block type="sb_instrument_container" x="20" y="200">
+    <field name="NAME">Kick</field>
+    <statement name="STACK">
+      <block type="sb_drum_sampler">
+        <field name="PATH">drum/kick.wav</field>
+      </block>
+    </statement>
+  </block>
+  <block type="sb_instrument_container" x="20" y="320">
+    <field name="NAME">Lead</field>
+    <statement name="STACK">
+      <block type="sb_set_wave">
+        <field name="TYPE">TRIANGLE</field>
+      </block>
+    </statement>
+  </block>
+  <block type="sb_perform" x="400" y="20">
+    <statement name="DO">
+      <block type="sb_wait_musical">
+        <field name="UNIT">SECONDS</field>
+        <value name="VALUE">
+          <shadow type="math_number">
+            <field name="NUM">2</field>
+          </shadow>
+        </value>
+        <next>
+          <block type="controls_repeat_ext">
+            <value name="TIMES">
+              <shadow type="math_number">
+                <field name="NUM">4</field>
+              </shadow>
+            </value>
+            <statement name="DO">
+              <block type="sb_trigger_sample">
+                <field name="NAME">Kick</field>
+                <value name="VELOCITY">
+                  <shadow type="math_number">
+                    <field name="NUM">100</field>
+                  </shadow>
+                </value>
+                <next>
+                  <block type="sb_wait_musical">
+                    <field name="UNIT">BEATS</field>
+                    <value name="VALUE">
+                      <shadow type="math_number">
+                        <field name="NUM">1</field>
+                      </shadow>
+                    </value>
+                    <next>
+                      <block type="sb_trigger_sample">
+                        <field name="NAME">Kick</field>
+                        <value name="VELOCITY">
+                          <shadow type="math_number">
+                            <field name="NUM">80</field>
+                          </shadow>
+                        </value>
+                        <next>
+                          <block type="sb_wait_musical">
+                            <field name="UNIT">BEATS</field>
+                            <value name="VALUE">
+                              <shadow type="math_number">
+                                <field name="NUM">0.5</field>
+                              </shadow>
+                            </value>
+                            <next>
+                              <block type="sb_trigger_sample">
+                                <field name="NAME">Kick</field>
+                                <value name="VELOCITY">
+                                  <shadow type="math_number">
+                                    <field name="NUM">60</field>
+                                  </shadow>
+                                </value>
+                                <next>
+                                  <block type="sb_wait_musical">
+                                    <field name="UNIT">BEATS</field>
+                                    <value name="VALUE">
+                                      <shadow type="math_number">
+                                        <field name="NUM">0.5</field>
+                                      </shadow>
+                                    </value>
+                                  </block>
+                                </next>
+                              </block>
+                            </next>
+                          </block>
+                        </next>
+                      </block>
+                    </next>
+                  </block>
+                </next>
+              </block>
+            </statement>
+          </block>
+        </next>
+      </block>
+    </statement>
+  </block>
+  <block type="sb_perform" x="400" y="450">
+    <statement name="DO">
+      <block type="sb_wait_musical">
+        <field name="UNIT">MEASURES</field>
+        <value name="VALUE">
+          <shadow type="math_number">
+            <field name="NUM">1</field>
+          </shadow>
+        </value>
+        <next>
+          <block type="sb_select_current_instrument">
+            <field name="NAME">Lead</field>
+            <next>
+              <block type="sb_play_note">
+                <value name="PITCH">
+                  <shadow type="math_number">
+                    <field name="NUM">60</field>
+                  </shadow>
+                </value>
+                <value name="VELOCITY">
+                  <shadow type="math_number">
+                    <field name="NUM">100</field>
+                  </shadow>
+                </value>
+                <next>
+                  <block type="sb_wait_musical">
+                    <field name="UNIT">BEATS</field>
+                    <value name="VALUE">
+                      <shadow type="math_number">
+                        <field name="NUM">2</field>
+                      </shadow>
+                    </value>
+                    <next>
+                      <block type="sb_stop_note">
+                        <value name="PITCH">
+                          <shadow type="math_number">
+                            <field name="NUM">60</field>
+                          </shadow>
+                        </value>
+                      </block>
+                    </next>
+                  </block>
+                </next>
+              </block>
+            </next>
+          </block>
+        </next>
+      </block>
+    </statement>
+  </block>
+</xml>

@@ -126,9 +126,23 @@ class SynthBlocklyPanel {
                 case 'showExamples':
                     this._handleShowExamples(message.isDirty);
                     return;
+                case 'showPrompt':
+                    this._handleShowPrompt(message.message, message.defaultValue, message.id);
+                    return;
             }
         }, null, this._disposables);
         vscode.commands.executeCommand('setContext', 'synthblockly-stage.isWebviewOpen', true);
+    }
+    async _handleShowPrompt(prompt, defaultValue, id) {
+        const result = await vscode.window.showInputBox({
+            prompt: prompt,
+            value: defaultValue
+        });
+        this._panel.webview.postMessage({
+            command: 'promptResponse',
+            id: id,
+            value: result
+        });
     }
     _handleWebviewReady() {
         // We do nothing here regarding auto-loading. 

@@ -33,11 +33,6 @@ Blockly.Processing.forBlock['processing_exit'] = function(block) {
   return 'exit();\n';
 };
 
-Blockly.Processing.forBlock['processing_delay'] = function(block) {
-  const ms = Blockly.Processing.valueToCode(block, 'MS', Blockly.Processing.ORDER_ATOMIC) || '1000';
-  return `delay((int)${ms});\n`;
-};
-
 Blockly.Processing.forBlock['processing_frame_count'] = function(block) {
   return ['frameCount', Blockly.Processing.ORDER_ATOMIC];
 };

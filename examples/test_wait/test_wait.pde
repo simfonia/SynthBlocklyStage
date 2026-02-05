@@ -53,7 +53,7 @@ float defAdsrA = 0.01;
 float defAdsrD = 0.1;
 float defAdsrR = 0.5;
 float defAdsrS = 0.5;
-float fgHue = 230.0;
+float fgHue = 110.0;
 float masterGain = -5.0;
 float trailAlpha = 100.0;
 float waveScale = 2.5;
@@ -507,24 +507,12 @@ void logToScreen(String msg, int type) {
     
   }
 
-void do_something() {
-  playMelodyInternal("RQ   C4Q D4Q.   E4E  CM7H.+E              RE RQ C5Q B4Q.  G4E DmH      FM7H", "Piano");
-}
-
-void do_something2() {
-  playMelodyInternal("RH   A3Q_T B3Q_T C4Q_T   DmQ.     E4E FMadd6_CQ.    E4E BdimQ.     A4E B3Q.    B4E CM7W RH", "Piano");
-}
-
 void setup() {
-  if (!instrumentMap.containsKey("Piano")) instrumentMap.put("Piano", "TRIANGLE");
-  if (!instrumentADSR.containsKey("Piano")) instrumentADSR.put("Piano", new float[]{defAdsrA, defAdsrD, defAdsrS, defAdsrR});
-    instrumentMap.put("Piano", "TRIANGLE");
-    instrumentADSR.put("Piano", new float[]{(float)0.01, (float)0.1, (float)0.3, (float)1});
-    checkMainMixer();
-    size(1600, 600);
+  checkMainMixer();
+    size(1200, 600);
   pixelDensity(displayDensity());
   stageBgColor = color(0, 0, 0);
-  stageFgColor = color(255, 0, 150);
+  stageFgColor = color(0, 255, 150);
   checkMainMixer();
   adsrState = 0;
   fft = new FFT(out.bufferSize(), out.sampleRate());
@@ -534,10 +522,10 @@ void setup() {
   myBus = new MidiBus(this, 0, -1);
   
     // --- Log Textareas ---
-  cp5.addTextarea("alertsArea").setPosition(1200, 35).setSize(400, 265)
+  cp5.addTextarea("alertsArea").setPosition(800, 35).setSize(400, 265)
      .setFont(createFont("Arial", 18)).setLineHeight(22).setColor(color(255, 100, 100))
      .setColorBackground(color(40, 0, 0));
-  cp5.addTextarea("consoleArea").setPosition(1200, 335)
+  cp5.addTextarea("consoleArea").setPosition(800, 335)
      .setSize(400, 265).setFont(createFont("Arial", 18))
      .setLineHeight(22).setColor(color(200)).setColorBackground(color(20));
   
@@ -548,7 +536,7 @@ void setup() {
   cp5.addToggle("showLog").setPosition(230, 430).setSize(40, 20).setCaptionLabel("LOG");
   cp5.addSlider("trailAlpha").setPosition(20, 495).setSize(150, 15).setRange(0, 255).setCaptionLabel("TRAIL");
   cp5.addSlider("waveScale").setPosition(20, 525).setSize(150, 15).setRange(0.1, 10).setCaptionLabel("SCALE");
-  cp5.addSlider("fgHue").setPosition(20, 555).setSize(150, 15).setRange(0, 255).setValue(230.0).setCaptionLabel("FG COLOR");
+  cp5.addSlider("fgHue").setPosition(20, 555).setSize(150, 15).setRange(0, 255).setValue(110.0).setCaptionLabel("FG COLOR");
   cp5.addSlider("adsrA").setPosition(320, 485).setSize(15, 80).setRange(0, 2).setDecimalPrecision(2).setCaptionLabel("A");
   cp5.addSlider("adsrD").setPosition(380, 485).setSize(15, 80).setRange(0, 1).setDecimalPrecision(2).setCaptionLabel("D");
   cp5.addSlider("adsrS").setPosition(440, 485).setSize(15, 80).setRange(0, 1).setDecimalPrecision(2).setCaptionLabel("S");
@@ -566,26 +554,50 @@ void setup() {
   for (int i = 0; i < serialPorts.length; i++) { ssl.addItem(serialPorts[i], i); }
   ssl.close();
   cp5.addButton("scanMidi").setPosition(970, 430).setSize(50, 30).setCaptionLabel("SCAN");
-  cp5.addButton("copyLogs").setPosition(1405, 5).setSize(90, 25).setCaptionLabel("COPY LOG");
-  cp5.addButton("clearLogs").setPosition(1500, 5).setSize(90, 25).setCaptionLabel("CLEAR LOG");
+  cp5.addButton("copyLogs").setPosition(1005, 5).setSize(90, 25).setCaptionLabel("COPY LOG");
+  cp5.addButton("clearLogs").setPosition(1100, 5).setSize(90, 25).setCaptionLabel("CLEAR LOG");
   logToScreen("System Initialized.", 0);
-    currentInstrument = "Piano";
-    bpm = (float)80;
-    chords.put("CM7", new String[]{"C4", "E4", "G4", "B4"});
-    chords.put("Dm", new String[]{"D4", "F4", "A4"});
-    chords.put("FM7", new String[]{"F3", "A3", "E4"});
-    chords.put("FMadd6_C", new String[]{"C4", "D4", "F4", "A4"});
-    chords.put("Bdim", new String[]{"B3", "D4", "F4", "A4"});
-    chords.put("GMaj", new String[]{"G5", "B5", "D4"});
+    bpm = (float)120;
     new Thread(new Runnable() {
       public void run() {
         activeMelodyCount++;
         try { Thread.sleep(200); } catch(Exception e) {}
         int timeout = 0;
         while(isCountingIn && timeout < 500) { try { Thread.sleep(10); timeout++; } catch(Exception e) {} }
-          do_something();
-          do_something2();
-          do_something();
+          for (int count = 0; count < 4; count++) {
+            parseAndPlayNote("Kick", "x", (float)100);
+            delay((int)((float)(1) * 60000.0f / bpm));
+            parseAndPlayNote("Kick", "x", (float)80);
+            delay((int)((float)(0.5) * 60000.0f / bpm));
+            parseAndPlayNote("Kick", "x", (float)60);
+            delay((int)((float)(0.5) * 60000.0f / bpm));
+          }
+        
+        activeMelodyCount--;
+      }
+    }).start();
+    if (!instrumentMap.containsKey("Kick")) instrumentMap.put("Kick", "TRIANGLE");
+  if (!instrumentADSR.containsKey("Kick")) instrumentADSR.put("Kick", new float[]{defAdsrA, defAdsrD, defAdsrS, defAdsrR});
+    checkMainMixer();
+    samplerMap.put("Kick", new Sampler("drum/kick.wav", 4, minim));
+    samplerGainMap.put("Kick", new Gain(0.f));
+    samplerMap.get("Kick").patch(samplerGainMap.get("Kick")).patch(mainMixer);
+    instrumentMap.put("Kick", "DRUM");
+    instrumentADSR.put("Kick", new float[]{defAdsrA, defAdsrD, defAdsrS, defAdsrR});
+    if (!instrumentMap.containsKey("Lead")) instrumentMap.put("Lead", "TRIANGLE");
+  if (!instrumentADSR.containsKey("Lead")) instrumentADSR.put("Lead", new float[]{defAdsrA, defAdsrD, defAdsrS, defAdsrR});
+    instrumentMap.put("Lead", "TRIANGLE");
+    new Thread(new Runnable() {
+      public void run() {
+        activeMelodyCount++;
+        try { Thread.sleep(200); } catch(Exception e) {}
+        int timeout = 0;
+        while(isCountingIn && timeout < 500) { try { Thread.sleep(10); timeout++; } catch(Exception e) {} }
+          delay((int)((float)(1) * 4.0f * 60000.0f / bpm));
+          currentInstrument = "Lead";
+          playNoteInternal(currentInstrument, (int)60, (float)100);
+          delay((int)((float)(2) * 60000.0f / bpm));
+          stopNoteInternal(currentInstrument, (int)60);
         
         activeMelodyCount--;
       }
@@ -598,7 +610,7 @@ void draw() {
   masterGainUGen.setValue(masterGain); noStroke(); fill(30); rect(0, 400, width, 200);
   // Draw rainbow bar behind fgHue slider
   pushStyle(); for (int i = 0; i < 150; i++) { colorMode(HSB, 150); stroke(i, 150, 150); line(20 + i, 572, 20 + i, 575); } popStyle();
-  colorMode(RGB, 255); float currentVisualW = showLog ? 1200.0 : width;
+  colorMode(RGB, 255); float currentVisualW = showLog ? 800.0 : width;
   noStroke(); fill(stageBgColor, 255 - trailAlpha); rect(0, 0, currentVisualW, 400);
   int activeViews = int(showWave) + int(showADSR) + int(showSpec);
   if (activeViews > 0) {
@@ -649,7 +661,7 @@ void draw() {
   if (cp5.get(Textarea.class, "alertsArea") != null) {
     if (showLog) {
       cp5.get(Textarea.class, "alertsArea").show(); cp5.get(Textarea.class, "consoleArea").show();
-      pushMatrix(); translate(1200, 0); float spH = height / 2.0;
+      pushMatrix(); translate(800, 0); float spH = height / 2.0;
       fill(40, 0, 0); rect(0, 0, 400, spH); fill(255, 100, 100); text("ALERTS", 10, 25);
       translate(0, spH); fill(20); rect(0, 0, 400, height-spH); fill(200); text("CONSOLE", 10, 25);
       popMatrix();
@@ -658,9 +670,4 @@ void draw() {
     }
   }
   updateInstrumentUISync();
-    if (frameCount > 60) {
-      if (!((activeMelodyCount > 0))) {
-        exit();
-      }
-    }
 }
