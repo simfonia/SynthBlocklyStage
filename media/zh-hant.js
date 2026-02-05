@@ -197,6 +197,8 @@
     "SB_WAIT_UNIT_MEASURES": "小節 (measures)",
     "SB_WAIT_UNIT_MICROS": "微秒 (µs)",
     "SB_WAIT_MUSICAL_TOOLTIP": "暫停程式執行一段時間。可以選擇以音樂節拍（拍、小節）或標準時間（秒、毫秒）為單位。",
+    "SB_MUSICAL_SECTION": "配置樂句 長度 %1 小節 %2 %3",
+    "SB_MUSICAL_SECTION_TOOLTIP": "用於配置一段樂句的容器。它會同時啟動內部的所有演奏，並等待指定的小節數結束後才繼續執行下一個積木。這能確保多個音軌同步開始，且樂句銜接精準。",
     "AUDIO_IS_PLAYING": "是否有旋律在播放？",
     "AUDIO_IS_PLAYING_TOOLTIP": "檢查背景旋律播放器是否仍在運作中。",
     "AUDIO_WAIT_UNTIL_FINISHED": "等到所有演奏結束",

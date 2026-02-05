@@ -539,6 +539,26 @@ Blockly.defineBlocksWithJsonArray([
     "nextStatement": null,
     "colour": "%{BKY_PERFORMANCE_HUE}",
     "tooltip": "%{BKY_SB_WAIT_MUSICAL_TOOLTIP}"
+  },
+  {
+    "type": "sb_musical_section",
+    "message0": "%{BKY_SB_MUSICAL_SECTION}",
+    "args0": [
+      {
+        "type": "input_value",
+        "name": "DURATION",
+        "check": "Number"
+      },
+      { "type": "input_dummy" },
+      {
+        "type": "input_statement",
+        "name": "STACK"
+      }
+    ],
+    "previousStatement": null,
+    "nextStatement": null,
+    "colour": "%{BKY_PERFORMANCE_HUE}",
+    "tooltip": "%{BKY_SB_MUSICAL_SECTION_TOOLTIP}"
   }
 ]);
 

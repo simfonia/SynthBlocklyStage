@@ -167,6 +167,8 @@
     "SB_WAIT_UNIT_MEASURES": "measures",
     "SB_WAIT_UNIT_MICROS": "µs",
     "SB_WAIT_MUSICAL_TOOLTIP": "Pause execution for a specific duration. You can choose musical units (beats, measures) or time units (seconds, ms).",
+    "SB_MUSICAL_SECTION": "Arrange Phrase length %1 measures %2 %3",
+    "SB_MUSICAL_SECTION_TOOLTIP": "A container to arrange a musical phrase. It starts all inner performances simultaneously and waits for the specified number of measures before proceeding.",
     "AUDIO_IS_PLAYING": "Is any melody playing?",
     "AUDIO_IS_PLAYING_TOOLTIP": "Check if the background melody player is still active.",
     "BKY_CONTROLS_DO": "do",

@@ -1411,7 +1411,7 @@ void setup() {
     if (!instrumentMap.containsKey("Bass")) instrumentMap.put("Bass", "TRIANGLE");
   if (!instrumentADSR.containsKey("Bass")) instrumentADSR.put("Bass", new float[]{defAdsrA, defAdsrD, defAdsrS, defAdsrR});
     instrumentMap.put("Bass", "SAW");
-    instrumentVolumes.put("Sax", (float)70 / 100.0f);
+    instrumentVolumes.put("Bass", (float)50 / 100.0f);
     instrumentADSR.put("Bass", new float[]{(float)0.01, (float)0.5, (float)0, (float)0.5});
     if (!instrumentMap.containsKey("Clap")) instrumentMap.put("Clap", "TRIANGLE");
   if (!instrumentADSR.containsKey("Clap")) instrumentADSR.put("Clap", new float[]{defAdsrA, defAdsrD, defAdsrS, defAdsrR});
@@ -1520,10 +1520,16 @@ void setup() {
         int timeout = 0;
         while(isCountingIn && timeout < 500) { try { Thread.sleep(10); timeout++; } catch(Exception e) {} }
           A();
+          delay((int)((float)(4) * 4.0f * 60000.0f / bpm));
           A();
+          delay((int)((float)(4) * 4.0f * 60000.0f / bpm));
           B();
+          delay((int)((float)(2) * 4.0f * 60000.0f / bpm));
           A();
+          delay((int)((float)(4) * 4.0f * 60000.0f / bpm));
           B();
+          delay((int)((float)(2) * 4.0f * 60000.0f / bpm));
+          exit();
         
         activeMelodyCount--;
       }

@@ -707,6 +707,13 @@ registerGenerator('sb_wait_musical', function(block) {
   return code;
 });
 
+registerGenerator('sb_musical_section', function(block) {
+  const duration = Blockly.Processing.valueToCode(block, 'DURATION', Blockly.Processing.ORDER_ATOMIC) || '1';
+  const branch = Blockly.Processing.statementToCode(block, 'STACK');
+  
+  return branch + `delay((int)((float)(${duration}) * 4.0f * 60000.0f / bpm));\n`;
+});
+
 // Legacy / Utility fallback
 registerGenerator('audio_sample_property', function(block) {
   const name = block.getFieldValue('NAME');

@@ -1,6 +1,6 @@
 <xml xmlns="https://developers.google.com/blockly/xml">
   <block type="sb_comment" id="tO.4qa=%dE+LBNIN=g0X" x="50" y="-110">
-    <field name="TEXT">【重複樂曲段落】&amp;#10;&amp;#10;此範例展示利用函式構建精準的樂曲結構。&amp;#10;1. A 段：4 小節循環 (Dm7-G7-CM7-A7)。&amp;#10;2. B 段：2 小節終止式。&amp;#10;3. 曲式安排：主程式呼叫 A -&gt; A -&gt; B -&gt; A -&gt; B。&amp;#10;&amp;#10;技巧：&amp;#10;與&lt;播放旋律&gt;積木一個音一個音演奏的方式不同，&amp;#10;&lt;步進音序器&gt;積木本質上是將音符預先排程再播放，&amp;#10;在函式內會"瞬間"把所有的樂譜排程完畢，然後才開始依速度演奏，&amp;#10;所以在呼叫函式後，要加上「等待 所需小節數」，才可確保段落間的完美銜接。</field>
+    <field name="TEXT">【使用&lt;配置樂句&gt;積木封裝音序器所組成的樂句】&amp;#10;&amp;#10;此範例展示利用函式構建精準的樂曲結構。&amp;#10;1. A 段：4 小節循環 (Dm7-G7-CM7-A7)。&amp;#10;2. B 段：2 小節終止式。&amp;#10;3. 曲式安排：主程式呼叫 A -&gt; A -&gt; B -&gt; A -&gt; B。&amp;#10;&amp;#10;技巧：&amp;#10;&lt;配置樂句&gt;積木可以自己等待樂句所需時間，&amp;#10;它必需放在 &lt;演奏&gt;  或 &lt;無限反覆演奏&gt; 積木內，&amp;#10;或是放在由這兩者呼叫的「函式」內。</field>
   </block>
   <block type="sb_instrument_container" id="UPARf$SN7Hc^brNI|x[?" x="50" y="170">
     <field name="NAME">Sax</field>
@@ -222,155 +222,164 @@
     <field name="NAME">A</field>
     <comment pinned="false" h="80" w="160">Describe this function...</comment>
     <statement name="STACK">
-      <block type="sb_rhythm_sequence" id="I@l]#f~tZTSxw_B~|GYR">
-        <field name="SOURCE">Clap</field>
-        <field name="CHORD_MODE">FALSE</field>
-        <field name="PATTERN">x--- --x- --x- x---</field>
-        <value name="VELOCITY">
-          <shadow type="math_number" id="BuSe8JxH2b`rXXRBUSaz">
-            <field name="NUM">100</field>
+      <block type="sb_musical_section" id="-%8:SmL%$goEaq}]#}xQ">
+        <value name="DURATION">
+          <shadow type="math_number" id="^Y6Ry-#PW%?go7*aUMK`">
+            <field name="NUM">4</field>
           </shadow>
         </value>
-        <value name="MEASURE">
-          <shadow type="math_number" id="{k%T2^]tsE(j8qAs!BP+">
-            <field name="NUM">1</field>
-          </shadow>
-        </value>
-        <next>
-          <block type="sb_rhythm_sequence" id="B]FEx@K6EFiOocg`a)+p">
-            <field name="SOURCE">Piano</field>
-            <field name="CHORD_MODE">TRUE</field>
-            <field name="PATTERN">Dm7... Dm7--- ..Dm7. ..Dm7.</field>
+        <statement name="STACK">
+          <block type="sb_rhythm_sequence" id="I@l]#f~tZTSxw_B~|GYR">
+            <field name="SOURCE">Clap</field>
+            <field name="CHORD_MODE">FALSE</field>
+            <field name="PATTERN">x--- --x- --x- x---</field>
             <value name="VELOCITY">
-              <shadow type="math_number" id="OFQeEjt^7EMy;DXR]?Mk">
+              <shadow type="math_number" id="BuSe8JxH2b`rXXRBUSaz">
                 <field name="NUM">100</field>
               </shadow>
             </value>
             <value name="MEASURE">
-              <shadow type="math_number" id="ZF8TJ0T:d_sjtFFD^B,)">
+              <shadow type="math_number" id="{k%T2^]tsE(j8qAs!BP+">
                 <field name="NUM">1</field>
               </shadow>
             </value>
             <next>
-              <block type="sb_rhythm_sequence" id="*,^-|N#n}.^2*mQV6qa/">
-                <field name="SOURCE">Bass</field>
-                <field name="CHORD_MODE">FALSE</field>
-                <field name="PATTERN">D2--- ---- A2--- ----</field>
+              <block type="sb_rhythm_sequence" id="B]FEx@K6EFiOocg`a)+p">
+                <field name="SOURCE">Piano</field>
+                <field name="CHORD_MODE">TRUE</field>
+                <field name="PATTERN">Dm7... Dm7--- ..Dm7. ..Dm7.</field>
                 <value name="VELOCITY">
-                  <shadow type="math_number" id="4/22w1!p,odZ8n8FoGVW">
+                  <shadow type="math_number" id="OFQeEjt^7EMy;DXR]?Mk">
                     <field name="NUM">100</field>
                   </shadow>
                 </value>
                 <value name="MEASURE">
-                  <shadow type="math_number" id="B.,MMC1Cw9:*QEV_@l_}">
+                  <shadow type="math_number" id="ZF8TJ0T:d_sjtFFD^B,)">
                     <field name="NUM">1</field>
                   </shadow>
                 </value>
                 <next>
-                  <block type="sb_rhythm_sequence" id="*mOjc/jy4S,u@({@6Jax">
-                    <field name="SOURCE">Kick</field>
+                  <block type="sb_rhythm_sequence" id="*,^-|N#n}.^2*mQV6qa/">
+                    <field name="SOURCE">Bass</field>
                     <field name="CHORD_MODE">FALSE</field>
-                    <field name="PATTERN">x--- --x- --x- x---</field>
+                    <field name="PATTERN">D2--- ---- A2--- ----</field>
                     <value name="VELOCITY">
-                      <shadow type="math_number" id="(.Mrdh(1w/;}7(sE{.Fi">
-                        <field name="NUM">150</field>
+                      <shadow type="math_number" id="4/22w1!p,odZ8n8FoGVW">
+                        <field name="NUM">100</field>
                       </shadow>
                     </value>
                     <value name="MEASURE">
-                      <shadow type="math_number" id="^83a1Fk@eC{M^,!~$ZT3">
-                        <field name="NUM">2</field>
+                      <shadow type="math_number" id="B.,MMC1Cw9:*QEV_@l_}">
+                        <field name="NUM">1</field>
                       </shadow>
                     </value>
                     <next>
-                      <block type="sb_rhythm_sequence" id="P$|:N10a1D*U5`ME@Cc`">
-                        <field name="SOURCE">Piano</field>
-                        <field name="CHORD_MODE">TRUE</field>
-                        <field name="PATTERN">..G7. ..G7. ---- G7...</field>
+                      <block type="sb_rhythm_sequence" id="*mOjc/jy4S,u@({@6Jax">
+                        <field name="SOURCE">Kick</field>
+                        <field name="CHORD_MODE">FALSE</field>
+                        <field name="PATTERN">x--- --x- --x- x---</field>
                         <value name="VELOCITY">
-                          <shadow type="math_number" id="!e:K=5!$YJu|UPOMr]O1">
-                            <field name="NUM">100</field>
+                          <shadow type="math_number" id="(.Mrdh(1w/;}7(sE{.Fi">
+                            <field name="NUM">150</field>
                           </shadow>
                         </value>
                         <value name="MEASURE">
-                          <shadow type="math_number" id="Yv::|ykf%kPv9I,!{V%I">
+                          <shadow type="math_number" id="^83a1Fk@eC{M^,!~$ZT3">
                             <field name="NUM">2</field>
                           </shadow>
                         </value>
                         <next>
-                          <block type="sb_rhythm_sequence" id="d.9=AB#KJU=p42#hbY8D">
-                            <field name="SOURCE">Bass</field>
-                            <field name="CHORD_MODE">FALSE</field>
-                            <field name="PATTERN">G1--- ---- D2--- ----</field>
+                          <block type="sb_rhythm_sequence" id="P$|:N10a1D*U5`ME@Cc`">
+                            <field name="SOURCE">Piano</field>
+                            <field name="CHORD_MODE">TRUE</field>
+                            <field name="PATTERN">..G7. ..G7. ---- G7...</field>
                             <value name="VELOCITY">
-                              <shadow type="math_number" id="LPE6L[~CLl_)HQOSWkMI">
+                              <shadow type="math_number" id="!e:K=5!$YJu|UPOMr]O1">
                                 <field name="NUM">100</field>
                               </shadow>
                             </value>
                             <value name="MEASURE">
-                              <shadow type="math_number" id="p:c*M?5[`K-pdmdJ?D{:">
+                              <shadow type="math_number" id="Yv::|ykf%kPv9I,!{V%I">
                                 <field name="NUM">2</field>
                               </shadow>
                             </value>
                             <next>
-                              <block type="sb_rhythm_sequence" id="%W%/YTO.olcSow~IidUL">
-                                <field name="SOURCE">Piano</field>
-                                <field name="CHORD_MODE">TRUE</field>
-                                <field name="PATTERN">CM7... CM7--- ..CM7. ..CM7.</field>
+                              <block type="sb_rhythm_sequence" id="d.9=AB#KJU=p42#hbY8D">
+                                <field name="SOURCE">Bass</field>
+                                <field name="CHORD_MODE">FALSE</field>
+                                <field name="PATTERN">G1--- ---- D2--- ----</field>
                                 <value name="VELOCITY">
-                                  <shadow type="math_number" id="Z^4uM7SPWi._h*(gltA-">
+                                  <shadow type="math_number" id="LPE6L[~CLl_)HQOSWkMI">
                                     <field name="NUM">100</field>
                                   </shadow>
                                 </value>
                                 <value name="MEASURE">
-                                  <shadow type="math_number" id="sYZ!2L(==_}vk-0CuNm5">
-                                    <field name="NUM">3</field>
+                                  <shadow type="math_number" id="p:c*M?5[`K-pdmdJ?D{:">
+                                    <field name="NUM">2</field>
                                   </shadow>
                                 </value>
                                 <next>
-                                  <block type="sb_rhythm_sequence" id="k|o,Zzrn7NWT+^@DVTMq">
-                                    <field name="SOURCE">Bass</field>
-                                    <field name="CHORD_MODE">FALSE</field>
-                                    <field name="PATTERN">C2--- ---- G2--- ----</field>
+                                  <block type="sb_rhythm_sequence" id="%W%/YTO.olcSow~IidUL">
+                                    <field name="SOURCE">Piano</field>
+                                    <field name="CHORD_MODE">TRUE</field>
+                                    <field name="PATTERN">CM7... CM7--- ..CM7. ..CM7.</field>
                                     <value name="VELOCITY">
-                                      <shadow type="math_number" id="2ij~f5F%XH^5e8X0HzOZ">
+                                      <shadow type="math_number" id="Z^4uM7SPWi._h*(gltA-">
                                         <field name="NUM">100</field>
                                       </shadow>
                                     </value>
                                     <value name="MEASURE">
-                                      <shadow type="math_number" id=".$VB?6_%Iy[1OUsauMVc">
+                                      <shadow type="math_number" id="sYZ!2L(==_}vk-0CuNm5">
                                         <field name="NUM">3</field>
                                       </shadow>
                                     </value>
                                     <next>
-                                      <block type="sb_rhythm_sequence" id="~JjI)8D3iWAOt7%JsPYC">
-                                        <field name="SOURCE">Piano</field>
-                                        <field name="CHORD_MODE">TRUE</field>
-                                        <field name="PATTERN">..A7. ..A7. ---- A7...</field>
+                                      <block type="sb_rhythm_sequence" id="k|o,Zzrn7NWT+^@DVTMq">
+                                        <field name="SOURCE">Bass</field>
+                                        <field name="CHORD_MODE">FALSE</field>
+                                        <field name="PATTERN">C2--- ---- G2--- ----</field>
                                         <value name="VELOCITY">
-                                          <shadow type="math_number" id="doBF2@rtRVX/g~{{Fs*a">
+                                          <shadow type="math_number" id="2ij~f5F%XH^5e8X0HzOZ">
                                             <field name="NUM">100</field>
                                           </shadow>
                                         </value>
                                         <value name="MEASURE">
-                                          <shadow type="math_number" id="X|Lq8{q.{//91(50M~UC">
-                                            <field name="NUM">4</field>
+                                          <shadow type="math_number" id=".$VB?6_%Iy[1OUsauMVc">
+                                            <field name="NUM">3</field>
                                           </shadow>
                                         </value>
                                         <next>
-                                          <block type="sb_rhythm_sequence" id="1-1aeMc|Mv(M;z@b8EZ^">
-                                            <field name="SOURCE">Bass</field>
-                                            <field name="CHORD_MODE">FALSE</field>
-                                            <field name="PATTERN">A1--- ---- E2--- ----</field>
+                                          <block type="sb_rhythm_sequence" id="~JjI)8D3iWAOt7%JsPYC">
+                                            <field name="SOURCE">Piano</field>
+                                            <field name="CHORD_MODE">TRUE</field>
+                                            <field name="PATTERN">..A7. ..A7. ---- A7...</field>
                                             <value name="VELOCITY">
-                                              <shadow type="math_number" id="ljX2bl*5)YnI|R%onn9S">
+                                              <shadow type="math_number" id="doBF2@rtRVX/g~{{Fs*a">
                                                 <field name="NUM">100</field>
                                               </shadow>
                                             </value>
                                             <value name="MEASURE">
-                                              <shadow type="math_number" id="yEP(JvuE#iwTG,nT.s1)">
+                                              <shadow type="math_number" id="X|Lq8{q.{//91(50M~UC">
                                                 <field name="NUM">4</field>
                                               </shadow>
                                             </value>
+                                            <next>
+                                              <block type="sb_rhythm_sequence" id="1-1aeMc|Mv(M;z@b8EZ^">
+                                                <field name="SOURCE">Bass</field>
+                                                <field name="CHORD_MODE">FALSE</field>
+                                                <field name="PATTERN">A1--- ---- E2--- ----</field>
+                                                <value name="VELOCITY">
+                                                  <shadow type="math_number" id="ljX2bl*5)YnI|R%onn9S">
+                                                    <field name="NUM">100</field>
+                                                  </shadow>
+                                                </value>
+                                                <value name="MEASURE">
+                                                  <shadow type="math_number" id="yEP(JvuE#iwTG,nT.s1)">
+                                                    <field name="NUM">4</field>
+                                                  </shadow>
+                                                </value>
+                                              </block>
+                                            </next>
                                           </block>
                                         </next>
                                       </block>
@@ -388,150 +397,109 @@
               </block>
             </next>
           </block>
-        </next>
+        </statement>
       </block>
     </statement>
   </block>
-  <block type="procedures_defnoreturn" id="/#KeeB8n!tV8S*EWN#L-" x="50" y="1510">
+  <block type="procedures_defnoreturn" id="/#KeeB8n!tV8S*EWN#L-" x="50" y="1570">
     <field name="NAME">B</field>
     <comment pinned="false" h="80" w="160">Describe this function...</comment>
     <statement name="STACK">
-      <block type="sb_rhythm_sequence" id="JQd;RY1wO@xdDSB==2-r">
-        <field name="SOURCE">Piano</field>
-        <field name="CHORD_MODE">TRUE</field>
-        <field name="PATTERN">Dm7--- ---- G7--- ----</field>
-        <value name="VELOCITY">
-          <shadow type="math_number" id="wwi?zw,tgZ%es:[|y2q=">
-            <field name="NUM">100</field>
+      <block type="sb_musical_section" id="R09:aMA{#Mo9Ft}^=jCW">
+        <value name="DURATION">
+          <shadow type="math_number" id="z3PTOmi6^`t.n@|$PsOX">
+            <field name="NUM">2</field>
           </shadow>
         </value>
-        <value name="MEASURE">
-          <shadow type="math_number" id="g_pA1$+L6UqW~P+9$Z~J">
-            <field name="NUM">1</field>
-          </shadow>
-        </value>
-        <next>
-          <block type="sb_rhythm_sequence" id="ELJ@aPIdy-c-1Uua9|NE">
-            <field name="SOURCE">Bass</field>
-            <field name="CHORD_MODE">FALSE</field>
-            <field name="PATTERN">D2--- ---- G1--- ----</field>
+        <statement name="STACK">
+          <block type="sb_rhythm_sequence" id="JQd;RY1wO@xdDSB==2-r">
+            <field name="SOURCE">Piano</field>
+            <field name="CHORD_MODE">TRUE</field>
+            <field name="PATTERN">Dm7--- ---- G7--- ----</field>
             <value name="VELOCITY">
-              <shadow type="math_number" id="6)x[@SFeWN2+ZY72aspd">
+              <shadow type="math_number" id="wwi?zw,tgZ%es:[|y2q=">
                 <field name="NUM">100</field>
               </shadow>
             </value>
             <value name="MEASURE">
-              <shadow type="math_number" id="ObD*-99!.HEFU}7jQSQ^">
+              <shadow type="math_number" id="g_pA1$+L6UqW~P+9$Z~J">
                 <field name="NUM">1</field>
               </shadow>
             </value>
             <next>
-              <block type="sb_rhythm_sequence" id="~gLvt20$=j@J91%_-!@D">
-                <field name="SOURCE">Piano</field>
-                <field name="CHORD_MODE">TRUE</field>
-                <field name="PATTERN">CM7_End--- ---- ---- ----</field>
+              <block type="sb_rhythm_sequence" id="ELJ@aPIdy-c-1Uua9|NE">
+                <field name="SOURCE">Bass</field>
+                <field name="CHORD_MODE">FALSE</field>
+                <field name="PATTERN">D2--- ---- G1--- ----</field>
                 <value name="VELOCITY">
-                  <shadow type="math_number" id="OPoS*ue1QL6h/CU21$cC">
+                  <shadow type="math_number" id="6)x[@SFeWN2+ZY72aspd">
                     <field name="NUM">100</field>
                   </shadow>
                 </value>
                 <value name="MEASURE">
-                  <shadow type="math_number" id="anTh,|]sM[24$hE7?:1~">
-                    <field name="NUM">2</field>
+                  <shadow type="math_number" id="ObD*-99!.HEFU}7jQSQ^">
+                    <field name="NUM">1</field>
                   </shadow>
                 </value>
                 <next>
-                  <block type="sb_rhythm_sequence" id="]B3hT^MtxXty@@#jVq~.">
-                    <field name="SOURCE">Bass</field>
-                    <field name="CHORD_MODE">FALSE</field>
-                    <field name="PATTERN">C2--- ---- ---- ----</field>
+                  <block type="sb_rhythm_sequence" id="~gLvt20$=j@J91%_-!@D">
+                    <field name="SOURCE">Piano</field>
+                    <field name="CHORD_MODE">TRUE</field>
+                    <field name="PATTERN">CM7_End--- ---- ---- ----</field>
                     <value name="VELOCITY">
-                      <shadow type="math_number" id="6~a_+o@ulHgE#H,YfeGz">
+                      <shadow type="math_number" id="OPoS*ue1QL6h/CU21$cC">
                         <field name="NUM">100</field>
                       </shadow>
                     </value>
                     <value name="MEASURE">
-                      <shadow type="math_number" id="Q`~/J`AExq;a65O]|B|F">
+                      <shadow type="math_number" id="anTh,|]sM[24$hE7?:1~">
                         <field name="NUM">2</field>
                       </shadow>
                     </value>
+                    <next>
+                      <block type="sb_rhythm_sequence" id="]B3hT^MtxXty@@#jVq~.">
+                        <field name="SOURCE">Bass</field>
+                        <field name="CHORD_MODE">FALSE</field>
+                        <field name="PATTERN">C2--- ---- ---- ----</field>
+                        <value name="VELOCITY">
+                          <shadow type="math_number" id="6~a_+o@ulHgE#H,YfeGz">
+                            <field name="NUM">100</field>
+                          </shadow>
+                        </value>
+                        <value name="MEASURE">
+                          <shadow type="math_number" id="Q`~/J`AExq;a65O]|B|F">
+                            <field name="NUM">2</field>
+                          </shadow>
+                        </value>
+                      </block>
+                    </next>
                   </block>
                 </next>
               </block>
             </next>
           </block>
-        </next>
+        </statement>
       </block>
     </statement>
   </block>
-  <block type="sb_perform" id="yl{JIF[Y;%Bo;@nt^3A+" x="50" y="1730">
+  <block type="sb_perform" id="ne?*yqI?CxC[R?|!ULE|" x="50" y="1850">
     <statement name="DO">
-      <block type="procedures_callnoreturn" id="bAR@ImJi=ChEJ4l1{pQo">
+      <block type="procedures_callnoreturn" id="LPS_^(G$)$?%;Mz_VUSN">
         <mutation name="A"></mutation>
         <next>
-          <block type="sb_wait_musical" id="Q=i:2oNTW)cd:))vS3Zp">
-            <field name="UNIT">MEASURES</field>
-            <value name="VALUE">
-              <shadow type="math_number" id="6D`,MMP(X#NTutPmxN4x">
-                <field name="NUM">4</field>
-              </shadow>
-            </value>
+          <block type="procedures_callnoreturn" id="$/:@qsF2UnndGmr9]G]3">
+            <mutation name="A"></mutation>
             <next>
-              <block type="procedures_callnoreturn" id="e!.|(_m4rhML.P/PhZ?M">
-                <mutation name="A"></mutation>
+              <block type="procedures_callnoreturn" id="#5g8/H[F?}xiU0gyQ0..">
+                <mutation name="B"></mutation>
                 <next>
-                  <block type="sb_wait_musical" id="(=l[HUqo#oWqCt.=913*">
-                    <field name="UNIT">MEASURES</field>
-                    <value name="VALUE">
-                      <shadow type="math_number" id="+qRKQI2mnghl^rM.[D[T">
-                        <field name="NUM">4</field>
-                      </shadow>
-                    </value>
+                  <block type="procedures_callnoreturn" id="x_,UjmKjI-O+fym(pOu;">
+                    <mutation name="A"></mutation>
                     <next>
                       <block type="procedures_callnoreturn" id="e!+-xs[;Otw*Mt!V$qmT">
                         <mutation name="B"></mutation>
                         <next>
-                          <block type="sb_wait_musical" id=")=Kir*,9U$~F+cRT.:S2">
-                            <field name="UNIT">MEASURES</field>
-                            <value name="VALUE">
-                              <shadow type="math_number" id="Y:i8,cZ`ygV+)mkbmbkw">
-                                <field name="NUM">2</field>
-                              </shadow>
-                            </value>
-                            <next>
-                              <block type="procedures_callnoreturn" id="4]#_.*~h.?J8n`bWnzyF">
-                                <mutation name="A"></mutation>
-                                <next>
-                                  <block type="sb_wait_musical" id="PCa)V8r[v}5vhw+M@Gv5">
-                                    <field name="UNIT">MEASURES</field>
-                                    <value name="VALUE">
-                                      <shadow type="math_number" id="+gHFE^0+dXM5]5Xt6*I8">
-                                        <field name="NUM">4</field>
-                                      </shadow>
-                                    </value>
-                                    <next>
-                                      <block type="procedures_callnoreturn" id="e)#Omae9^3v=t:II.FhA">
-                                        <mutation name="B"></mutation>
-                                        <next>
-                                          <block type="sb_wait_musical" id="_t/K3lXnfCc*1-LliSYZ">
-                                            <field name="UNIT">MEASURES</field>
-                                            <value name="VALUE">
-                                              <shadow type="math_number" id=")!;1Wj_jg#P~995;f/a2">
-                                                <field name="NUM">2</field>
-                                              </shadow>
-                                            </value>
-                                            <next>
-                                              <block type="processing_exit" id="|Hw:`q:gb@MTB0tKKB@q"></block>
-                                            </next>
-                                          </block>
-                                        </next>
-                                      </block>
-                                    </next>
-                                  </block>
-                                </next>
-                              </block>
-                            </next>
-                          </block>
+                          <block type="processing_exit" id="|Hw:`q:gb@MTB0tKKB@q"></block>
                         </next>
                       </block>
                     </next>
