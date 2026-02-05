@@ -21,7 +21,7 @@
 - **解決方案**：在 `generateAndSendCode` 階段改用 `workspace.getTopBlocks(true)` 遍歷所有頂層積木，強迫每個積木都執行一次 `blockToCode`。
 
 ### 3. Java 事件注入 (Java Event Injection)
-- **細節**：Processing 的 `void keyPressed()` 是全域唯一的。
+- **細節**：Processing 的 `void keyPressed()` 是全域唯一的.
 - **對策**：在 `ui_key_event` 產生器中加入 `if (!Blockly.Processing.definitions_['Helpers'])` 檢查，確保框架只被建立一次，後續所有積木僅將代碼 push 到全域陣列中，最後由 `_core.js` 的 `finish()` 進行字串取代。
 
 ## Windows 資源管理與鎖定 (2026-01-29)
@@ -68,7 +68,7 @@
 - **現象**：`write_file` 過程中若不慎混入 `</script>` 或編碼不匹配，會導致 Webview 載入產生器失敗，報 `Uncaught SyntaxError` 或 `generator does not know how to generate code`。
 - **對策**：避免在產生器 JS 中使用過於複雜的字串拼接，優先採用乾淨的模板結構並定期校對引號閉合。
 
-### 5. PC Key 重複觸發機制 (Debounce)
+### 5. PC Key 重重複觸發機制 (Debounce)
 - **問題**：Windows 鍵盤長按會連續發送 `keyPressed` 事件，導致聲音不斷 Restart。
 - **方案**：使用 `HashSet<Integer> pcKeysHeld`。在 `keyPressed` 時檢查 `if (!contains(p))` 才觸發發聲；在 `keyReleased` 時移除。這確保了長按按鍵時聲音能正確進入 Sustain 階段。
 
@@ -83,7 +83,7 @@
 - **Minim ADSR API**：\ADSR\ 沒有 \setAmplitude\ 方法，最大振幅需在建構函式第一參數或 \setParameters\ 中設定。
 - **產生器 Key 覆寫 Bug**：在 \_core.js\ 中原本使用代碼第一行作為 Key，這會導致多個內容相似的帽子積木（如多個 Thread）互相覆寫。已改用遞增 ID (\setup_0\, \setup_1\...) 解決。
 - **取樣器 Transient 保護**：為了保留真實鋼琴/小提琴的「擊槌感」，取樣器應跳過 ADS 設定（固定為 0/0/1.0），僅將 R (Release) 開放給使用者控制。
-- **執行緒競爭 (Race Condition)**：\draw()\ 中的 \exit()\ 判斷必須配合 \FrameCount > 60\，以給予背景執行緒充足的啟動時間，避免在音樂還沒開始播時就誤判結束。
+- **執行緒競爭 (Race Condition)**：\draw()\ 中的 \exit()\ 判斷必須配合 \FrameCount > 60\, 以給予背景執行緒充足的啟動時間，避免在音樂還沒開始播時就誤判結束。
 
 ## 2026-02-04 技術細節
 - **並發修改異常 (ConcurrentModificationException)**：背景演奏執行緒與鍵盤事件同時操作 activeNotes 時，會導致 Java Exception。已將 activeNotes 型別改為 ConcurrentHashMap。
@@ -91,3 +91,11 @@
 - **鍵盤樂器記憶 (Keyboard Memory)**：若在按住期間切換樂器，釋放時會因 currentInstrument 已變更而導致 Stuck Note。已將 pcKeysHeld 改為 HashMap<Integer, String> 以記住原始樂器名。
 - **Java Thread 參數 final 化**：在產生的 Java 代碼中，傳遞給 Thread 的參數（如 instName）必須宣告為 final 才能在匿名內部類別中存取。
 - **Webview UI 邊界問題**：HTML 下拉選單無法超出 Webview。改用 VS Code 原生 showQuickPick 解決介面遮擋與搜尋需求。
+
+# 2026-02-05 技術細節
+- **初始化順序 (Critical)**：Java 版 MelodicSampler 在建構子中若嘗試 patch(mainMixer)，若 mainMixer 尚未初始化會拋出 NullPointerException。解決方案：建立 checkMainMixer() 輔助函式，並在所有樂器建立前優先呼叫。
+- **Java 布林值匹配**：Blockly 下拉選單傳回的 'TRUE'/'FALSE' 字串在 Java 中會被視為未定義變數。必須在產生器中將其轉換為小寫的 true/false。
+- **嵌套迴圈變數衝突**：在多軌音序器的產生器中，外層 JS 迴圈與內層 Java 迴圈若都使用 'i'，會導致產出的代碼語法錯誤。應使用不同的變數名稱（如 k）。
+- **Z-Order 遮擋**：ControlP5 元件的層級由建立順序決定。後建立的元件會出現在最上層。若下拉選單被其他元件擋住，應調整其初始化順序。
+- **ADSR 動態更新**：當 currentInstrument 切換時，必須同步將 adsrState 重設為 0，否則光點會繼承上一個樂器的播放進度而產生鬼影。
+- **Webview Sandbox**：window.prompt 在沙盒中被禁用。已實作 vscode.postMessage 橋接到 vscode.window.showInputBox 的機制。

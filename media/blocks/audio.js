@@ -203,6 +203,71 @@ const SAMPLER_HELPER = {
   }
 };
 
+const RHYTHM_V2_MUTATOR = {
+  itemCount_: 1,
+  mutationToDom: function() {
+    const container = Blockly.utils.xml.createElement('mutation');
+    container.setAttribute('items', this.itemCount_);
+    return container;
+  },
+  domToMutation: function(xmlElement) {
+    this.itemCount_ = parseInt(xmlElement.getAttribute('items'), 10);
+    this.updateShape_();
+  },
+  decompose: function(workspace) {
+    const containerBlock = workspace.newBlock('sb_rhythm_v2_container');
+    containerBlock.initSvg();
+    let connection = containerBlock.nextConnection;
+    for (let i = 0; i < this.itemCount_; i++) {
+      const itemBlock = workspace.newBlock('sb_rhythm_v2_item');
+      itemBlock.initSvg();
+      connection.connect(itemBlock.previousConnection);
+      connection = itemBlock.nextConnection;
+    }
+    return containerBlock;
+  },
+  compose: function(containerBlock) {
+    let itemBlock = containerBlock.getNextBlock();
+    this.itemCount_ = 0;
+    while (itemBlock) {
+      this.itemCount_++;
+      itemBlock = itemBlock.getNextBlock();
+    }
+    this.updateShape_();
+  },
+  updateShape_: function() {
+    const trackData = [];
+    for (let i = 0; i < 50; i++) {
+      if (!this.getField('INST' + i)) break;
+      trackData.push({
+        inst: this.getFieldValue('INST' + i),
+        vel: this.getFieldValue('VEL' + i),
+        mode: this.getFieldValue('MODE' + i),
+        pattern: this.getFieldValue('PATTERN' + i)
+      });
+    }
+    let i = 0;
+    while (this.getInput('TRACK' + i)) { this.removeInput('TRACK' + i); i++; }
+    for (let i = 0; i < this.itemCount_; i++) {
+      const input = this.appendDummyInput('TRACK' + i)
+          .appendField("樂器")
+          .appendField(new Blockly.FieldDropdown(getInstrumentDropdown), 'INST' + i)
+          .appendField("力度")
+          .appendField(new Blockly.FieldTextInput("100"), 'VEL' + i)
+          .appendField("模式")
+          .appendField(new Blockly.FieldDropdown([["單音", "FALSE"], ["和弦", "TRUE"]]), 'MODE' + i)
+          .appendField("節奏")
+          .appendField(new Blockly.FieldTextInput("x--- x--- x--- x---"), 'PATTERN' + i);
+      if (trackData[i]) {
+        this.setFieldValue(trackData[i].inst, 'INST' + i);
+        this.setFieldValue(trackData[i].vel, 'VEL' + i);
+        this.setFieldValue(trackData[i].mode, 'MODE' + i);
+        this.setFieldValue(trackData[i].pattern, 'PATTERN' + i);
+      }
+    }
+  }
+};
+
 // --- DYNAMIC DROPDOWN FOR INSTRUMENTS ---
 const getInstrumentDropdown = function() {
   const instrumentBlocks = Blockly.getMainWorkspace().getBlocksByType('sb_instrument_container');
@@ -268,6 +333,21 @@ Blockly.defineBlocksWithJsonArray([
     "nextStatement": null,
     "enableContextMenu": false,
     "colour": "#E74C3C"
+  },
+  {
+    "type": "sb_rhythm_v2_container",
+    "message0": "音軌清單",
+    "nextStatement": null,
+    "enableContextMenu": false,
+    "colour": "#E67E22"
+  },
+  {
+    "type": "sb_rhythm_v2_item",
+    "message0": "音軌",
+    "previousStatement": null,
+    "nextStatement": null,
+    "enableContextMenu": false,
+    "colour": "#E67E22"
   },
 
   // Standard Audio Blocks
@@ -338,8 +418,9 @@ Blockly.defineBlocksWithJsonArray([
     ],
     "previousStatement": null,
     "nextStatement": null,
+    "inputsInline": true,
     "colour": "%{BKY_PERFORMANCE_HUE}",
-    "tooltip": "開始播放一個持續音。"
+    "tooltip": "%{BKY_AUDIO_PLAY_NOTE_TOOLTIP}"
   },
   {
     "type": "sb_stop_note",
@@ -349,8 +430,9 @@ Blockly.defineBlocksWithJsonArray([
     ],
     "previousStatement": null,
     "nextStatement": null,
+    "inputsInline": true,
     "colour": "%{BKY_PERFORMANCE_HUE}",
-    "tooltip": "觸發 ADSR 的 Release 階段並停止發聲。"
+    "tooltip": "%{BKY_AUDIO_STOP_NOTE_TOOLTIP}"
   },
   {
     "type": "sb_play_melody",
@@ -398,8 +480,24 @@ Blockly.defineBlocksWithJsonArray([
     ],
     "previousStatement": null,
     "nextStatement": null,
+    "inputsInline": true,
     "colour": "%{BKY_PERFORMANCE_HUE}",
     "tooltip": "%{BKY_AUDIO_RHYTHM_SEQUENCE_TOOLTIP}"
+  },
+  {
+    "type": "sb_rhythm_sequencer_v2",
+    "message0": "%{BKY_AUDIO_RHYTHM_V2_HEADER}",
+    "args0": [
+      { "type": "field_input", "name": "MEASURE", "text": "1" },
+      { "type": "field_input", "name": "BEATS", "text": "4" },
+      { "type": "field_input", "name": "DENOMINATOR", "text": "4" },
+      { "type": "field_input", "name": "RESOLUTION", "text": "4" }
+    ],
+    "previousStatement": null,
+    "nextStatement": null,
+    "inputsInline": true,
+    "colour": "%{BKY_PERFORMANCE_HUE}",
+    "mutator": "rhythm_v2_mutator"
   },
   {
     "type": "sb_transport_count_in",
@@ -633,6 +731,26 @@ Blockly.Extensions.registerMutator('harmonic_mutator', HARMONIC_PARTIALS_MUTATOR
 Blockly.Extensions.registerMutator('additive_mutator', ADDITIVE_SYNTH_MUTATOR, undefined, ['sb_additive_synth_item']);
 Blockly.Extensions.registerMutator('melodic_sampler_mutator', MELODIC_SAMPLER_MUTATOR, undefined);
 Blockly.Extensions.registerMutator('drum_sampler_mutator', DRUM_SAMPLER_MUTATOR, undefined);
+Blockly.Extensions.registerMutator('rhythm_v2_mutator', RHYTHM_V2_MUTATOR, undefined, ['sb_rhythm_v2_item']);
+
+Blockly.Blocks['sb_rhythm_sequencer_v2'] = {
+  init: function() {
+    this.jsonInit({
+      "type": "sb_rhythm_sequencer_v2",
+      "message0": "%{BKY_AUDIO_RHYTHM_V2_HEADER}",
+      "args0": [
+        { "type": "field_input", "name": "MEASURE", "text": "1" },
+        { "type": "field_input", "name": "BEATS", "text": "4" },
+        { "type": "field_input", "name": "DENOMINATOR", "text": "4" },
+        { "type": "field_input", "name": "RESOLUTION", "text": "4" }
+      ],
+      "previousStatement": null,
+      "nextStatement": null,
+      "colour": "%{BKY_PERFORMANCE_HUE}",
+      "mutator": "rhythm_v2_mutator"
+    });
+  }
+};
 
 
 // --- INSTRUMENT CONTAINER SYSTEM ---

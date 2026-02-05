@@ -11,19 +11,23 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.concurrent.*;
 import processing.serial.*;
 import themidibus.*;
 
 AudioOutput out;
 ControlP5 cp5;
 FFT fft;
-HashMap<Integer, ADSR> activeNotes = new HashMap<Integer, ADSR>();
+Gain masterGainUGen;
+HashMap<Integer, String> midiKeysHeld = new HashMap<Integer, String>();
+HashMap<Integer, String> pcKeysHeld = new HashMap<Integer, String>();
+HashMap<String, Float> instrumentVolumes = new HashMap<String, Float>();
 HashMap<String, Gain> samplerGainMap = new HashMap<String, Gain>();
 HashMap<String, List<SynthComponent>> additiveConfigs = new HashMap<String, List<SynthComponent>>();
+HashMap<String, MelodicSampler> melodicSamplers = new HashMap<String, MelodicSampler>();
 HashMap<String, Sampler> samplerMap = new HashMap<String, Sampler>();
 HashMap<String, String[]> chords = new HashMap<String, String[]>();
 HashMap<String, float[]> harmonicPartials = new HashMap<String, float[]>();
-HashSet<Integer> pcKeysHeld = new HashSet<Integer>();
 LinkedHashMap<String, String> instrumentMap = new LinkedHashMap<String, String>();
 LinkedHashMap<String, float[]> instrumentADSR = new LinkedHashMap<String, float[]>();
 MidiBus myBus;
@@ -34,6 +38,7 @@ Sampler snare;
 Serial myPort;
 String currentInstrument = "default";
 String lastInstrument = "";
+Summer mainMixer;
 boolean isMidiMode = false;
 boolean showADSR = true;
 boolean showLog = true;
@@ -64,6 +69,77 @@ int velocity;
 volatile boolean isCountingIn = false;
 
 int pitchTranspose = 0;
+
+  class MelodicSampler {
+    TreeMap<Integer, Sampler> samples = new TreeMap<Integer, Sampler>();
+    TreeMap<Integer, TickRate> rates = new TreeMap<Integer, TickRate>();
+    TreeMap<Integer, ADSR> adsrs = new TreeMap<Integer, ADSR>();
+    Summer localMixer = new Summer();
+    Minim m;
+    
+    MelodicSampler(Minim minim) { 
+      this.m = minim; 
+      checkMainMixer();
+      localMixer.patch(mainMixer);
+    }
+    
+    void loadSamples(String folder) {
+      File dir = new File(dataPath(folder));
+      if (!dir.exists()) return;
+      File[] files = dir.listFiles();
+      if (files == null) return;
+      for (File f : files) {
+        String fullName = f.getName();
+        String upperName = fullName.toUpperCase();
+        if (upperName.endsWith(".MP3") || upperName.endsWith(".WAV")) {
+          String noteName = fullName.substring(0, fullName.lastIndexOf('.'));
+          int midi = noteToMidi(noteName);
+          if (midi >= 0) {
+            Sampler s = new Sampler(folder + "/" + fullName, 4, m);
+            TickRate tr = new TickRate(1.f);
+            ADSR a = new ADSR(1.0, 0.001f, 0.001f, 1.0f, 0.5f); // 預設 R=0.5
+            tr.setInterpolation(true);
+            s.patch(tr).patch(a).patch(localMixer);
+            samples.put(midi, s);
+            rates.put(midi, tr);
+            adsrs.put(midi, a);
+          }
+        }
+      }
+    }
+    
+    ADSR trigger(int midi, float amp, float r) {
+      if (samples.isEmpty()) return null;
+      Integer closest = samples.floorKey(midi);
+      if (closest == null) closest = samples.ceilingKey(midi);
+      
+      Sampler src = samples.get(closest);
+      TickRate tr = rates.get(closest);
+      ADSR a = adsrs.get(closest);
+      
+      if (src != null && tr != null && a != null) {
+        float rate = (float)Math.pow(2.0, (midi - closest) / 12.0);
+        tr.value.setLastValue(rate);
+        
+        // 使用傳入的 amp 設定最大振幅
+        a.setParameters(amp, 0.001f, 0.001f, 1.0f, r, 0, 0);
+        a.noteOn();
+        src.trigger();
+        return a;
+      }
+      return null;
+    }
+  }
+
+  void checkMainMixer() {
+    if (minim == null) minim = new Minim(this);
+    if (out == null) out = minim.getLineOut();
+    if (mainMixer == null) {
+      mainMixer = new Summer();
+      masterGainUGen = new Gain(0.f);
+      mainMixer.patch(masterGainUGen).patch(out);
+    }
+  }
 
   class SynthComponent {
     String waveType; float ratio; float amp;
@@ -102,57 +178,87 @@ int pitchTranspose = 0;
     return Waves.TRIANGLE;
   }
 
-  void playNoteInternal(int p, float vel) {
+  // Global ConcurrentHashMap for thread safety and composite keys
+  ConcurrentHashMap<String, ADSR> activeNotes = new ConcurrentHashMap<String, ADSR>();
+
+  void playNoteInternal(String instName, int p, float vel) {
+    if (instName == null || instName.length() == 0) instName = currentInstrument;
     if (p < 0) return;
-    if (activeNotes.containsKey(p)) stopNoteInternal(p);
+    String key = instName + "_" + p;
     
-    float masterAmp = map(vel, 0, 127, 0, 0.6f);
+    // Stop existing note of SAME instrument and SAME pitch
+    if (activeNotes.containsKey(key)) stopNoteInternal(instName, p);
+    
+    float masterAmp = map(vel, 0, 127, 0, 0.5f);
+    masterAmp *= instrumentVolumes.getOrDefault(instName, 1.0f);
+    
+    float[] adsr = instrumentADSR.get(instName);
+    if (adsr == null) adsr = new float[]{defAdsrA, defAdsrD, defAdsrS, defAdsrR};
+
+    String type = instrumentMap.getOrDefault(instName, "TRIANGLE");
+    if (type.equals("MELODIC_SAMPLER")) {
+      MelodicSampler ms = melodicSamplers.get(instName);
+      if (ms != null) {
+        ADSR env = ms.trigger(p, masterAmp, adsr[3]);
+        if (env != null) {
+          activeNotes.put(key, env);
+          if (instName.equals(currentInstrument) && !instName.equals("")) {
+            adsrTimer = millis(); adsrState = 1;
+          }
+        }
+      }
+      return;
+    }
+    
     float baseFreq = mtof((float)p);
+    ADSR env = new ADSR(1.0, adsr[0], adsr[1], adsr[2], adsr[3]);
     
-    // Use LIVE values from UI Sliders for active performance
-    ADSR adsr = new ADSR(1.0, adsrA, adsrD, adsrS, adsrR);
-    
-    Summer mixer = new Summer(); 
-    String type = instrumentMap.getOrDefault(currentInstrument, "TRIANGLE");
+    Summer noteMixer = new Summer(); 
     
     if (type.equals("HARMONIC")) {
-      float[] partials = harmonicPartials.get(currentInstrument);
+      float[] partials = harmonicPartials.get(instName);
       if (partials != null) {
         for (int i = 0; i < partials.length; i++) {
           if (partials[i] > 0) {
             Oscil osc = new Oscil(baseFreq * (i + 1), partials[i] * masterAmp, Waves.SINE);
-            osc.patch(mixer);
+            osc.patch(noteMixer);
           }
         }
       }
-      mixer.patch(adsr);
+      noteMixer.patch(env);
     } else if (type.equals("ADDITIVE")) {
-      List<SynthComponent> configs = additiveConfigs.get(currentInstrument);
+      List<SynthComponent> configs = additiveConfigs.get(instName);
       if (configs != null) {
         for (SynthComponent comp : configs) {
           Oscil osc = new Oscil(baseFreq * comp.ratio, comp.amp * masterAmp, getWaveform(comp.waveType));
-          osc.patch(mixer);
+          osc.patch(noteMixer);
         }
       }
-      mixer.patch(adsr);
+      noteMixer.patch(env);
     } else {
       Oscil wave = new Oscil(baseFreq, masterAmp, getWaveform(type));
-      wave.patch(adsr);
+      wave.patch(env);
     }
     
-    adsr.patch(out);
-    adsr.noteOn();
-    activeNotes.put(p, adsr);
-    adsrTimer = millis(); adsrState = 1;
+    env.patch(mainMixer);
+    env.noteOn();
+    activeNotes.put(key, env);
+    if (instName.equals(currentInstrument) && !instName.equals("")) {
+      adsrTimer = millis(); adsrState = 1;
+    }
   }
 
-  void stopNoteInternal(int p) {
-    ADSR adsr = activeNotes.get(p);
+  void stopNoteInternal(String instName, int p) {
+    if (instName == null || instName.length() == 0) instName = currentInstrument;
+    String key = instName + "_" + p;
+    ADSR adsr = activeNotes.get(key);
     if (adsr != null) {
-      adsr.unpatchAfterRelease(out);
+      adsr.unpatchAfterRelease(mainMixer);
       adsr.noteOff();
-      activeNotes.remove(p);
-      adsrTimer = millis(); adsrState = 2;
+      activeNotes.remove(key);
+      if (instName.equals(currentInstrument) && !instName.equals("")) {
+        adsrTimer = millis(); adsrState = 2;
+      }
     }
   }
 
@@ -177,147 +283,82 @@ int pitchTranspose = 0;
         if (cp5.getController("adsrS") != null) cp5.getController("adsrS").setValue(adsrS);
         if (cp5.getController("adsrR") != null) cp5.getController("adsrR").setValue(adsrR);
       }
+      adsrState = 0; // Reset light dot on instrument switch
       logToScreen("Instrument Switched: " + currentInstrument, 1);
       lastInstrument = currentInstrument;
     }
   }
 
-  void playNoteForDuration(int p, float vel, final float durationMs) {
+  void playNoteForDuration(final String instName, int p, float vel, final float durationMs) {
     if (p < 0) return;
-    playNoteInternal(p, vel);
+    playNoteInternal(instName, p, vel);
     final int pitch = p;
     new Thread(new Runnable() {
       public void run() {
         try { Thread.sleep((long)durationMs); } catch (Exception e) {}
-        stopNoteInternal(pitch);
+        stopNoteInternal(instName, pitch);
       }
     }).start();
   }
 
-  void playChordByNameInternal(String name, float durationMs, float vel) {
+  void playChordByNameInternal(String instName, String name, float durationMs, float vel) {
     String[] notes = chords.get(name);
     if (notes != null) {
       for (String n : notes) {
         int midi = noteToMidi(n);
-        if (midi >= 0) playNoteForDuration(midi, vel, durationMs);
-      }
-    }
-  }
-
-  class MelodyPlayer extends Thread {
-    String melody; String inst;
-    MelodyPlayer(String m, String i) { melody = m; inst = i; }
-    public void run() {
-      synchronized(melodyLock) {
-        activeMelodyCount++;
-        String oldInst = currentInstrument;
-        if (inst != null && !inst.equals("")) currentInstrument = inst;
-        
-              // Split by comma, space, tab, or newline
-        
-              String[] tokens = splitTokens(melody, ", \t\n\r");
-        
-              for (String t : tokens) {
-        
-                t = t.trim(); if (t.length() < 2) continue;
-        
-                
-        
-                float totalMs = 0;
-        
-                String noteName = "";
-        
-                
-        
-                // Support Ties (+) e.g. C4H+Q or C4H.+E
-        
-                String[] parts = t.split("\\+");
-        
-                for (int j = 0; j < parts.length; j++) {
-        
-                  String p = parts[j].trim();
-        
-                  if (p.length() == 0) continue;
-        
-                  
-        
-                  float multiplier = 1.0f;
-        
-                  if (p.endsWith(".")) {
-        
-                    multiplier = 1.5f;
-        
-                    p = p.substring(0, p.length() - 1);
-        
-                  } else if (p.endsWith("_T")) {
-        
-                    multiplier = 2.0f / 3.0f;
-        
-                    p = p.substring(0, p.length() - 2);
-        
-                  }
-        
-                  
-        
-                  char durChar = p.charAt(p.length() - 1);
-        
-                  String prefix = p.substring(0, p.length() - 1);
-        
-                  
-        
-                  // The first part of a tied note defines the pitch/chord
-        
-                  if (j == 0) noteName = prefix;
-        
-                  
-        
-                  float baseMs = 0;
-        
-                  if (durChar == 'W') baseMs = (60000.0f / bpm) * 4.0f;
-        
-                  else if (durChar == 'H') baseMs = (60000.0f / bpm) * 2.0f;
-        
-                  else if (durChar == 'Q') baseMs = (60000.0f / bpm);
-        
-                  else if (durChar == 'E') baseMs = (60000.0f / bpm) / 2.0f;
-        
-                  else if (durChar == 'S') baseMs = (60000.0f / bpm) / 4.0f;
-        
-                  
-        
-                  totalMs += (baseMs * multiplier);
-        
-                }
-        
-                
-        
-                if (noteName.length() > 0) {
-        
-                  if (chords.containsKey(noteName)) {
-        
-                    playChordByNameInternal(noteName, totalMs * 0.95f, 100);
-        
-                  } else {
-        
-                    int midi = noteToMidi(noteName);
-        
-                    if (midi >= 0) playNoteForDuration(midi, 100, totalMs * 0.95f);
-        
-                  }
-        
-                  try { Thread.sleep((long)totalMs); } catch (Exception e) {}
-        
-                }
-        
-              }
-        currentInstrument = oldInst;
-        activeMelodyCount--;
+        if (midi >= 0) playNoteForDuration(instName, midi, vel, durationMs);
       }
     }
   }
 
   void playMelodyInternal(String m, String i) {
-    new MelodyPlayer(m, i).start();
+    String[] tokens = splitTokens(m, ", \t\n\r");
+    for (String t : tokens) {
+      parseAndPlayNote(i, t, 100);
+    }
+  }
+
+  void parseAndPlayNote(String name, String token, float vel) {
+    token = token.trim(); if (token.length() < 2) return;
+    activeMelodyCount++;
+    float totalMs = 0;
+    String noteName = "";
+    String[] parts = token.split("\\+");
+    for (int j = 0; j < parts.length; j++) {
+      String p = parts[j].trim();
+      if (p.length() == 0) continue;
+      float multiplier = 1.0f;
+      if (p.endsWith(".")) { multiplier = 1.5f; p = p.substring(0, p.length() - 1); }
+      else if (p.endsWith("_T")) { multiplier = 2.0f / 3.0f; p = p.substring(0, p.length() - 2); }
+      char durChar = p.charAt(p.length() - 1);
+      String prefix = p.substring(0, p.length() - 1);
+      if (j == 0) noteName = prefix;
+      float baseMs = 0;
+      if (durChar == 'W') baseMs = (60000.0f / bpm) * 4.0f;
+      else if (durChar == 'H') baseMs = (60000.0f / bpm) * 2.0f;
+      else if (durChar == 'Q') baseMs = (60000.0f / bpm);
+      else if (durChar == 'E') baseMs = (60000.0f / bpm) / 2.0f;
+      else if (durChar == 'S') baseMs = (60000.0f / bpm) / 4.0f;
+      totalMs += (baseMs * multiplier);
+    }
+    
+    if (noteName.length() > 0) {
+      String type = instrumentMap.getOrDefault(name, "DRUM");
+      float volScale = instrumentVolumes.getOrDefault(name, 1.0f);
+      if (type.equals("DRUM")) {
+        if (!noteName.equalsIgnoreCase("R") && samplerMap.containsKey(name)) {
+          samplerGainMap.get(name).setValue(map(vel * volScale, 0, 127, -40, 0));
+          samplerMap.get(name).trigger();
+        }
+      } else {
+        if (!noteName.equalsIgnoreCase("R")) {
+          if (chords.containsKey(noteName)) playChordByNameInternal(name, noteName, totalMs * 0.95f, vel);
+          else { int midi = noteToMidi(noteName); if (midi >= 0) playNoteForDuration(name, midi, vel, totalMs * 0.95f); }
+        }
+      }
+      try { Thread.sleep((long)totalMs); } catch(Exception e) {}
+    }
+    activeMelodyCount--;
   }
 
   float durationToMs(String iv) {
@@ -335,17 +376,18 @@ int pitchTranspose = 0;
   }
 
   void playClick(float freq, float v) {
+    checkMainMixer();
     if (out == null) return;
-    float amp = map(v, 0, 127, 0, 0.8f);
-    // Use SQUARE wave for a more sharp, percussive click
-    Oscil wave = new Oscil(freq, amp, Waves.SQUARE);
-    ADSR adsr = new ADSR(1.0, 0.001f, 0.02f, 0.0f, 0.02f);
-    wave.patch(adsr).patch(out);
+    float amp = map(v, 0, 127, 0, 1.0f);
+    // Use TRIANGLE wave for better visibility on oscilloscope
+    Oscil wave = new Oscil(freq, amp, Waves.TRIANGLE);
+    // Increase duration to ~100ms to ensure frame capture
+    ADSR adsr = new ADSR(1.0, 0.01f, 0.05f, 0.0f, 0.05f);
+    wave.patch(adsr).patch(mainMixer);
     adsr.noteOn();
-    // Since this is called from the count-in thread, a short sleep here is safe and necessary
-    try { Thread.sleep(50); } catch(Exception e) {} 
+    try { Thread.sleep(80); } catch(Exception e) {} 
     adsr.noteOff();
-    adsr.unpatchAfterRelease(out);
+    adsr.unpatchAfterRelease(mainMixer);
   }
 
 void logToScreen(String msg, int type) {
@@ -413,8 +455,8 @@ void logToScreen(String msg, int type) {
 
   void keyPressed() {
     if (key == CODED) {
-      if (keyCode == UP) { pitchTranspose += 12; logToScreen("Octave UP", 1); }
-      else if (keyCode == DOWN) { pitchTranspose -= 12; logToScreen("Octave DOWN", 1); }
+      if (keyCode == UP) { pitchTranspose += 12; logToScreen("Octave UP (Trans: " + (pitchTranspose > 0 ? "+" : "") + pitchTranspose + ")", 1); }
+      else if (keyCode == DOWN) { pitchTranspose -= 12; logToScreen("Octave DOWN (Trans: " + (pitchTranspose > 0 ? "+" : "") + pitchTranspose + ")", 1); }
       else if (keyCode == LEFT || keyCode == RIGHT) {
         Object[] names = instrumentMap.keySet().toArray();
         if (names.length > 0) {
@@ -426,7 +468,9 @@ void logToScreen(String msg, int type) {
           currentInstrument = names[idx].toString();
         }
       }
-    } else if (key == BACKSPACE) { pitchTranspose = 0; logToScreen("Transpose Reset", 1); }
+    } else if (key == '=' || key == '+') { pitchTranspose += 1; logToScreen("Transpose: " + (pitchTranspose > 0 ? "+" : "") + pitchTranspose, 1); }
+    else if (key == '-' || key == '_') { pitchTranspose -= 1; logToScreen("Transpose: " + (pitchTranspose > 0 ? "+" : "") + pitchTranspose, 1); }
+    else if (key == BACKSPACE) { pitchTranspose = 0; logToScreen("Transpose Reset", 1); }
 
     int p = -1;
     char k = Character.toLowerCase(key);
@@ -438,9 +482,9 @@ void logToScreen(String msg, int type) {
     else if (k == '0') p = 75; else if (k == 'p') p = 76;
 
     if (p != -1) {
-      if (!pcKeysHeld.contains(p)) {
-        playNoteInternal(p, 100);
-        pcKeysHeld.add(p);
+      if (!pcKeysHeld.containsKey(p)) {
+        playNoteInternal(currentInstrument, p, 100);
+        pcKeysHeld.put(p, currentInstrument);
         logToScreen("Keyboard ON: MIDI " + p, 0);
       }
     }
@@ -458,23 +502,38 @@ void logToScreen(String msg, int type) {
     else if (k == '0') p = 75; else if (k == 'p') p = 76;
 
     if (p != -1) {
-      stopNoteInternal(p);
-      pcKeysHeld.remove(p);
-      logToScreen("Keyboard OFF: MIDI " + p, 0);
+      if (pcKeysHeld.containsKey(p)) {
+        String inst = pcKeysHeld.get(p);
+        stopNoteInternal(inst, p);
+        pcKeysHeld.remove(p);
+        logToScreen("Keyboard OFF: MIDI " + p, 0);
+      }
     }
     
   }
 
 void noteOn(int channel, int pitch, int velocity) {
   logToScreen("Note ON - Pitch: " + pitch + " Vel: " + velocity, 0);
-    playNoteInternal((int)pitch, (float)velocity);
+  midiKeysHeld.put(pitch, currentInstrument);
+    playNoteInternal(currentInstrument, (int)pitch, (float)velocity);
 
 }
 
 void noteOff(int channel, int pitch, int velocity) {
   logToScreen("Note OFF - Pitch: " + pitch, 0);
-    stopNoteInternal((int)pitch);
+  String memorizedInst = midiKeysHeld.get(pitch);
+  if (memorizedInst != null) {
+    // We modify the internal execution context by temporarily overriding currentInstrument
+    String backup = currentInstrument;
+    currentInstrument = memorizedInst;
+      stopNoteInternal(currentInstrument, (int)pitch);
 
+    currentInstrument = backup;
+    midiKeysHeld.remove(pitch);
+  } else {
+      stopNoteInternal(currentInstrument, (int)pitch);
+
+  }
 }
 
 void setup() {
@@ -488,15 +547,13 @@ void setup() {
   if (!instrumentADSR.containsKey("Bell")) instrumentADSR.put("Bell", new float[]{defAdsrA, defAdsrD, defAdsrS, defAdsrR});
     instrumentMap.put("Bell", "ADDITIVE");
     additiveConfigs.put("Bell", Arrays.asList(new SynthComponent[]{new SynthComponent("SINE", 1f, 0.8f), new SynthComponent("TRIANGLE", 2.76f, 0.4f), new SynthComponent("SQUARE", 5.4f, 0.2f)}));
-    minim = new Minim(this);
-  out = minim.getLineOut();
-  currentInstrument = "";
+    checkMainMixer();
     size(1600, 600);
   pixelDensity(displayDensity());
   stageBgColor = color(0, 0, 0);
   stageFgColor = color(117, 251, 76);
-  minim = new Minim(this);
-  out = minim.getLineOut();
+  checkMainMixer();
+  adsrState = 0;
   fft = new FFT(out.bufferSize(), out.sampleRate());
   cp5 = new ControlP5(this);
   cp5.setFont(createFont("Arial", 16));
@@ -524,6 +581,10 @@ void setup() {
   cp5.addSlider("adsrS").setPosition(440, 485).setSize(15, 80).setRange(0, 1).setDecimalPrecision(2).setCaptionLabel("S");
   cp5.addSlider("adsrR").setPosition(500, 485).setSize(15, 80).setRange(0, 2).setDecimalPrecision(2).setCaptionLabel("R");
   cp5.addSlider("masterGain").setPosition(560, 485).setSize(15, 80).setRange(-40, 15).setCaptionLabel("GAIN");
+  String[] serialPorts = Serial.list();
+  ScrollableList ssl = cp5.addScrollableList("serialInputDevice").setPosition(660, 470).setSize(300, 150).setBarHeight(30).setItemHeight(25).setCaptionLabel("SERIAL PORT");
+  for (int i = 0; i < serialPorts.length; i++) { ssl.addItem(serialPorts[i], i); }
+  ssl.close();
   String[] startInputs = MidiBus.availableInputs();
   println("--- MIDI Devices ---");
   for(String s : startInputs) println("  > " + s);
@@ -531,10 +592,6 @@ void setup() {
   for (int i = 0; i < startInputs.length; i++) { sl.addItem(startInputs[i], i); }
   if (startInputs.length > 0) sl.setValue(0);
   sl.close();
-  String[] serialPorts = Serial.list();
-  ScrollableList ssl = cp5.addScrollableList("serialInputDevice").setPosition(660, 470).setSize(300, 150).setBarHeight(30).setItemHeight(25).setCaptionLabel("SERIAL PORT");
-  for (int i = 0; i < serialPorts.length; i++) { ssl.addItem(serialPorts[i], i); }
-  ssl.close();
   cp5.addButton("scanMidi").setPosition(970, 430).setSize(50, 30).setCaptionLabel("SCAN");
   cp5.addButton("copyLogs").setPosition(1405, 5).setSize(90, 25).setCaptionLabel("COPY LOG");
   cp5.addButton("clearLogs").setPosition(1500, 5).setSize(90, 25).setCaptionLabel("CLEAR LOG");
@@ -545,7 +602,7 @@ void setup() {
 
 void draw() {
   pushStyle(); colorMode(HSB, 255); stageFgColor = color(fgHue, 255, 255); popStyle();
-  out.setGain(masterGain); noStroke(); fill(30); rect(0, 400, width, 200);
+  masterGainUGen.setValue(masterGain); noStroke(); fill(30); rect(0, 400, width, 200);
   // Draw rainbow bar behind fgHue slider
   pushStyle(); for (int i = 0; i < 150; i++) { colorMode(HSB, 150); stroke(i, 150, 150); line(20 + i, 572, 20 + i, 575); } popStyle();
   colorMode(RGB, 255); float currentVisualW = showLog ? 1200.0 : width;

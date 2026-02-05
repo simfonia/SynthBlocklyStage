@@ -35,6 +35,7 @@ Blockly.Processing.injectAudioCore = function() {
   g['activeMelodyCount'] = "int activeMelodyCount = 0;";
   g['melodyLock'] = "final Object melodyLock = new Object();";
   g['isCountingIn'] = "volatile boolean isCountingIn = false;";
+  g['midiKeysHeld'] = "HashMap<Integer, String> midiKeysHeld = new HashMap<Integer, String>();";
 
   // Core Classes and Methods
   g['bpm'] = "float bpm = 120.0;";
@@ -703,6 +704,79 @@ registerGenerator('sb_wait_musical', function(block) {
   } else {
     // Default MS
     code = `delay((int)(${val}));\n`;
+  }
+  return code;
+});
+
+registerGenerator('sb_rhythm_sequencer_v2', function(block) {
+  const measure = block.getFieldValue('MEASURE') || '1';
+  const beats = block.getFieldValue('BEATS') || '4';
+  const resolution = block.getFieldValue('RESOLUTION') || '4';
+  
+  let code = "";
+  for (let i = 0; i < block.itemCount_; i++) {
+    const inst = block.getFieldValue('INST' + i) || "default";
+    const vel = block.getFieldValue('VEL' + i) || "100";
+    const isChordMode = (block.getFieldValue('MODE' + i) === 'TRUE');
+    const pattern = block.getFieldValue('PATTERN' + i) || "";
+    
+    code += 'new Thread(new Runnable() {\n';
+    code += '  public void run() {\n';
+    code += '    int timeout = 0;\n';
+    code += '    while(isCountingIn && timeout < 500) { try { Thread.sleep(10); timeout++; } catch(Exception e) {} }\n';
+    code += '    try { float beatMs = 60000.0f / bpm;\n';
+    code += '          float measureMs = beatMs * ' + beats + '.0f;\n';
+    code += '          Thread.sleep((long)(((' + measure + '-1) * measureMs))); } catch(Exception e) {}\n';
+    code += '    String rawPattern = "' + pattern + '";\n';
+    code += '    ArrayList<String> parsed = new ArrayList<String>();\n';
+    code += '    StringBuilder buf = new StringBuilder();\n';
+    code += '    for (int j=0; j<rawPattern.length(); j++) {\n';
+    code += '      char c = rawPattern.charAt(j);\n';
+    code += '      if (c == \' \') {\n';
+    code += '        if (buf.length() > 0) { parsed.add(buf.toString()); buf.setLength(0); }\n';
+    code += '      } else if (c == \'.\' || c == \'-\' || c == \'|\') {\n';
+    code += '        if (buf.length() > 0) { parsed.add(buf.toString()); buf.setLength(0); }\n';
+    code += '        if (c != \'|\') parsed.add(String.valueOf(c));\n';
+    code += '      } else {\n';
+    code += '        buf.append(c);\n';
+    code += '      }\n';
+    code += '    }\n';
+    code += '    if (buf.length() > 0) parsed.add(buf.toString());\n';
+    code += '    String[] steps = parsed.toArray(new String[0]);\n';
+    code += '    float stepMs = (60000.0f / bpm) / ' + resolution + '.0f;\n';
+    code += '    for (int k=0; k<steps.length; k++) {\n';
+    code += '      String token = steps[k].trim();\n';
+    code += '      if (token.equals(".") || token.equals("-")) {\n';
+    code += '        try { Thread.sleep((long)stepMs); } catch (Exception e) {} continue;\n';
+    code += '      }\n';
+    code += '      int sustainSteps = 1;\n';
+    code += '      for (int next=k+1; next<steps.length; next++) {\n';
+    code += '        if (steps[next].trim().equals("-")) sustainSteps++;\n';
+    code += '        else break;\n';
+    code += '      }\n';
+    code += '      float noteDur = stepMs * sustainSteps;\n';
+    code += '      if (token.length() > 0) {\n';
+    code += '        if (instrumentMap.getOrDefault("' + inst + '", "").equals("DRUM")) {\n';
+    code += '          if (token.equalsIgnoreCase("x")) {\n';
+    code += '             float volScale = instrumentVolumes.getOrDefault("' + inst + '", 1.0f);\n';
+    code += '             samplerGainMap.get("' + inst + '").setValue(map(' + vel + ' * volScale, 0, 127, -40, 0));\n';
+    code += '             samplerMap.get("' + inst + '").trigger();\n';
+    code += '          }\n';
+    code += '        } else {\n';
+    code += '          if (' + isChordMode + ') {\n';
+    code += '            if (token.equals("x")) token = "C";\n';
+    code += '            if (chords.containsKey(token)) playChordByNameInternal("' + inst + '", token, noteDur * 0.9f, (float)' + vel + ');\n';
+    code += '            else { int midi = noteToMidi(token); if (midi >= 0) playNoteForDuration("' + inst + '", midi, (float)' + vel + ', noteDur * 0.9f); }\n';
+    code += '          } else {\n';
+    code += '            if (token.equalsIgnoreCase("x")) playNoteForDuration("' + inst + '", 60, (float)' + vel + ', noteDur * 0.8f);\n';
+    code += '            else { int midi = noteToMidi(token); if (midi >= 0) playNoteForDuration("' + inst + '", midi, (float)' + vel + ', noteDur * 0.9f); }\n';
+    code += '          }\n';
+    code += '        }\n';
+    code += '      }\n';
+    code += '      try { Thread.sleep((long)stepMs); } catch (Exception e) {}\n';
+    code += '    }\n';
+    code += '  }\n';
+    code += '}).start();\n';
   }
   return code;
 });

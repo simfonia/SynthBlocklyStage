@@ -16,7 +16,6 @@ Blockly.Processing.forBlock['midi_init'] = function(block) {
 };
 
 Blockly.Processing.forBlock['midi_on_note'] = function(block) {
-  // 強制使用固定名稱以匹配 _core.js 的變數強制更名邏輯
   const channelVar = "channel";
   const pitchVar = "pitch";
   const velocityVar = "velocity";
@@ -26,6 +25,7 @@ Blockly.Processing.forBlock['midi_on_note'] = function(block) {
   const funcCode = `
 void noteOn(int ${channelVar}, int ${pitchVar}, int ${velocityVar}) {
   logToScreen("Note ON - Pitch: " + ${pitchVar} + " Vel: " + ${velocityVar}, 0);
+  midiKeysHeld.put(${pitchVar}, currentInstrument);
   ${branch}
 }
   `;
@@ -44,7 +44,17 @@ Blockly.Processing.forBlock['midi_off_note'] = function(block) {
   const funcCode = `
 void noteOff(int ${channelVar}, int ${pitchVar}, int ${velocityVar}) {
   logToScreen("Note OFF - Pitch: " + ${pitchVar}, 0);
-  ${branch}
+  String memorizedInst = midiKeysHeld.get(${pitchVar});
+  if (memorizedInst != null) {
+    // We modify the internal execution context by temporarily overriding currentInstrument
+    String backup = currentInstrument;
+    currentInstrument = memorizedInst;
+    ${branch}
+    currentInstrument = backup;
+    midiKeysHeld.remove(${pitchVar});
+  } else {
+    ${branch}
+  }
 }
   `;
   

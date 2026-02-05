@@ -240,6 +240,26 @@
                 </value>
               </block>        <!-- 定義和弦 -->
         <block type="sb_define_chord"></block>
+        <!-- 演奏持續音 (MIDI) -->
+        <block type="sb_play_note">
+            <value name="PITCH">
+                <shadow type="math_number">
+                    <field name="NUM">60</field>
+                </shadow>
+            </value>
+            <value name="VELOCITY">
+                <shadow type="math_number">
+                    <field name="NUM">100</field>
+                </shadow>
+            </value>
+        </block>
+        <block type="sb_stop_note">
+            <value name="PITCH">
+                <shadow type="math_number">
+                    <field name="NUM">60</field>
+                </shadow>
+            </value>
+        </block>
         <!-- 播放單音 -->
         <block type="sb_trigger_sample">
             <value name="VELOCITY">
@@ -286,6 +306,7 @@
                 </shadow>
             </value>
         </block>
+        <block type="sb_rhythm_sequencer_v2"></block>
         <block type="sb_tone_loop"></block>
         <block type="sb_perform"></block>
     </category>

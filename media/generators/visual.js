@@ -254,8 +254,8 @@ Blockly.Processing.forBlock['visual_stage_setup'] = function (block) {
 
   void keyPressed() {
     if (key == CODED) {
-      if (keyCode == UP) { pitchTranspose += 12; logToScreen("Octave UP", 1); }
-      else if (keyCode == DOWN) { pitchTranspose -= 12; logToScreen("Octave DOWN", 1); }
+      if (keyCode == UP) { pitchTranspose += 12; logToScreen("Octave UP (Trans: " + (pitchTranspose > 0 ? "+" : "") + pitchTranspose + ")", 1); }
+      else if (keyCode == DOWN) { pitchTranspose -= 12; logToScreen("Octave DOWN (Trans: " + (pitchTranspose > 0 ? "+" : "") + pitchTranspose + ")", 1); }
       else if (keyCode == LEFT || keyCode == RIGHT) {
         Object[] names = instrumentMap.keySet().toArray();
         if (names.length > 0) {
@@ -267,7 +267,9 @@ Blockly.Processing.forBlock['visual_stage_setup'] = function (block) {
           currentInstrument = names[idx].toString();
         }
       }
-    } else if (key == BACKSPACE) { pitchTranspose = 0; logToScreen("Transpose Reset", 1); }
+    } else if (key == '=' || key == '+') { pitchTranspose += 1; logToScreen("Transpose: " + (pitchTranspose > 0 ? "+" : "") + pitchTranspose, 1); }
+    else if (key == '-' || key == '_') { pitchTranspose -= 1; logToScreen("Transpose: " + (pitchTranspose > 0 ? "+" : "") + pitchTranspose, 1); }
+    else if (key == BACKSPACE) { pitchTranspose = 0; logToScreen("Transpose Reset", 1); }
 
     int p = -1;
     char k = Character.toLowerCase(key);
@@ -360,17 +362,17 @@ Blockly.Processing.forBlock['visual_stage_setup'] = function (block) {
   setupCode += "cp5.addSlider(\"masterGain\").setPosition(" + uiX + ", " + adsrY + ").setSize(15, 80).setRange(-40, 15).setCaptionLabel(\"GAIN\");\n";
 
   uiX += 100;
-  setupCode += "String[] startInputs = MidiBus.availableInputs();\n"
+  setupCode += "String[] serialPorts = Serial.list();\n"
+    + "ScrollableList ssl = cp5.addScrollableList(\"serialInputDevice\").setPosition(" + uiX + ", " + (uiY + 40) + ").setSize(300, 150).setBarHeight(30).setItemHeight(25).setCaptionLabel(\"SERIAL PORT\");\n"
+    + "for (int i = 0; i < serialPorts.length; i++) { ssl.addItem(serialPorts[i], i); }\n"
+    + "ssl.close();\n"
+    + "String[] startInputs = MidiBus.availableInputs();\n"
     + "println(\"--- MIDI Devices ---\");\n"
     + "for(String s : startInputs) println(\"  > \" + s);\n"
     + "ScrollableList sl = cp5.addScrollableList(\"midiInputDevice\").setPosition(" + uiX + ", " + uiY + ").setSize(300, 150).setBarHeight(30).setItemHeight(25).setCaptionLabel(\"MIDI DEVICE\");\n"
     + "for (int i = 0; i < startInputs.length; i++) { sl.addItem(startInputs[i], i); }\n"
     + "if (startInputs.length > 0) sl.setValue(0);\n"
-    + "sl.close();\n"
-    + "String[] serialPorts = Serial.list();\n"
-    + "ScrollableList ssl = cp5.addScrollableList(\"serialInputDevice\").setPosition(" + uiX + ", " + (uiY + 40) + ").setSize(300, 150).setBarHeight(30).setItemHeight(25).setCaptionLabel(\"SERIAL PORT\");\n"
-    + "for (int i = 0; i < serialPorts.length; i++) { ssl.addItem(serialPorts[i], i); }\n"
-    + "ssl.close();\n";
+    + "sl.close();\n";
 
   setupCode += "cp5.addButton(\"scanMidi\").setPosition(" + (uiX + 310) + ", " + uiY + ").setSize(50, 30).setCaptionLabel(\"SCAN\");\n";
   setupCode += "cp5.addButton(\"copyLogs\").setPosition(" + (totalW - 195) + ", 5).setSize(90, 25).setCaptionLabel(\"COPY LOG\");\n";

@@ -27,7 +27,9 @@
     - `icons/`: 介面圖示資源。
 - `examples/`: XML 範例庫
     - `ex_00_play/`, `ex_01_Melody_and_Chord/`, `ex_02_instrument/`, `ex_03_Rock/`, `ex_04_sampler/`.
+    - `ex_05_Step_Sequencer/`, `ex_06_Function/`, `ex_07_Function2/`, `ex_08_Step_Sequencer_V2/`.
     - `08_Serial_KICK/`, `09_wah-wah/`, `ex_91_MIDI/`.
+    - `test_wait/`, `test/`.
 - `log/`: 紀錄檔
     - `work/`: 每日開發日誌 (如 2026-02-03.md)。
     - `handover.md`: 任務交接。

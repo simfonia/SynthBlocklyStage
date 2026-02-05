@@ -69,7 +69,7 @@ SynthBlockly Stage 開發交接指令
 2026-01-30
 
 1. 本次完成重點：
-- **核心演奏對齊**：實作了 Java 版的 MelodyPlayer (Thread) 與 RhythmPlayer。支援 sb_play_melody (C4Q, E4H等) 與 sb_rhythm_sequence (x---)。
+- **核心演奏對齊**：實作了 Java 版的 MelodyPlayer (Thread) 與 RhythmPlayer。支援 sb_play_melody (C4Q, E4H等) 與 sb_rhythm_sequence (x---).
 - **時序系統**：實作 sb_tone_loop (執行緒循環) 與 sb_transport_set_bpm。解決了 Processing 依賴 frameCount 導致音樂不穩的問題。
 - **啟動邏輯重構**：徹底分離「內容載入」與「路徑記憶」。現在啟動時是新專案，但開啟檔案會停在上次目錄。
 - **和弦系統移植**：實作 sb_define_chord 與 sb_play_chord_by_name，解析器優先檢查和弦定義。
@@ -125,3 +125,20 @@ SynthBlockly Stage 開發交接指令
 - **待辦任務**：
     - 繼續更新舊範例的 XML ID 與結構。
     - 觀察高負載合奏時是否需要加入 Master Limiter 防止爆音。
+
+==================================================
+2026-02-05
+
+1. 本次完成重點：
+- **音訊引擎大重構**：引入 mainMixer (Summer) 與 masterGainUGen (Gain)，達成 100% 涵蓋所有音源的總音量控制與示波器顯示。
+- **編曲系統進化**：
+    - 實作「配置樂句 (Arrange Phrase)」容器，支援段落自動等待與銜接。
+    - 實作「多軌音序器 V2」，支援單一積木管理多軌、自訂拍號、解析度（支援三連音）。
+- **演奏穩定性**：
+    - 實作 MIDI 語音記憶 (midiKeysHeld)，解決在按住音符時切換樂器導致的長鳴音。
+    - 修正 ADSR 鬼影移動問題，確保啟動與切換時狀態歸零。
+- **UI 與互動**：解決了 Webview 內 prompt() 被禁用的問題（橋接 VS Code InputBox），並修正了選單遮擋 Z-Order。
+
+2. 待辦任務 (Next Steps)：
+- **效果器對齊**：在 #SynthBlocklyStage 中實作與 #SynthBlockly 一致的效果器積木（Distortion, Reverb, Delay, Filter 等）。
+- **範例更新**：繼續將舊範例（特別是 Serial 相關）遷移至 V2 音序器架構。
