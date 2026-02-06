@@ -49,22 +49,15 @@
 
 ### 階段三：進階影音積木與功能對齊 (進行中)
 - [x] **3-1. 實作「多樂器管理系統」** (對齊 SynthBlockly)
-    - [x] 新增「建立合成器」積木，支援自訂名稱與波形。
-    - [x] 新增「選取目前樂器」積木。
-    - [x] 實作 Java 端的 `HashMap` 樂器存簿。
-    - [x] **架構優化**：將 Java 核心支援由視覺積木解耦，改為音訊積木按需注入。
-    - [x] **容器化架構**：實作 `sb_instrument_container` 與 `sb_set_adsr`，支援每個樂器獨立的 ADSR 設定。
 - [x] **3-2. 字串演奏解析器 (String Parser)**
-    - [x] 實作 `sb_play_melody`：解析 `C4Q, E4Q, G4H` 字串。
-    - [x] 實作 `sb_rhythm_sequence`：解析 `x---x---` 節奏字串。
-    - [x] **進化支援**：附點 (`.`)、三連音 (`_T`) 與連結線 (`+`)。
-    - [x] **穩定性**：實作背景播放排隊機制 (melodyLock)。
 - [x] **3-3. 時序系統與節拍控制 (Transport)**
-    - [x] 實作 `sb_transport_set_bpm`。
-    - [x] 實作基於音樂時值的 `Loop` 積木（採用 Java Thread 實作）。
 - [x] **3-4. 繪圖積木擴充**
-    - [x] 增加：圓形、多邊形、旋轉 (`rotate`)、座標轉換。
-    - [x] 整合 `field-colour` 顏色選取器。
+- [x] **3-5. 效果器與音訊引擎大升級 (Minim 2.2.2 深度對齊)**
+    - [x] 支援 Filter (LP/HP/BP), Delay, BitCrush, Waveshaper, Reverb, Flanger。
+    - [x] 解決 **Stereo Panning** 訊號鏈位置問題。
+    - [x] 實作 **Auto-Filter** (自動掃頻) 與 **Pitch-Mod** (音高調變)。
+    - [x] **反射更新機制**: 確保參數即時更新與 Minim 版本相容性。
+- [x] **3-6. 實作「混合音源 (Mixed Source)」**：支援 Wave + Noise 同步混音與動態平衡。
 
 ### 階段四：互動與通訊
 - [x] **4-1. MIDI 深度支援**
@@ -76,16 +69,15 @@
 
 ### 階段五：教學導向 (PBL) 整理
 - [ ] **5-1. 實作「範例載入系統」** (工具列按鈕與選單)。
-- [x] **5-2. 撰寫積木使用指南 (HelpUrl)**
-    - [x] 實作多語系自動感應說明系統。
-    - [x] 完成音源、演奏、旋律、合成技術、舞台控制之 HTML 文檔。
-    - [x] 實作 Tooltip 聯動引導。
-- [x] **5-3. 核心範例建立**
-    - [x] 完成 `ex_03_Rock`：展示 Drum Sampler 與多軌 Sequencer 聯動。
+- [x] **5-2. 撰寫積木使用指南 (HelpUrl)**：已完成中英文說明文件，支援 Lo-Fi 製作指南。
+- [ ] **5-3. 範例遷移與建立**
+    - [x] 完成 `ex_03_Rock`。
+    - [x] 完成 `ex_08_Step_Sequencer_V2` 修復。
+    - [ ] 遷移備份中的「光控 Wah-wah」範例。
 
 ---
 
 ## 技術規範提醒
 - **變數處理**: 必須使用 `Blockly.Processing.nameDB_.getName` 並強制特定音樂變數（如 `pitch`）為原名。
 - **Java 強型別**: 產生器必須自動處理 `float`, `int`, `boolean` 的全域宣告。
-- **資源路徑**: 始終使用 `path.join` 處理跨平台路徑問題。
+- **訊號鏈順序**: 樂器級效果必須接在 `Summer` 之後，`Pan` 之前，以確保立體聲輸出穩定。

@@ -52,6 +52,8 @@ Blockly.Processing.init = function(workspace) {
 
   // Standard Imports for Lists and Utils
   Blockly.Processing.addImport("import java.util.*;");
+  Blockly.Processing.addImport("import ddf.minim.*;");
+  Blockly.Processing.addImport("import ddf.minim.ugens.*;");
 
   if (!Blockly.Processing.nameDB_) {
     Blockly.Processing.nameDB_ = new Blockly.Names(Blockly.Processing.RESERVED_WORDS_);

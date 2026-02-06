@@ -1,4 +1,4 @@
-SynthBlockly Stage 開發交接指令
+﻿SynthBlockly Stage 開發交接指令
 
 ==================================================
 2026-01-12
@@ -142,3 +142,22 @@ SynthBlockly Stage 開發交接指令
 2. 待辦任務 (Next Steps)：
 - **效果器對齊**：在 #SynthBlocklyStage 中實作與 #SynthBlockly 一致的效果器積木（Distortion, Reverb, Delay, Filter 等）。
 - **範例更新**：繼續將舊範例（特別是 Serial 相關）遷移至 V2 音序器架構。
+
+# 2026-02-06 任務交接
+
+## 本次完成重點 (音訊引擎大升級與 Lo-Fi 調變系統)：
+- **Minim 2.2.2 深度對齊**：
+    - 成功實作「Raw HashMap + Java 反射 (Reflection)」更新機制。現在可直接更新 `MoogFilter.frequency`、`Delay.delTime`、`BitCrush.bitRes` 等參數，無需處理複雜的型別轉換，且具備極佳的版本相容性。
+    - **訊號鏈修復 (Critical)**：將樂器級效果器固定插在 `Summer` 之後、`Pan` 之前。這解決了單聲道效果器（如 Filter）接在 Pan 之後導致的 `Pan MUST be ticked with STEREO output` 報錯。
+- **新增解耦調變效果器**：
+    - 實作 `Auto-Filter`：支援獨立的 LFO 掃頻，且內建 Constant Offset 防止頻率跌入 0 導致靜音。
+    - 實作 `Pitch-Mod`：支援「小提琴揉弦 (Vibrato)」與「磁帶抖動 (Jitter)」兩種模式。透過 `TickRate` 與 `Summer` 組合達成不影響基頻的動態音高調變。
+- **音源擴充**：實作 `sb_mixed_source` (Wave + Noise)，支援在單一樂器內混合基礎波形與背景噪聲，增強 Lo-Fi 音色質感。
+- **自訂 UGen 注入**：成功在 PDE 中注入高品質 `SBCompressor` (RMS 偵測)、`SBWaveshaper` (tanh 軟剪峰) 與 `SBReverb` (Freeverb) 類別。
+- **UI 優化**：將樂器與和弦選單改為 Hybrid Fields (支援直接輸入文字)，解決了 XML 載入時因順序導致的「無效選項」報錯。
+
+## 待辦任務 (Next Steps)：
+- **範例遷移**：將備份中的「光控 Wah-wah」範例移植至新架構，測試序列埠與 `Auto-Filter` 的結合。
+- **效能壓力測試**：驗證多個 `SBReverb` 同時掛載時的 CPU 消耗，必要時優化梳狀濾波器數量。
+- **Master Limiter**：在 `checkMainMixer` 中預設掛載總輸出限制器 (使用 `SBCompressor` 設定為高壓縮比)。
+- **聲碼器研究 (長期)**：尋找 `AudioInput` (非 UGen) 的替代監聽方案，以實現 100% 積木化的語音處理。

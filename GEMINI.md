@@ -69,6 +69,18 @@
 - **髒狀態 (Dirty State)**: 監控 Webview 變動，於工具列顯示狀態並在關閉前提示。
 - **自動存檔**: 2 秒防抖 (Debounce) 機制。
 
+### 積木說明文件系統 (Help System)
+- **檔案路徑**: 位於 `media/docs/` 下。
+- **命名規範**: 格式為 `[id]_[lang].html`。
+    - 例如: `effects_zh-hant.html`, `effects_en.html`。
+- **積木連結**:
+    - 在積木 JSON 定義中設定 `"helpUrl": "[id]"` (不含語系與副檔名)。
+    - 系統會依據 `HELP_LANG_SUFFIX` 訊息自動拼接正確的檔案名稱。
+- **視覺規範**:
+    - 主題色應與積木色彩一致 (Heading `h1` 與左邊框)。
+    - `tooltip` 末端應附加 `%{BKY_HELP_HINT}` 以提示使用者可按右鍵查看說明。
+- **安全機制**: Webview 內透過攔截 `window.open` 由 Extension Host 使用預設瀏覽器開啟 HTML，避開沙盒限制。
+
 ---
 
 ## 待辦事項與未來方向

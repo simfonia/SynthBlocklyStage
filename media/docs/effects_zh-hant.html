@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <title>音訊效果器積木說明</title>
+    <style>
+        body { font-family: sans-serif; line-height: 1.6; padding: 20px; color: #333; max-width: 900px; margin: 0 auto; }
+        h1 { color: #D22F73; border-bottom: 3px solid #D22F73; padding-bottom: 10px; }
+        h2 { color: #444; border-bottom: 2px solid #eee; padding-bottom: 5px; margin-top: 30px; }
+        .block-box { margin-bottom: 25px; padding: 15px; background: #fff5f8; border-radius: 8px; border-left: 5px solid #D22F73; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        code { background: #eee; padding: 2px 4px; border-radius: 4px; font-family: 'Courier New', Courier, monospace; font-weight: bold; }
+        .important { background-color: #fffbe6; border-left: 4px solid #ffc107; padding: 15px; margin: 15px 0; border-radius: 0 8px 8px 0; }
+        .tip { background-color: #e8f4fd; border-left: 4px solid #3498db; padding: 15px; margin: 15px 0; border-radius: 0 8px 8px 0; }
+        ul { padding-left: 25px; }
+        li { margin-bottom: 8px; }
+        .range { color: #888; font-size: 0.9em; font-style: italic; }
+    </style>
+</head>
+<body>
+    <h1>音訊效果器 (Audio Effects)</h1>
+    <p>效果器能讓聲音產生質變。你可以將效果器放在「定義樂器」容器內來處理特定樂器，或是放在 <code>setup</code> 區塊中作為全域 (Master) 效果。</p>
+
+    <div class="important">
+        <strong>串接順序非常重要：</strong> 效果器是「由上而下」串接的。例如：先放「失真」再放「延遲」，會得到帶著破音的回聲；反之則會得到許多破音的小碎音。
+    </div>
+
+    <div class="block-box">
+        <h2>1. 濾波器 (Filter / MoogFilter)</h2>
+        <p>模擬經典的 Moog 合成器低通濾波器，能修飾聲音的明暗度。</p>
+        <ul>
+            <li><strong>頻率 (Frequency)</strong> <span class="range">[20 - 20000 Hz]</span>：切斷頻率。數值愈低，聲音愈悶。</li>
+            <li><strong>共振 (Resonance/Q)</strong> <span class="range">[0.0 - 0.9]</span>：在切斷頻率處產生強調。數值愈高，音色愈尖銳。</li>
+        </ul>
+    </div>
+
+    <div class="block-box">
+        <h2>2. 延遲 (Delay)</h2>
+        <p>產生重複的回聲效果，增加聲音的空間感與厚度。</p>
+        <ul>
+            <li><strong>延遲時間 (Delay Time)</strong> <span class="range">[0.0 - 5.0 秒]</span>：原始聲音與回聲之間的時間間隔。</li>
+            <li><strong>回饋 (Feedback)</strong> <span class="range">[0.0 - 1.0]</span>：回聲循環的次數。</li>
+        </ul>
+    </div>
+
+    <div class="block-box">
+        <h2>3. 混響 (Reverb)</h2>
+        <p>模擬在大空間中產生的細密回響，讓聲音更豐滿、更具臨場感。</p>
+        <ul>
+            <li><strong>房間大小 (Room Size)</strong>：空間的開闊程度。</li>
+            <li><strong>濕度 (Wet)</strong>：殘響效果的大小。0 為純原音，1 為純殘響。</li>
+        </ul>
+    </div>
+
+    <div class="block-box">
+        <h2>4. 自動濾波 (Auto-Filter)</h2>
+        <p>透過 LFO 自動控制濾波器掃頻，營造規律的頻率演變，產生類似「哇哇 (Wah-wah)」的動態聽感。</p>
+        <ul>
+            <li><strong>速率 (Rate)</strong>：濾波器擺動的速度。</li>
+            <li><strong>深度 (Depth %)</strong>：濾波器移動的頻率範圍。</li>
+        </ul>
+    </div>
+
+    <div class="block-box">
+        <h2>5. 音高調變 (Pitch-Mod)</h2>
+        <p>對音訊的頻率進行動態調變，是製造 Lo-Fi 質感與生命力的核心工具。</p>
+        <ul>
+            <li><strong>調變類型 (Type)</strong>：
+                <ul>
+                    <li><strong>顫音 (Vibrato)</strong>：使用規律的正弦波，聽起來像小提琴的揉弦，具音樂性（音高移動軌跡明顯）。</li>
+                    <li><strong>抖動 (Jitter)</strong>：使用極速跳動的隨機噪音。聽起來不像是變調，而是一種聲音邊緣的「毛邊感」或「粗糙質感」。</li>
+                </ul>
+            </li>
+            <li><strong>深度 (Depth)</strong> <span class="range">[單位：音分 Cents]</span>：
+                <ul>
+                    <li>在<strong>顫音</strong>中，它是音高擺動的半徑。</li>
+                    <li>在<strong>抖動</strong>中，它代表「音高模糊的寬度」。用於模擬老舊磁帶馬達轉速不穩的缺陷，讓音色更有生命力。</li>
+                </ul>
+            </li>
+        </ul>
+    </div>
+
+    <div class="block-box">
+        <h2>6. 位元破壞 (BitCrush)</h2>
+        <p>降低音訊採樣精度，製造粗糙、復古的 8-bit 電玩音色（Lo-Fi）。</p>
+    </div>
+
+    <div class="block-box">
+        <h2>7. 波形塑形 (Waveshaper)</h2>
+        <p>提供溫暖且具有類比質感的失真效果。透過 <code>tanh</code> 函數讓聲音變得厚實。</p>
+    </div>
+
+    <div class="block-box">
+        <h2>8. 壓縮器與限制器 (Dynamics)</h2>
+        <p>控制音量波動，防止爆音 (Clipping) 並增加聲音的紮實感。</p>
+    </div>
+
+    <div class="tip">
+        <strong>即時更新：</strong> 在 <code>draw</code> 迴圈或序列埠事件中使用效果器積木，可以動態改變參數，舞台會即時反映變化。
+    </div>
+</body>
+</html>

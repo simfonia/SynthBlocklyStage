@@ -1,0 +1,60 @@
+<xml xmlns="https://developers.google.com/blockly/xml">
+  <block type="processing_setup" id="Mq+%oIoagn;B?IrL8]Zv" x="10" y="110">
+    <statement name="DO">
+      <block type="sb_minim_init" id="||qp}{T5J+[:;qNQWn%t">
+        <next>
+          <block type="visual_stage_setup" id="WX=jtd}oGhe@NMu?:.!*">
+            <field name="W">1200</field>
+            <field name="H">400</field>
+            <field name="BG_COLOR">#000000</field>
+            <field name="FG_COLOR">#ff0096</field>
+            <next>
+              <block type="sb_setup_effect" id="t3GOs|EW4Gj,rU]m;){?">
+                <mutation effect_type="compressor"></mutation>
+                <field name="EFFECT_TYPE">compressor</field>
+                <value name="THRESHOLD">
+                  <shadow type="math_number" id="UyjHH7;^(bSx]O2%H{0l">
+                    <field name="NUM">-20</field>
+                  </shadow>
+                </value>
+                <value name="RATIO">
+                  <shadow type="math_number" id="PiUOkmw`1r2gDo~4{]O*">
+                    <field name="NUM">4</field>
+                  </shadow>
+                </value>
+                <value name="ATTACK">
+                  <shadow type="math_number" id="8$1yYn)734fA%0[$`u(0">
+                    <field name="NUM">0.01</field>
+                  </shadow>
+                </value>
+                <value name="RELEASE">
+                  <shadow type="math_number" id="8G3JIw|xVa$VsIkiJ6rz">
+                    <field name="NUM">0.25</field>
+                  </shadow>
+                </value>
+                <value name="MAKEUP">
+                  <shadow type="math_number" id="Q;+*-uvaST?V7K2HV0;#">
+                    <field name="NUM">0</field>
+                  </shadow>
+                </value>
+                <next>
+                  <block type="sb_select_current_instrument" id="Ba(,CkJ5y3K~)59F/=$M">
+                    <field name="NAME">MySynth</field>
+                  </block>
+                </next>
+              </block>
+            </next>
+          </block>
+        </next>
+      </block>
+    </statement>
+  </block>
+  <block type="sb_instrument_container" id="`.u8uw75ORBDlw2W?VWi" x="10" y="470">
+    <field name="NAME">MySynth</field>
+    <statement name="STACK">
+      <block type="sb_set_wave" id="CSRN!j,NHtj1P;rema7`">
+        <field name="TYPE">SAW</field>
+      </block>
+    </statement>
+  </block>
+</xml>

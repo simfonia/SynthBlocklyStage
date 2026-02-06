@@ -166,6 +166,14 @@
         <block type="sb_minim_init"></block>
         <block type="sb_instrument_container"></block>
         <block type="sb_set_wave"></block>
+        <block type="sb_set_noise"></block>
+        <block type="sb_mixed_source">
+            <value name="LEVEL">
+                <shadow type="math_number">
+                    <field name="NUM">30</field>
+                </shadow>
+            </value>
+        </block>
         <block type="sb_create_harmonic_synth"></block>
         <block type="sb_create_additive_synth"></block>
         <block type="sb_melodic_sampler"></block>
@@ -175,6 +183,13 @@
     <!-- 10. Instrument Control -->
     <category name="%{BKY_CAT_INSTRUMENT_CONTROL}" colour="%{BKY_INSTRUMENT_CONTROL_HUE}">
         <block type="sb_select_current_instrument"></block>
+        <block type="sb_set_panning">
+            <value name="VALUE">
+                <shadow type="math_number">
+                    <field name="NUM">0</field>
+                </shadow>
+            </value>
+        </block>
         <block type="sb_set_instrument_volume">
             <value name="VOLUME">
                 <shadow type="math_number">
@@ -206,7 +221,140 @@
         </block>
     </category>
 
-    <!-- 11. Performance -->
+    <!-- 11. Audio Effects -->
+    <category name="%{BKY_CAT_EFFECTS}" colour="%{BKY_INSTRUMENT_CONTROL_HUE}">
+        <!-- Filter -->
+        <block type="sb_setup_effect">
+            <mutation effect_type="filter"></mutation>
+            <field name="EFFECT_TYPE">filter</field>
+            <value name="FILTER_FREQ">
+                <shadow type="math_number"><field name="NUM">1000</field></shadow>
+            </value>
+            <value name="FILTER_Q">
+                <shadow type="math_number"><field name="NUM">1</field></shadow>
+            </value>
+        </block>
+        <!-- Delay -->
+        <block type="sb_setup_effect">
+            <mutation effect_type="delay"></mutation>
+            <field name="EFFECT_TYPE">delay</field>
+            <value name="DELAY_TIME">
+                <shadow type="math_number"><field name="NUM">0.5</field></shadow>
+            </value>
+            <value name="FEEDBACK">
+                <shadow type="math_number"><field name="NUM">0.5</field></shadow>
+            </value>
+        </block>
+        <!-- BitCrush -->
+        <block type="sb_setup_effect">
+            <mutation effect_type="bitcrush"></mutation>
+            <field name="EFFECT_TYPE">bitcrush</field>
+            <value name="BITDEPTH">
+                <shadow type="math_number"><field name="NUM">8</field></shadow>
+            </value>
+        </block>
+        <!-- Waveshaper -->
+        <block type="sb_setup_effect">
+            <mutation effect_type="waveshaper"></mutation>
+            <field name="EFFECT_TYPE">waveshaper</field>
+            <value name="DISTORTION_AMOUNT">
+                <shadow type="math_number"><field name="NUM">2</field></shadow>
+            </value>
+        </block>
+        <!-- Reverb -->
+        <block type="sb_setup_effect">
+            <mutation effect_type="reverb"></mutation>
+            <field name="EFFECT_TYPE">reverb</field>
+            <value name="ROOMSIZE">
+                <shadow type="math_number"><field name="NUM">0.5</field></shadow>
+            </value>
+            <value name="DAMPING">
+                <shadow type="math_number"><field name="NUM">0.5</field></shadow>
+            </value>
+            <value name="WET">
+                <shadow type="math_number"><field name="NUM">0.3</field></shadow>
+            </value>
+        </block>
+        <!-- Flanger -->
+        <block type="sb_setup_effect">
+            <mutation effect_type="flanger"></mutation>
+            <field name="EFFECT_TYPE">flanger</field>
+            <value name="DELAY_TIME">
+                <shadow type="math_number"><field name="NUM">1</field></shadow>
+            </value>
+            <value name="RATE">
+                <shadow type="math_number"><field name="NUM">0.5</field></shadow>
+            </value>
+            <value name="DEPTH">
+                <shadow type="math_number"><field name="NUM">1</field></shadow>
+            </value>
+            <value name="FEEDBACK">
+                <shadow type="math_number"><field name="NUM">0.5</field></shadow>
+            </value>
+        </block>
+        <!-- Auto-Filter -->
+        <block type="sb_setup_effect">
+            <mutation effect_type="autofilter"></mutation>
+            <field name="EFFECT_TYPE">autofilter</field>
+            <value name="RATE">
+                <shadow type="math_number"><field name="NUM">0.5</field></shadow>
+            </value>
+            <value name="DEPTH">
+                <shadow type="math_number"><field name="NUM">20</field></shadow>
+            </value>
+            <value name="FILTER_Q">
+                <shadow type="math_number"><field name="NUM">0.4</field></shadow>
+            </value>
+        </block>
+        <!-- Pitch-Mod -->
+        <block type="sb_setup_effect">
+            <mutation effect_type="pitchmod"></mutation>
+            <field name="EFFECT_TYPE">pitchmod</field>
+            <field name="TYPE">NOISE</field>
+            <value name="RATE">
+                <shadow type="math_number"><field name="NUM">5</field></shadow>
+            </value>
+            <value name="DEPTH">
+                <shadow type="math_number"><field name="NUM">10</field></shadow>
+            </value>
+        </block>
+        <!-- Compressor -->
+        <block type="sb_setup_effect">
+            <mutation effect_type="compressor"></mutation>
+            <field name="EFFECT_TYPE">compressor</field>
+            <value name="THRESHOLD">
+                <shadow type="math_number"><field name="NUM">-20</field></shadow>
+            </value>
+            <value name="RATIO">
+                <shadow type="math_number"><field name="NUM">4</field></shadow>
+            </value>
+            <value name="ATTACK">
+                <shadow type="math_number"><field name="NUM">0.01</field></shadow>
+            </value>
+            <value name="RELEASE">
+                <shadow type="math_number"><field name="NUM">0.25</field></shadow>
+            </value>
+            <value name="MAKEUP">
+                <shadow type="math_number"><field name="NUM">0</field></shadow>
+            </value>
+        </block>
+        <!-- Limiter -->
+        <block type="sb_setup_effect">
+            <mutation effect_type="limiter"></mutation>
+            <field name="EFFECT_TYPE">limiter</field>
+            <value name="THRESHOLD">
+                <shadow type="math_number"><field name="NUM">-3</field></shadow>
+            </value>
+            <value name="ATTACK">
+                <shadow type="math_number"><field name="NUM">0.001</field></shadow>
+            </value>
+            <value name="RELEASE">
+                <shadow type="math_number"><field name="NUM">0.1</field></shadow>
+            </value>
+        </block>
+    </category>
+
+    <!-- 12. Performance -->
     <category name="%{BKY_CAT_PERFORMANCE}" colour="%{BKY_PERFORMANCE_HUE}">
         <!-- 設定速度 -->
         <block type="sb_transport_set_bpm">

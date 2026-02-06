@@ -20,6 +20,8 @@
         - `audio.js`: 演奏引擎與 MelodicSampler 類別。
         - `visual.js`, `serial.js`, `midi.js`, `functions.js`, `variables.js`.
     - `docs/`: 積木說明文件 (HTML)
+        - `effects_en.html`, `effects_zh-hant.html`: 效果器與調變指南。
+        - `mixed_source_en.html`, `mixed_source_zh-hant.html`: 混合音源與 Lo-Fi 製作配方。
         - `sound_sources_zh-hant.html`: 取樣器與 ADSR 說明。
         - `performance_zh-hant.html`, `melody_zh-hant.html` 等。
     - `samples/`: 音訊取樣庫

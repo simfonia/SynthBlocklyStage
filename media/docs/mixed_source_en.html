@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Mixed Source Help</title>
+    <style>
+        body { font-family: sans-serif; line-height: 1.6; padding: 20px; color: #333; max-width: 900px; margin: 0 auto; }
+        h1 { color: #E74C3C; border-bottom: 3px solid #E74C3C; padding-bottom: 10px; }
+        h2 { color: #444; border-bottom: 2px solid #eee; padding-bottom: 5px; margin-top: 30px; }
+        .block-box { margin-bottom: 25px; padding: 15px; background: #fff5f5; border-radius: 8px; border-left: 5px solid #E74C3C; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .tip { background-color: #e8f4fd; border-left: 4px solid #3498db; padding: 15px; margin: 15px 0; border-radius: 0 8px 8px 0; }
+        ul { padding-left: 25px; }
+        li { margin-bottom: 8px; }
+    </style>
+</head>
+<body>
+    <h1>Mixed Source</h1>
+    <p>The Mixed Source block lets you combine a <strong>clear waveform</strong> with <strong>textured noise</strong> in a single instrument. This is the first step in creating sounds with airiness, mechanical character, or Lo-Fi vibes.</p>
+
+    <div class="block-box">
+        <h2>Parameters</h2>
+        <ul>
+            <li><strong>Wave</strong>: Provides the stable base pitch.
+                <ul>
+                    <li>Sine: Clean and pure.</li>
+                    <li>Saw: Bright and aggressive.</li>
+                </ul>
+            </li>
+            <li><strong>Noise</strong>: Provides texture or "air".
+                <ul>
+                    <li>White: Equal energy across all frequencies, good for simulated airflow.</li>
+                    <li>Pink: More low-frequency energy, sounds warmer and more balanced.</li>
+                </ul>
+            </li>
+            <li><strong>Mix Level (Noise %)</strong>: The percentage of noise in the final mix.
+                <ul>
+                    <li>5-15%: Subtle texture, makes the synth sound less "digital".</li>
+                    <li>50%+: Used for percussion-like effects or ambient sounds.</li>
+                </ul>
+            </li>
+        </ul>
+    </div>
+
+    <div class="tip">
+        <h2>Advanced: Creating Lo-Fi Tones</h2>
+        <p>Mixed Source provides the foundation. To achieve a true Lo-Fi effect, add these effects in sequence:</p>
+        <ol>
+            <li><strong>Mixed Source</strong> (Wave + 10% Noise)</li>
+            <li><strong>Pitch-Mod</strong>: Use "Jitter" mode to add instability.</li>
+            <li><strong>Auto-Filter</strong>: Add dynamic breathing to the frequency spectrum.</li>
+        </ol>
+    </div>
+</body>
+</html>

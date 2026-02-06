@@ -1,4 +1,4 @@
-開發過程遇到的問題與解決方法、關鍵技術細節（踩過的坑）
+﻿開發過程遇到的問題與解決方法、關鍵技術細節（踩過的坑）
 
  * Java 字串比較：logic_compare 已修正，偵測到字串時必須產生 .equals() 而非 ==。
  * Minim 混音：多個音源必須先 patch 到 Summer 物件，再 patch 到 ADSR，否則只有最後一個音源有聲。
@@ -99,3 +99,26 @@
 - **Z-Order 遮擋**：ControlP5 元件的層級由建立順序決定。後建立的元件會出現在最上層。若下拉選單被其他元件擋住，應調整其初始化順序。
 - **ADSR 動態更新**：當 currentInstrument 切換時，必須同步將 adsrState 重設為 0，否則光點會繼承上一個樂器的播放進度而產生鬼影。
 - **Webview Sandbox**：window.prompt 在沙盒中被禁用。已實作 vscode.postMessage 橋接到 vscode.window.showInputBox 的機制。
+
+## 2026-02-06: 音訊引擎升級與調變陷阱
+
+### 1. 立體聲相位器 (Pan) 與單聲道效果器的順序衝突
+- **問題**：若將 Filter 或 BitCrush 等單聲道 UGen 接在 `Pan` 之後，Minim 會噴錯：`Pan MUST be ticked with STEREO output`。這是因為 Pan 輸出的雙聲道訊號被強行降維回單聲道。
+- **對策**：強制訊號鏈順序為：`Source -> Summer -> Effects -> Pan -> Master`。效果器必須在立體聲分像前處理完成。
+
+### 2. Minim 參數更新的「型別地獄」
+- **問題**：Minim 的 UGen 參數（如 `frequency`）有些是 `float`，有些是 `Control` 物件，且不同版本間型別有變動，導致產生器中的 Java 強轉 (Casting) 經常失敗。
+- **解決方案**：使用 **Java 反射 (Reflection)**。透過 `obj.getClass().getField("field")` 取得欄位，再判斷其型別進行設定。這大幅增強了對不同版本 Minim 的容錯率。
+
+### 3. 自動濾波 (Auto-Filter) 的靜音陷阱
+- **問題**：直接用 LFO 驅動濾波頻率時，若 LFO 數值為負，會導致 `frequency <= 0`，濾波器會因此靜音。
+- **解決方案**：使用 `Constant(Offset)` + `LFO(Depth)` 疊加。Offset 設為中心頻率（如 2000Hz），Depth 則負責上下擺動，確保最終結果恆大於 0。
+
+### 4. 聲碼器 (Vocoder) 的硬體路由限制
+- **坑點**：Minim 的 `AudioInput` (由 `getLineIn()` 取得) 並非 `UGen` 子類，它無法直接 `.patch()` 到 `Vocoder` 的調變器輸入。
+- **失敗嘗試**：試圖透過 `AudioListener` 建立橋接類別 `SBLiveInput`。雖然能獲取 buffer，但在實時處理中會與 Minim 的 `uGenerate` 時脈衝突，導致編譯錯誤或嚴重爆音。
+- **目前結論**：聲碼器功能在現有 Minim 抽象架構下難以穩定實作，建議暫時擱置，優先強化離線或取樣式的語音處理。
+
+### 5. Blockly XML 反序列化順序問題
+- **現象**：載入包含自訂樂器名稱的 XML 時，Blockly 會因為「下拉選單尚未定義該樂器名稱」而彈出警告並重設為預設值。
+- **對策**：改用 **Hybrid Field (FieldTextInput)**。雖然外觀像下拉選單，但本質是文字輸入。這讓 XML 在載入任何樂器名稱時都能「安靜地接收」，隨後再由 `main.js` 同步選單內容。

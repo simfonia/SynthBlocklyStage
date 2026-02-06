@@ -689,11 +689,7 @@ void logToScreen(String msg, int type) {
   }
 
 void setup() {
-  if (!instrumentMap.containsKey("Piano")) instrumentMap.put("Piano", "TRIANGLE");
-  if (!instrumentADSR.containsKey("Piano")) instrumentADSR.put("Piano", new float[]{defAdsrA, defAdsrD, defAdsrS, defAdsrR});
-    instrumentMap.put("Piano", "TRIANGLE");
-    instrumentADSR.put("Piano", new float[]{(float)0.01, (float)0.1, (float)0.3, (float)1});
-    checkMainMixer();
+  checkMainMixer();
     size(1600, 600);
   pixelDensity(displayDensity());
   stageBgColor = color(0, 0, 0);
@@ -742,26 +738,23 @@ void setup() {
   cp5.addButton("copyLogs").setPosition(1405, 5).setSize(90, 25).setCaptionLabel("COPY LOG");
   cp5.addButton("clearLogs").setPosition(1500, 5).setSize(90, 25).setCaptionLabel("CLEAR LOG");
   logToScreen("System Initialized.", 0);
-    currentInstrument = "Piano";
-    bpm = (float)80;
-    chords.put("CM7", new String[]{"C4", "E4", "G4", "B4"});
-    chords.put("Dm", new String[]{"D4", "F4", "A4"});
-    chords.put("FM7", new String[]{"F3", "A3", "E4"});
-    chords.put("FMadd6_C", new String[]{"C4", "D4", "F4", "A4"});
-    chords.put("Bdim", new String[]{"B3", "D4", "F4", "A4"});
-    chords.put("GMaj", new String[]{"G5", "B5", "D4"});
-    new Thread(new Runnable() {
-      public void run() {
-        activeMelodyCount++;
-        try { Thread.sleep(200); } catch(Exception e) {}
-        int timeout = 0;
-        while(isCountingIn && timeout < 500) { try { Thread.sleep(10); timeout++; } catch(Exception e) {} }
-          playMelodyInternal("RQ   C4Q D4Q.   E4E  CM7H.+E              RE RQ C5Q B4Q.  G4E DmH      FM7H", "Piano");
-          playMelodyInternal("RH   A3Q_T B3Q_T C4Q_T   DmQ.     E4E FMadd6_CQ.    E4E BdimQ.     A4E B3Q.    B4E CM7W RH", "Piano");
-        
-        activeMelodyCount--;
+    {
+      if (instrumentCompressors.containsKey("Master")) {
+        ((SBCompressor)instrumentCompressors.get("Master")).setParams((float)(-20), (float)4, (float)0.01, (float)0.25, (float)0);
+      } else {
+        UGen prev = masterEffectEnd;
+        prev.unpatch(masterGainUGen);
+        SBCompressor c = new SBCompressor();
+        c.setParams((float)(-20), (float)4, (float)0.01, (float)0.25, (float)0);
+        instrumentCompressors.put("Master", c);
+        prev.patch(c).patch(masterGainUGen);
+        masterEffectEnd = c;
       }
-    }).start();
+    }
+    currentInstrument = "MySynth";
+    if (!instrumentMap.containsKey("MySynth")) instrumentMap.put("MySynth", "TRIANGLE");
+  if (!instrumentADSR.containsKey("MySynth")) instrumentADSR.put("MySynth", new float[]{defAdsrA, defAdsrD, defAdsrS, defAdsrR});
+    instrumentMap.put("MySynth", "SAW");
 }
 
 
@@ -830,9 +823,4 @@ void draw() {
     }
   }
   updateInstrumentUISync();
-    if (frameCount > 60) {
-      if (!((activeMelodyCount > 0))) {
-        exit();
-      }
-    }
 }

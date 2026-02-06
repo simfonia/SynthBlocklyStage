@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Audio Effects Help</title>
+    <style>
+        body { font-family: sans-serif; line-height: 1.6; padding: 20px; color: #333; max-width: 900px; margin: 0 auto; }
+        h1 { color: #D22F73; border-bottom: 3px solid #D22F73; padding-bottom: 10px; }
+        h2 { color: #444; border-bottom: 2px solid #eee; padding-bottom: 5px; margin-top: 30px; }
+        .block-box { margin-bottom: 25px; padding: 15px; background: #fff5f8; border-radius: 8px; border-left: 5px solid #D22F73; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        code { background: #eee; padding: 2px 4px; border-radius: 4px; font-family: 'Courier New', Courier, monospace; font-weight: bold; }
+        .important { background-color: #fffbe6; border-left: 4px solid #ffc107; padding: 15px; margin: 15px 0; border-radius: 0 8px 8px 0; }
+        .tip { background-color: #e8f4fd; border-left: 4px solid #3498db; padding: 15px; margin: 15px 0; border-radius: 0 8px 8px 0; }
+        ul { padding-left: 25px; }
+        li { margin-bottom: 8px; }
+        .range { color: #888; font-size: 0.9em; font-style: italic; }
+    </style>
+</head>
+<body>
+    <h1>Audio Effects</h1>
+    <p>Effects change the character of your sound. You can place effects inside an "Instrument Definition" container for specific instruments, or in the <code>setup</code> block as Global (Master) effects.</p>
+
+    <div class="important">
+        <strong>Signal Chain Order Matters:</strong> Effects are processed from top to bottom. For example, placing Distortion before Delay creates echoes of distorted sounds; reversing them creates sharp, grainy artifacts.
+    </div>
+
+    <div class="block-box">
+        <h2>1. Filter (MoogFilter)</h2>
+        <p>Simulates the classic Moog low-pass filter to shape brightness.</p>
+        <ul>
+            <li><strong>Frequency</strong> <span class="range">[20 - 20000 Hz]</span>: The cutoff frequency. Lower values make the sound "muffled".</li>
+            <li><strong>Resonance (Q)</strong> <span class="range">[0.0 - 0.9]</span>: Adds emphasis at the cutoff point. Higher values create a sharp, "electronic" character.</li>
+        </ul>
+    </div>
+
+    <div class="block-box">
+        <h2>2. Delay</h2>
+        <p>Creates repetitive echoes, adding space and depth.</p>
+        <ul>
+            <li><strong>Delay Time</strong> <span class="range">[0.0 - 5.0 s]</span>: The interval between echoes.</li>
+            <li><strong>Feedback</strong>: How many times the echo repeats.</li>
+        </ul>
+    </div>
+
+    <div class="block-box">
+        <h2>3. Reverb</h2>
+        <p>Simulates dense reflections in a large room, making the sound fuller and more immersive.</p>
+    </div>
+
+    <div class="block-box">
+        <h2>4. Auto-Filter</h2>
+        <p>Uses an LFO to automatically sweep the filter frequency, creating "Wah-wah" or breathing effects.</p>
+        <ul>
+            <li><strong>Rate</strong>: The speed of the sweep.</li>
+            <li><strong>Depth %</strong>: The range of frequency modulation.</li>
+        </ul>
+    </div>
+
+    <div class="block-box">
+        <h2>5. Pitch-Mod</h2>
+        <p>Dynamically modulates the frequency, a core tool for creating Lo-Fi character and organic movement.</p>
+        <ul>
+            <li><strong>Modulation Type</strong>:
+                <ul>
+                    <li><strong>Vibrato</strong>: Uses a regular sine wave. Sounds like a violin's vibrato, musical and rhythmic.</li>
+                    <li><strong>Jitter</strong>: Uses high-speed random noise. Sounds like "grit" or "texture" rather than pitch change.</li>
+                </ul>
+            </li>
+            <li><strong>Depth</strong> <span class="range">[Unit: Cents]</span>:
+                <ul>
+                    <li>In <strong>Vibrato</strong>, it's the radius of the pitch swing.</li>
+                    <li>In <strong>Jitter</strong>, it represents the "width of pitch blur." Simulates tape motor instability for a vintage feel.</li>
+                </ul>
+            </li>
+        </ul>
+    </div>
+
+    <div class="block-box">
+        <h2>6. BitCrush</h2>
+        <p>Reduces audio resolution for a raw, 8-bit vintage game sound (Lo-Fi).</p>
+    </div>
+
+    <div class="block-box">
+        <h2>7. Waveshaper</h2>
+        <p>Provides warm, analog-style saturation and distortion using a <code>tanh</code> function.</p>
+    </div>
+
+    <div class="block-box">
+        <h2>8. Dynamics (Compressor & Limiter)</h2>
+        <p>Controls volume fluctuations to prevent clipping and add "punch" to the sound.</p>
+    </div>
+
+    <div class="tip">
+        <strong>Real-time Updates:</strong> Using effect blocks inside the <code>draw</code> loop or Serial events allows you to change parameters dynamically (e.g., controlling filter with a knob).
+    </div>
+</body>
+</html>
