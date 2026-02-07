@@ -15,13 +15,11 @@ Blockly.Processing.forBlock['text'] = function(block) {
 Blockly.Processing.forBlock['text_join'] = function(block) {
   if (block.itemCount_ === 0) {
     return ['""', Blockly.Processing.ORDER_ATOMIC];
-  } else if (block.itemCount_ === 1) {
-    const argument0 = Blockly.Processing.valueToCode(block, 'ADD0', Blockly.Processing.ORDER_NONE) || '""';
-    return ['String.valueOf(' + argument0 + ')', Blockly.Processing.ORDER_FUNCTION_CALL];
   } else {
     const elements = new Array(block.itemCount_);
     for (let i = 0; i < block.itemCount_; i++) {
-      elements[i] = Blockly.Processing.valueToCode(block, 'ADD' + i, Blockly.Processing.ORDER_NONE) || '""';
+      const code = Blockly.Processing.valueToCode(block, 'ADD' + i, Blockly.Processing.ORDER_NONE) || '""';
+      elements[i] = 'String.valueOf(' + code + ')';
     }
     const code = elements.join(' + ');
     return [code, Blockly.Processing.ORDER_ADDITION];
@@ -60,10 +58,21 @@ Blockly.Processing.forBlock['text_charAt'] = function(block) {
     case 'FROM_START':
       const at = Blockly.Processing.getRelativeIndex(block, 'AT');
       return [argument0 + '.charAt(' + at + ')', Blockly.Processing.ORDER_FUNCTION_CALL];
+    case 'FIRST':
+      return [argument0 + '.charAt(0)', Blockly.Processing.ORDER_FUNCTION_CALL];
+    case 'LAST':
+      return [argument0 + '.charAt(' + argument0 + '.length() - 1)', Blockly.Processing.ORDER_FUNCTION_CALL];
     case 'RANDOM':
       return [argument0 + '.charAt(int(random(' + argument0 + '.length())))', Blockly.Processing.ORDER_FUNCTION_CALL];
   }
   return [argument0 + '.charAt(0)', Blockly.Processing.ORDER_FUNCTION_CALL];
+};
+
+Blockly.Processing.forBlock['text_trim'] = function(block) {
+  const argument0 = Blockly.Processing.valueToCode(block, 'TEXT', Blockly.Processing.ORDER_MEMBER) || '""';
+  // Java's .trim() handles both sides. If specific mode is needed, logic would be more complex,
+  // but standard trim() covers MOST use cases.
+  return [argument0 + '.trim()', Blockly.Processing.ORDER_FUNCTION_CALL];
 };
 
 Blockly.Processing.forBlock['text_print'] = function(block) {

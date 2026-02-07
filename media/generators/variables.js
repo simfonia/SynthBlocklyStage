@@ -22,8 +22,13 @@ Blockly.Processing.forBlock['variables_get'] = function(block) {
 
   // Auto-declare if not defined
   if (!Blockly.Processing.global_vars_[varName]) {
-      const type = intVars.includes(varName) ? "int" : "float";
-      Blockly.Processing.global_vars_[varName] = type + " " + varName + ";";
+      let type = "Object"; // Default to Object for maximum flexibility
+      let init = "\"0\""; // Default initialization for Object to avoid null
+      
+      if (intVars.includes(varName)) { type = "int"; init = "0"; }
+      else if (forceNames.includes(varName)) { type = "float"; init = "0.0f"; }
+      
+      Blockly.Processing.global_vars_[varName] = type + " " + varName + " = " + init + ";";
   }
   
   return [varName, Blockly.Processing.ORDER_ATOMIC];
@@ -43,9 +48,14 @@ Blockly.Processing.forBlock['variables_set'] = function(block) {
   }
   
   // Ensure declaration exists
-  if (!Blockly.Processing.global_vars_[varName] || !Blockly.Processing.global_vars_[varName].includes('=')) {
-      const type = intVars.includes(varName) ? "int" : "float";
-      Blockly.Processing.global_vars_[varName] = type + " " + varName + " = 0;"; 
+  if (!Blockly.Processing.global_vars_[varName]) {
+      let type = "Object";
+      let init = "\"0\"";
+      
+      if (intVars.includes(varName)) { type = "int"; init = "0"; }
+      else if (forceNames.includes(varName)) { type = "float"; init = "0.0f"; }
+      
+      Blockly.Processing.global_vars_[varName] = type + " " + varName + " = " + init + ";"; 
   }
   return varName + ' = ' + argument0 + ';\n';
 };

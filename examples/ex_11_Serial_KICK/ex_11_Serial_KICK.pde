@@ -54,6 +54,7 @@ Sampler snare;
 Serial myPort;
 String currentInstrument = "default";
 String lastInstrument = "";
+String my_2peI_5D_25s_7DP_VM0u__8xX_ = "";
 Summer mainMixer;
 UGen masterEffectEnd;
 boolean isMidiMode = false;
@@ -739,6 +740,27 @@ void logToScreen(String msg, int type) {
     
   }
 
+void serialEvent(Serial p) {
+  try {
+    my_2peI_5D_25s_7DP_VM0u__8xX_ = p.readString();
+    if (my_2peI_5D_25s_7DP_VM0u__8xX_ != null) {
+      my_2peI_5D_25s_7DP_VM0u__8xX_ = my_2peI_5D_25s_7DP_VM0u__8xX_.toString().trim();
+      if (my_2peI_5D_25s_7DP_VM0u__8xX_.toString().length() > 0) {
+        println("[Serial] Received: " + my_2peI_5D_25s_7DP_VM0u__8xX_);
+        logToScreen("Serial In: " + my_2peI_5D_25s_7DP_VM0u__8xX_, 0);
+          if (my_2peI_5D_25s_7DP_VM0u__8xX_.equals("KICK")) {
+    playBuiltinDrum("KICK", floatVal(100));
+    parseAndPlayNote("Ride", "X", floatVal(70));
+  }
+
+      }
+    }
+  } catch (Exception e) {
+    println("[Serial Error] " + e.getMessage());
+    e.printStackTrace();
+  }
+}
+
 void setup() {
   checkMainMixer();
     size(1600, 600);
@@ -789,68 +811,24 @@ void setup() {
   cp5.addButton("copyLogs").setPosition(1405, 5).setSize(90, 25).setCaptionLabel("COPY LOG");
   cp5.addButton("clearLogs").setPosition(1500, 5).setSize(90, 25).setCaptionLabel("CLEAR LOG");
   logToScreen("System Initialized.", 0);
-    bpm = floatVal(120);
-    if (!instrumentMap.containsKey("Lead")) instrumentMap.put("Lead", "TRIANGLE");
-  if (!instrumentADSR.containsKey("Lead")) instrumentADSR.put("Lead", new float[]{defAdsrA, defAdsrD, defAdsrS, defAdsrR});
+    println("--- Available Serial Ports ---");
+    println(Serial.list());
+    serialBaud = 9600;
+    try {
+      myPort = new Serial(this, Serial.list()[0], serialBaud);
+      myPort.bufferUntil('\n');
+    } catch (Exception e) {
+      println("Serial Init Failed: " + e.getMessage());
+    }
+    if (!instrumentMap.containsKey("Ride")) instrumentMap.put("Ride", "TRIANGLE");
+  if (!instrumentADSR.containsKey("Ride")) instrumentADSR.put("Ride", new float[]{defAdsrA, defAdsrD, defAdsrS, defAdsrR});
     checkMainMixer();
-    if (!melodicSamplers.containsKey("Lead")) melodicSamplers.put("Lead", new MelodicSampler(minim, "Lead"));
-    melodicSamplers.get("Lead").loadSamples("piano");
-    instrumentMap.put("Lead", "MELODIC_SAMPLER");
-    instrumentADSR.put("Lead", new float[]{defAdsrA, defAdsrD, defAdsrS, defAdsrR});
-    instrumentVolumes.put("Lead", floatVal(100) / 100.0f);
-    if (!instrumentMap.containsKey("clap")) instrumentMap.put("clap", "TRIANGLE");
-  if (!instrumentADSR.containsKey("clap")) instrumentADSR.put("clap", new float[]{defAdsrA, defAdsrD, defAdsrS, defAdsrR});
-    checkMainMixer();
-    samplerMap.put("clap", new ddf.minim.ugens.Sampler("drum/clap.wav", 4, minim));
-    samplerGainMap.put("clap", new Gain(0.f));
-    ((ddf.minim.ugens.Sampler)samplerMap.get("clap")).patch((Gain)samplerGainMap.get("clap")).patch(getInstrumentMixer("clap"));
-    instrumentMap.put("clap", "DRUM");
-    instrumentADSR.put("clap", new float[]{defAdsrA, defAdsrD, defAdsrS, defAdsrR});
-    instrumentVolumes.put("clap", floatVal(90) / 100.0f);
-    new Thread(new Runnable() {
-      public void run() {
-        activeMelodyCount++;
-        try { Thread.sleep(200); } catch(Exception e) {}
-        int timeout = 0;
-        while(isCountingIn && timeout < 500) { try { Thread.sleep(10); timeout++; } catch(Exception e) {} }
-          for (int count = 0; count < 1; count++) {
-            parseAndPlayNote("Lead", "G5Q", floatVal(50));
-            parseAndPlayNote("Lead", "E5Q", floatVal(50));
-            parseAndPlayNote("Lead", "E5Q", floatVal(50));
-            parseAndPlayNote("clap", "XQ", floatVal(100));
-          }
-          for (int count2 = 0; count2 < 1; count2++) {
-            parseAndPlayNote("Lead", "F5Q", floatVal(50));
-            parseAndPlayNote("Lead", "D5Q", floatVal(50));
-            parseAndPlayNote("Lead", "D5Q", floatVal(50));
-            parseAndPlayNote("clap", "XQ", floatVal(100));
-          }
-        
-        activeMelodyCount--;
-      }
-    }).start();
-    new Thread(new Runnable() {
-      public void run() {
-        activeMelodyCount++;
-        try { Thread.sleep(200); } catch(Exception e) {}
-        int timeout = 0;
-        while(isCountingIn && timeout < 500) { try { Thread.sleep(10); timeout++; } catch(Exception e) {} }
-          for (int count3 = 0; count3 < 2; count3++) {
-            parseAndPlayNote("Lead", "C3E", floatVal(80));
-            parseAndPlayNote("Lead", "G3E", floatVal(30));
-            parseAndPlayNote("Lead", "E3E", floatVal(30));
-            parseAndPlayNote("Lead", "G3E", floatVal(30));
-          }
-          for (int count4 = 0; count4 < 2; count4++) {
-            parseAndPlayNote("Lead", "D3E", floatVal(80));
-            parseAndPlayNote("Lead", "G3E", floatVal(30));
-            parseAndPlayNote("Lead", "F3E", floatVal(30));
-            parseAndPlayNote("Lead", "G3E", floatVal(30));
-          }
-        
-        activeMelodyCount--;
-      }
-    }).start();
+    samplerMap.put("Ride", new ddf.minim.ugens.Sampler("drum/ride.wav", 4, minim));
+    samplerGainMap.put("Ride", new Gain(0.f));
+    ((ddf.minim.ugens.Sampler)samplerMap.get("Ride")).patch((Gain)samplerGainMap.get("Ride")).patch(getInstrumentMixer("Ride"));
+    instrumentMap.put("Ride", "DRUM");
+    instrumentADSR.put("Ride", new float[]{defAdsrA, defAdsrD, defAdsrS, defAdsrR});
+    updatePanning("Ride", floatVal((-1)));
 }
 
 
@@ -919,9 +897,4 @@ void draw() {
     }
   }
   updateInstrumentUISync();
-    if (floatVal(frameCount) > floatVal(60)) {
-      if (!((activeMelodyCount > 0))) {
-        exit();
-      }
-    }
 }

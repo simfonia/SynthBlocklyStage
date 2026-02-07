@@ -55,7 +55,7 @@ Blockly.Processing.forBlock["visual_rect"] = function (block) {
   const y = Blockly.Processing.valueToCode(block, "Y", Blockly.Processing.ORDER_ATOMIC) || "0";
   const w = Blockly.Processing.valueToCode(block, "W", Blockly.Processing.ORDER_ATOMIC) || "100";
   const h = Blockly.Processing.valueToCode(block, "H", Blockly.Processing.ORDER_ATOMIC) || "100";
-  return "rect(" + x + ", " + y + ", " + w + ", " + h + ");\n";
+  return "rect(floatVal(" + x + "), floatVal(" + y + "), floatVal(" + w + "), floatVal(" + h + "));\n";
 };
 
 Blockly.Processing.forBlock["visual_ellipse"] = function (block) {
@@ -63,7 +63,7 @@ Blockly.Processing.forBlock["visual_ellipse"] = function (block) {
   const y = Blockly.Processing.valueToCode(block, "Y", Blockly.Processing.ORDER_ATOMIC) || "0";
   const w = Blockly.Processing.valueToCode(block, "W", Blockly.Processing.ORDER_ATOMIC) || "100";
   const h = Blockly.Processing.valueToCode(block, "H", Blockly.Processing.ORDER_ATOMIC) || "100";
-  return "ellipse(" + x + ", " + y + ", " + w + ", " + h + ");\n";
+  return "ellipse(floatVal(" + x + "), floatVal(" + y + "), floatVal(" + w + "), floatVal(" + h + "));\n";
 };
 
 Blockly.Processing.forBlock["visual_triangle"] = function (block) {
@@ -73,7 +73,7 @@ Blockly.Processing.forBlock["visual_triangle"] = function (block) {
   const y2 = Blockly.Processing.valueToCode(block, "Y2", Blockly.Processing.ORDER_ATOMIC) || "0";
   const x3 = Blockly.Processing.valueToCode(block, "X3", Blockly.Processing.ORDER_ATOMIC) || "25";
   const y3 = Blockly.Processing.valueToCode(block, "Y3", Blockly.Processing.ORDER_ATOMIC) || "50";
-  return "triangle(" + x1 + ", " + y1 + ", " + x2 + ", " + y2 + ", " + x3 + ", " + y3 + ");\n";
+  return "triangle(floatVal(" + x1 + "), floatVal(" + y1 + "), floatVal(" + x2 + "), floatVal(" + y2 + "), floatVal(" + x3 + "), floatVal(" + y3 + "));\n";
 };
 
 Blockly.Processing.forBlock["visual_line"] = function (block) {
@@ -81,23 +81,23 @@ Blockly.Processing.forBlock["visual_line"] = function (block) {
   const y1 = Blockly.Processing.valueToCode(block, "Y1", Blockly.Processing.ORDER_ATOMIC) || "0";
   const x2 = Blockly.Processing.valueToCode(block, "X2", Blockly.Processing.ORDER_ATOMIC) || "100";
   const y2 = Blockly.Processing.valueToCode(block, "Y2", Blockly.Processing.ORDER_ATOMIC) || "100";
-  return "line(" + x1 + ", " + y1 + ", " + x2 + ", " + y2 + ");\n";
+  return "line(floatVal(" + x1 + "), floatVal(" + y1 + "), floatVal(" + x2 + "), floatVal(" + y2 + "));\n";
 };
 
 Blockly.Processing.forBlock["visual_rotate"] = function (block) {
   const angle = Blockly.Processing.valueToCode(block, "ANGLE", Blockly.Processing.ORDER_ATOMIC) || "0";
-  return "rotate(radians(" + angle + "));\n";
+  return "rotate(radians(floatVal(" + angle + ")));\n";
 };
 
 Blockly.Processing.forBlock["visual_translate"] = function (block) {
   const x = Blockly.Processing.valueToCode(block, "X", Blockly.Processing.ORDER_ATOMIC) || "0";
   const y = Blockly.Processing.valueToCode(block, "Y", Blockly.Processing.ORDER_ATOMIC) || "0";
-  return "translate(" + x + ", " + y + ");\n";
+  return "translate(floatVal(" + x + "), floatVal(" + y + "));\n";
 };
 
 Blockly.Processing.forBlock["visual_scale"] = function (block) {
   const s = Blockly.Processing.valueToCode(block, "S", Blockly.Processing.ORDER_ATOMIC) || "1.0";
-  return "scale(" + s + ");\n";
+  return "scale(floatVal(" + s + "));\n";
 };
 
 Blockly.Processing.forBlock["visual_push_pop"] = function (block) {
@@ -107,7 +107,7 @@ Blockly.Processing.forBlock["visual_push_pop"] = function (block) {
 
 Blockly.Processing.forBlock["visual_stroke_weight"] = function (block) {
   const weight = Blockly.Processing.valueToCode(block, "WEIGHT", Blockly.Processing.ORDER_ATOMIC) || "1";
-  return "strokeWeight(" + weight + ");\n";
+  return "strokeWeight(floatVal(" + weight + "));\n";
 };
 
 Blockly.Processing.forBlock["visual_no_stroke"] = function (block) {
@@ -190,6 +190,7 @@ Blockly.Processing.forBlock['visual_stage_setup'] = function (block) {
 
   var helpersDef = `
   void logToScreen(String msg, int type) {
+    if (cp5 == null) { println("[Early Log] " + msg); return; }
     Textarea target = (type >= 1) ? cp5.get(Textarea.class, "alertsArea") : cp5.get(Textarea.class, "consoleArea");
     if (target != null) {
       String prefix = (type == 3) ? "[ERR] " : (type == 2) ? "[WARN] " : (type == 1) ? "[!] " : "[INFO] ";
@@ -214,6 +215,7 @@ Blockly.Processing.forBlock['visual_stage_setup'] = function (block) {
       if (myPort != null) { myPort.stop(); }
       try {
         myPort = new Serial(this, ports[n], serialBaud);
+        myPort.bufferUntil('\\n');
         logToScreen("Serial Connected: " + ports[n], 1);
       } catch (Exception e) {
         logToScreen("Serial Error: Port Busy or Unavailable", 3);

@@ -7,13 +7,22 @@
 Blockly.Processing = new Blockly.Generator('Processing');
 Blockly.Processing.forBlock = {}; 
 
-// Proxy forBlock to the generator itself to support both modern and classic Blockly patterns
-// This prevents "does not know how to generate code" errors
+// Proxy blockToCode to handle missing generators gracefully
 const originalBlockToCode = Blockly.Processing.blockToCode;
 Blockly.Processing.blockToCode = function(block) {
-  if (block && !this.forBlock[block.type] && this[block.type]) {
+  if (!block) return '';
+  
+  // Try to sync modern and legacy generator locations
+  if (!this.forBlock[block.type] && this[block.type]) {
     this.forBlock[block.type] = this[block.type];
   }
+
+  // If still not found, return a safe comment instead of throwing error
+  if (!this.forBlock[block.type]) {
+    console.warn('Missing generator for block type: ' + block.type);
+    return '/* Missing generator for ' + block.type + ' */\n';
+  }
+
   return originalBlockToCode.call(this, block);
 };
 
@@ -54,6 +63,15 @@ Blockly.Processing.init = function(workspace) {
   Blockly.Processing.addImport("import java.util.*;");
   Blockly.Processing.addImport("import ddf.minim.*;");
   Blockly.Processing.addImport("import ddf.minim.ugens.*;");
+
+  // Helper function for dynamic type conversion (Object to float)
+  Blockly.Processing.definitions_['Helper_floatVal'] = 
+    "float floatVal(Object o) {\n" +
+    "  if (o == null) return 0.0f;\n" +
+    "  if (o instanceof Number) return ((Number)o).floatValue();\n" +
+    "  try { return Float.parseFloat(o.toString()); }\n" +
+    "  catch (Exception e) { return 0.0f; }\n" +
+    "}";
 
   if (!Blockly.Processing.nameDB_) {
     Blockly.Processing.nameDB_ = new Blockly.Names(Blockly.Processing.RESERVED_WORDS_);

@@ -68,11 +68,23 @@ Blockly.defineBlocksWithJsonArray([
     "message0": "%{BKY_SERIAL_CHECK_MASK}",
     "args0": [
       { "type": "input_value", "name": "MASK", "check": "Number" },
-      { "type": "input_value", "name": "KEY", "check": "Number" }
+      { "type": "field_number", "name": "KEY", "value": 1, "min": 1 }
     ],
     "output": "Boolean",
     "inputsInline": true,
     "colour": "#2c3e50",
     "tooltip": "用於判斷位元遮罩中特定的按鍵是否被按下。"
+  },
+  {
+    "type": "sb_serial_check_key_mask",
+    "message0": "%{BKY_SB_SERIAL_CHECK_KEY_MASK_MESSAGE}",
+    "args0": [
+      { "type": "input_value", "name": "DATA", "check": "String" },
+      { "type": "field_number", "name": "KEY", "value": 1, "min": 1 }
+    ],
+    "output": "Boolean",
+    "inputsInline": true,
+    "colour": "#2c3e50",
+    "tooltip": "%{BKY_SB_SERIAL_CHECK_KEY_MASK_TOOLTIP}"
   }
 ]);

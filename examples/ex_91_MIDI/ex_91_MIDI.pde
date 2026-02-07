@@ -78,12 +78,19 @@ float waveScale = 2.5;
 int activeMelodyCount = 0;
 int adsrState = 0;
 int adsrTimer = 0;
-int pitch;
+int pitch = 0;
 int serialBaud = 115200;
 int stageBgColor;
 int stageFgColor;
-int velocity;
+int velocity = 0;
 volatile boolean isCountingIn = false;
+
+float floatVal(Object o) {
+  if (o == null) return 0.0f;
+  if (o instanceof Number) return ((Number)o).floatValue();
+  try { return Float.parseFloat(o.toString()); }
+  catch (Exception e) { return 0.0f; }
+}
 
 class SBWaveshaper extends ddf.minim.ugens.Summer {
     float amount = 1.0f;
@@ -209,31 +216,74 @@ class SBWaveshaper extends ddf.minim.ugens.Summer {
     }
   }
 
-  void checkMainMixer() {
-    if (minim == null) minim = new Minim(this);
-    if (out == null) out = minim.getLineOut();
-    if (mainMixer == null) {
-      mainMixer = new Summer();
-      masterEffectEnd = mainMixer;
-      masterGainUGen = new Gain(0.f);
-      masterEffectEnd.patch(masterGainUGen).patch(out);
+    void checkMainMixer() {
+      if (minim == null) minim = new Minim(this);
+      if (out == null) out = minim.getLineOut(); 
+      if (mainMixer == null) {
+        mainMixer = new Summer();
+        masterEffectEnd = mainMixer;
+        masterGainUGen = new Gain(0.f);
+        masterEffectEnd.patch(masterGainUGen).patch(out);
+        
+        // FORCE STEREO: Patch a silent stereo Pan to mainMixer
+        Oscil silent = new Oscil(0, 0, Waves.SINE);
+        Pan p = new Pan(0);
+        silent.patch(p).patch(mainMixer);
+        
+        // PRE-INIT DEFAULT INSTRUMENT
+        getInstrumentMixer("default");
+      }
     }
-  }
+  
+    ddf.minim.ugens.Summer getInstrumentMixer(String name) {
+      checkMainMixer();
+      if (instrumentMixers.containsKey(name)) return (ddf.minim.ugens.Summer)instrumentMixers.get(name);
+      
+      ddf.minim.ugens.Summer s = new ddf.minim.ugens.Summer();
+      ddf.minim.ugens.Pan p = new ddf.minim.ugens.Pan(0.f);
+      
+      synchronized(mainMixer) {
+        s.patch(p);
+        p.patch(mainMixer);
+      }
+      
+      instrumentMixers.put(name, s);
+      instrumentPans.put(name, p);
+      instrumentEffectEnds.put(name, s);
+      return s;
+    }
 
-  ddf.minim.ugens.Summer getInstrumentMixer(String name) {
-    checkMainMixer();
-    if (instrumentMixers.containsKey(name)) return (ddf.minim.ugens.Summer)instrumentMixers.get(name);
-    ddf.minim.ugens.Summer s = new ddf.minim.ugens.Summer();
-    ddf.minim.ugens.Pan p = new ddf.minim.ugens.Pan(0.f);
-    s.patch(p).patch(mainMixer);
-    instrumentMixers.put(name, s);
-    instrumentPans.put(name, p);
-    // 關鍵：效果器鏈應該從 Summer 開始，插在 Pan 之前
-    instrumentEffectEnds.put(name, s);
-    return s;
-  }
-
-  void updateFilter(String name, float freq, float q) {
+    void playBuiltinDrum(String type, float vel) {
+      checkMainMixer();
+      String instName = "_builtin_" + type;
+      if (!samplerMap.containsKey(instName)) {
+        String path = "drum/";
+        if (type.equals("KICK")) path += "kick.wav";
+        else if (type.equals("SNARE")) path += "snare.wav";
+        else if (type.equals("CH")) path += "ch.wav";
+        else if (type.equals("OH")) path += "oh.wav";
+        else if (type.equals("CLAP")) path += "clap.wav";
+        else return;
+        
+        Sampler s = new Sampler(path, 4, minim);
+        Gain g = new Gain(0.f);
+        
+        // Fix: Use getInstrumentMixer to support panning for drums
+        s.patch(g).patch(getInstrumentMixer(instName));
+        
+        samplerMap.put(instName, s);
+        samplerGainMap.put(instName, g);
+        instrumentMap.put(instName, "DRUM");
+      }
+      
+      Sampler s = samplerMap.get(instName);
+      Gain g = samplerGainMap.get(instName);
+      if (s != null && g != null) {
+        g.setValue(map(vel, 0, 127, -40, 0));
+        s.trigger();
+      }
+    }
+    void updateFilter(String name, float freq, float q) {
     Object obj = instrumentFilters.get(name);
     if (obj != null) {
       try {
@@ -278,6 +328,7 @@ class SBWaveshaper extends ddf.minim.ugens.Summer {
   int noteToMidi(String note) {
     String n = note.toUpperCase();
     if (n.equals("R")) return -1;
+    if (n.equals("X")) return 69; // Support 'X' as a general trigger
     int octave = 4;
     if (n.length() > 1 && Character.isDigit(n.charAt(n.length()-1))) {
       octave = Character.getNumericValue(n.charAt(n.length()-1));
@@ -480,12 +531,17 @@ class SBWaveshaper extends ddf.minim.ugens.Summer {
   }
 
   void playChordByNameInternal(String instName, String name, float durationMs, float vel) {
+    if (instName == null || instName.length() == 0 || instName.equals("(請選擇樂器)")) {
+      instName = currentInstrument;
+    }
     String[] notes = chords.get(name);
     if (notes != null) {
       for (String n : notes) {
         int midi = noteToMidi(n);
         if (midi >= 0) playNoteForDuration(instName, midi, vel, durationMs);
       }
+    } else {
+      logToScreen("Chord not found: " + name, 2);
     }
   }
 
@@ -497,7 +553,7 @@ class SBWaveshaper extends ddf.minim.ugens.Summer {
   }
 
   void parseAndPlayNote(String name, String token, float vel) {
-    token = token.trim(); if (token.length() < 2) return;
+    token = token.trim(); if (token.length() < 1) return;
     activeMelodyCount++;
     float totalMs = 0;
     String noteName = "";
@@ -508,8 +564,17 @@ class SBWaveshaper extends ddf.minim.ugens.Summer {
       float multiplier = 1.0f;
       if (p.endsWith(".")) { multiplier = 1.5f; p = p.substring(0, p.length() - 1); }
       else if (p.endsWith("_T")) { multiplier = 2.0f / 3.0f; p = p.substring(0, p.length() - 2); }
+      
+      if (p.length() == 0) continue;
       char durChar = p.charAt(p.length() - 1);
       String prefix = p.substring(0, p.length() - 1);
+      
+      // If the last character is NOT a duration identifier, default to 'Q'
+      if (durChar != 'W' && durChar != 'H' && durChar != 'Q' && durChar != 'E' && durChar != 'S') {
+        prefix = p;
+        durChar = 'Q';
+      }
+      
       if (j == 0) noteName = prefix;
       float baseMs = 0;
       if (durChar == 'W') baseMs = (60000.0f / bpm) * 4.0f;
@@ -569,6 +634,7 @@ class SBWaveshaper extends ddf.minim.ugens.Summer {
   }
 
 void logToScreen(String msg, int type) {
+    if (cp5 == null) { println("[Early Log] " + msg); return; }
     Textarea target = (type >= 1) ? cp5.get(Textarea.class, "alertsArea") : cp5.get(Textarea.class, "consoleArea");
     if (target != null) {
       String prefix = (type == 3) ? "[ERR] " : (type == 2) ? "[WARN] " : (type == 1) ? "[!] " : "[INFO] ";
@@ -593,6 +659,7 @@ void logToScreen(String msg, int type) {
       if (myPort != null) { myPort.stop(); }
       try {
         myPort = new Serial(this, ports[n], serialBaud);
+        myPort.bufferUntil('\n');
         logToScreen("Serial Connected: " + ports[n], 1);
       } catch (Exception e) {
         logToScreen("Serial Error: Port Busy or Unavailable", 3);
@@ -693,7 +760,7 @@ void logToScreen(String msg, int type) {
 void noteOn(int channel, int pitch, int velocity) {
   logToScreen("Note ON - Pitch: " + pitch + " Vel: " + velocity, 0);
   midiKeysHeld.put(pitch, currentInstrument);
-    playNoteInternal(currentInstrument, (int)pitch, (float)velocity);
+    playNoteInternal(currentInstrument, (int)floatVal(pitch), floatVal(velocity));
 
 }
 
@@ -704,12 +771,12 @@ void noteOff(int channel, int pitch, int velocity) {
     // We modify the internal execution context by temporarily overriding currentInstrument
     String backup = currentInstrument;
     currentInstrument = memorizedInst;
-      stopNoteInternal(currentInstrument, (int)pitch);
+      stopNoteInternal(currentInstrument, (int)floatVal(pitch));
 
     currentInstrument = backup;
     midiKeysHeld.remove(pitch);
   } else {
-      stopNoteInternal(currentInstrument, (int)pitch);
+      stopNoteInternal(currentInstrument, (int)floatVal(pitch));
 
   }
 }

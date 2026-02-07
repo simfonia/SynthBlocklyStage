@@ -1,0 +1,87 @@
+<xml xmlns="https://developers.google.com/blockly/xml">
+  <variables>
+    <variable id="2peI]%s}P!VM0u_#8xX:">serial_data</variable>
+  </variables>
+  <block type="processing_setup" id="h7$EL5+)ydwXj,Ndz$]." x="90" y="30">
+    <statement name="DO">
+      <block type="sb_minim_init" id="XSb%(0S,Q8x.k2`JT_k+">
+        <next>
+          <block type="serial_init" id="}a3Y5%Coxfr#L4!#4^O(">
+            <field name="INDEX">0</field>
+            <field name="BAUD">9600</field>
+            <next>
+              <block type="visual_stage_setup" id="g=~o:`k`60v@-B#v%,s0">
+                <field name="W">1200</field>
+                <field name="H">400</field>
+                <field name="BG_COLOR">#000000</field>
+                <field name="FG_COLOR">#ff0096</field>
+              </block>
+            </next>
+          </block>
+        </next>
+      </block>
+    </statement>
+  </block>
+  <block type="sb_instrument_container" id="kL:/%Ra8O|YgSQfv+Ss$" x="450" y="30">
+    <field name="NAME">Ride</field>
+    <statement name="STACK">
+      <block type="sb_drum_sampler" id=",nht)?EWPQ`QG$f]PG}Y">
+        <mutation type="drum/ride.wav"></mutation>
+        <field name="PATH">drum/ride.wav</field>
+        <next>
+          <block type="sb_set_panning" id="_%pA1+!D_!*G{+8HfB|F">
+            <field name="NAME">Ride</field>
+            <value name="VALUE">
+              <shadow type="math_number" id="=EIxF{{/SXNsWeS@fu`y">
+                <field name="NUM">-1</field>
+              </shadow>
+            </value>
+          </block>
+        </next>
+      </block>
+    </statement>
+  </block>
+  <block type="sb_serial_data_received" id="URHv+sbNix[W}acPm%5a" x="90" y="230">
+    <field name="DATA" id="2peI]%s}P!VM0u_#8xX:">serial_data</field>
+    <statement name="DO">
+      <block type="controls_if" id="^Dkizlj*y~rzO7^Bo9e2">
+        <value name="IF0">
+          <block type="logic_compare" id="c6D4n}0sEevCgo71*IaT">
+            <field name="OP">EQ</field>
+            <value name="A">
+              <block type="variables_get" id="x6ZkcNYxBPO@qFVFh5IT">
+                <field name="VAR" id="2peI]%s}P!VM0u_#8xX:">serial_data</field>
+              </block>
+            </value>
+            <value name="B">
+              <block type="text" id="X8!aQ56`:1HSb?GG$N)5">
+                <field name="TEXT">KICK</field>
+              </block>
+            </value>
+          </block>
+        </value>
+        <statement name="DO0">
+          <block type="sb_play_drum" id="P[=+,rD?5ln0Rs^G|GE0">
+            <field name="TYPE">KICK</field>
+            <value name="VELOCITY">
+              <shadow type="math_number" id="!*DW5K4kICZRa.(ea}Bo">
+                <field name="NUM">100</field>
+              </shadow>
+            </value>
+            <next>
+              <block type="sb_trigger_sample" id="`]Z6GJ705rug{W}M2kQC">
+                <field name="NAME">Ride</field>
+                <field name="NOTE">X</field>
+                <value name="VELOCITY">
+                  <shadow type="math_number" id="KN*T7CaB~JOGQ!9JGAH=">
+                    <field name="NUM">70</field>
+                  </shadow>
+                </value>
+              </block>
+            </next>
+          </block>
+        </statement>
+      </block>
+    </statement>
+  </block>
+</xml>

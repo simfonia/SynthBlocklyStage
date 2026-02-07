@@ -19,6 +19,7 @@ Blockly.Processing.forBlock['serial_init'] = function(block) {
          `serialBaud = ${baud};\n` +
          `try {\n` +
          `  myPort = new Serial(this, Serial.list()[${index}], serialBaud);\n` +
+         `  myPort.bufferUntil('\\n');\n` +
          `} catch (Exception e) {\n` +
          `  println("Serial Init Failed: " + e.getMessage());\n` +
          `}\n`;
@@ -49,12 +50,19 @@ Blockly.Processing.forBlock['sb_serial_data_received'] = function(block) {
   // Use serialEvent(Serial p) for the hat block implementation
   const code = `
 void serialEvent(Serial p) {
-  ${varName} = p.readStringUntil('\\n');
-  if (${varName} != null) {
-    ${varName} = ${varName}.trim();
-    println("[Serial] Received: " + ${varName});
-    logToScreen("Serial In: " + ${varName}, 0);
-    ${branch}
+  try {
+    ${varName} = p.readString();
+    if (${varName} != null) {
+      ${varName} = ${varName}.toString().trim();
+      if (${varName}.toString().length() > 0) {
+        println("[Serial] Received: " + ${varName});
+        logToScreen("Serial In: " + ${varName}, 0);
+        ${branch}
+      }
+    }
+  } catch (Exception e) {
+    println("[Serial Error] " + e.getMessage());
+    e.printStackTrace();
   }
 }
 `;
@@ -64,9 +72,43 @@ void serialEvent(Serial p) {
 
 Blockly.Processing.forBlock['serial_check_mask'] = function(block) {
   const mask = Blockly.Processing.valueToCode(block, 'MASK', Blockly.Processing.ORDER_BITWISE_AND) || '0';
-  const key = Blockly.Processing.valueToCode(block, 'KEY', Blockly.Processing.ORDER_BITWISE_AND) || '0';
+  const key = block.getFieldValue('KEY') || '1';
   
   // (mask & (1 << (key - 1))) != 0
-  const code = "(" + mask + " & (1 << (" + key + " - 1))) != 0";
-  return [code, Blockly.Processing.ORDER_EQUALITY];
+  const code = "((" + mask + " & (1 << (" + key + " - 1))) != 0)";
+  return [code, Blockly.Processing.ORDER_RELATIONAL];
+};
+
+Blockly.Processing.forBlock['sb_serial_check_key_mask'] = function(block) {
+  const dataVar = Blockly.Processing.valueToCode(block, 'DATA', Blockly.Processing.ORDER_ATOMIC) || '""';
+  const keyNum = block.getFieldValue('KEY') || '1';
+  
+  // Custom Java logic to parse "KEYS:N"
+  const code = "((function() { " +
+               "if (" + dataVar + " == null || !" + dataVar + ".startsWith(\"KEYS:\")) return false; " +
+               "try { int val = Integer.parseInt(" + dataVar + ".split(\":\")[1]); " +
+               "return (val & (1 << (" + keyNum + " - 1))) != 0; } catch(Exception e) { return false; } " +
+               "})())";
+  
+  // Note: Java doesn't support anonymous functions like JS in an expression directly. 
+  // We should use a helper method instead.
+  
+  const helperName = Blockly.Processing.provideFunction_('checkKeyMask', `
+boolean checkKeyMask(String data, int key) {
+  if (data == null) return false;
+  int splitIdx = data.indexOf(":");
+  if (splitIdx == -1) return false;
+  
+  String prefix = data.substring(0, splitIdx).toUpperCase();
+  if (!prefix.equals("KEYS") && !prefix.equals("KEY")) return false;
+  
+  try {
+    int val = Integer.parseInt(data.substring(splitIdx + 1).trim());
+    return (val & (1 << (key - 1))) != 0;
+  } catch(Exception e) {
+    return false;
+  }
+}
+`);
+  return [helperName + "(" + dataVar + ", " + keyNum + ")", Blockly.Processing.ORDER_FUNCTION_CALL];
 };

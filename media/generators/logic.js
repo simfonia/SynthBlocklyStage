@@ -42,8 +42,9 @@ Blockly.Processing.forBlock['logic_compare'] = function(block) {
     }
   }
 
+  // Numerical comparison with floatVal protection for Objects
   const operator = { 'EQ': '==', 'NEQ': '!=', 'LT': '<', 'LTE': '<=', 'GT': '>', 'GTE': '>=' }[op];
-  return [argument0 + ' ' + operator + ' ' + argument1, order];
+  return ['floatVal(' + argument0 + ') ' + operator + ' floatVal(' + argument1 + ')', order];
 };
 
 Blockly.Processing.forBlock['logic_operation'] = function(block) {

@@ -29,9 +29,9 @@ Blockly.Processing.forBlock['math_arithmetic'] = function(block) {
   
   let code;
   if (block.getFieldValue('OP') === 'POWER') {
-    code = 'pow((float)' + argument0 + ', (float)' + argument1 + ')';
+    code = 'pow(floatVal(' + argument0 + '), floatVal(' + argument1 + '))';
   } else {
-    code = argument0 + operator + argument1;
+    code = 'floatVal(' + argument0 + ')' + operator + 'floatVal(' + argument1 + ')';
   }
   return [code, order];
 };
@@ -42,46 +42,44 @@ Blockly.Processing.forBlock['math_single'] = function(block) {
   let arg;
   if (operator === 'NEG') {
     arg = Blockly.Processing.valueToCode(block, 'NUM', Blockly.Processing.ORDER_SUBTRACTION) || '0';
-    if (arg[0] === '-') arg = ' ' + arg;
-    return ['-' + arg, Blockly.Processing.ORDER_SUBTRACTION];
+    return ['-floatVal(' + arg + ')', Blockly.Processing.ORDER_SUBTRACTION];
   }
+  
+  arg = Blockly.Processing.valueToCode(block, 'NUM', Blockly.Processing.ORDER_NONE) || '0';
+  const val = 'floatVal(' + arg + ')';
+  
   if (operator === 'ABS') {
-    arg = Blockly.Processing.valueToCode(block, 'NUM', Blockly.Processing.ORDER_NONE) || '0';
-    code = 'abs(' + arg + ')';
+    code = 'abs(' + val + ')';
   } else if (operator === 'ROOT') {
-    arg = Blockly.Processing.valueToCode(block, 'NUM', Blockly.Processing.ORDER_NONE) || '0';
-    code = 'sqrt(' + arg + ')';
+    code = 'sqrt(' + val + ')';
   } else if (operator === 'SIN') {
-    arg = Blockly.Processing.valueToCode(block, 'NUM', Blockly.Processing.ORDER_NONE) || '0';
-    code = 'sin(' + arg + ')';
+    code = 'sin(' + val + ')';
   } else if (operator === 'COS') {
-    arg = Blockly.Processing.valueToCode(block, 'NUM', Blockly.Processing.ORDER_NONE) || '0';
-    code = 'cos(' + arg + ')';
+    code = 'cos(' + val + ')';
   } else if (operator === 'TAN') {
-    arg = Blockly.Processing.valueToCode(block, 'NUM', Blockly.Processing.ORDER_NONE) || '0';
-    code = 'tan(' + arg + ')';
+    code = 'tan(' + val + ')';
   }
   return [code, Blockly.Processing.ORDER_FUNCTION_CALL];
 };
 
 Blockly.Processing.forBlock['math_number_property'] = function(block) {
   const argument0 = Blockly.Processing.valueToCode(block, 'NUMBER_TO_CHECK', Blockly.Processing.ORDER_RELATIONAL) || '0';
+  const val = 'floatVal(' + argument0 + ')';
   const dropdown_property = block.getFieldValue('PROPERTY');
   let code;
   if (dropdown_property === 'EVEN') {
-    code = argument0 + ' % 2 == 0';
+    code = val + ' % 2 == 0';
   } else if (dropdown_property === 'ODD') {
-    code = argument0 + ' % 2 != 0';
+    code = val + ' % 2 != 0';
   } else if (dropdown_property === 'WHOLE') {
-    code = argument0 + ' % 1 == 0';
+    code = val + ' % 1 == 0';
   } else if (dropdown_property === 'POSITIVE') {
-    code = argument0 + ' > 0';
+    code = val + ' > 0';
   } else if (dropdown_property === 'NEGATIVE') {
-    code = (parseFloat(argument0) < 0) ? argument0 + ' < 0' : argument0 + ' < 0';
-    code = argument0 + ' < 0';
+    code = val + ' < 0';
   } else if (dropdown_property === 'DIVISIBLE_BY') {
     const argument1 = Blockly.Processing.valueToCode(block, 'DIVISOR', Blockly.Processing.ORDER_RELATIONAL) || '1';
-    code = argument0 + ' % ' + argument1 + ' == 0';
+    code = val + ' % floatVal(' + argument1 + ') == 0';
   }
   return [code, Blockly.Processing.ORDER_RELATIONAL];
 };
@@ -89,13 +87,14 @@ Blockly.Processing.forBlock['math_number_property'] = function(block) {
 Blockly.Processing.forBlock['math_round'] = function(block) {
   const operator = block.getFieldValue('OP');
   const arg = Blockly.Processing.valueToCode(block, 'NUM', Blockly.Processing.ORDER_NONE) || '0';
+  const val = 'floatVal(' + arg + ')';
   let code;
   if (operator === 'ROUND') {
-    code = 'round(' + arg + ')';
+    code = 'round(' + val + ')';
   } else if (operator === 'ROUNDUP') {
-    code = 'ceil(' + arg + ')';
+    code = 'ceil(' + val + ')';
   } else if (operator === 'ROUNDDOWN') {
-    code = 'floor(' + arg + ')';
+    code = 'floor(' + val + ')';
   }
   return [code, Blockly.Processing.ORDER_FUNCTION_CALL];
 };
@@ -104,14 +103,14 @@ Blockly.Processing.forBlock['math_constrain'] = function(block) {
   const val = Blockly.Processing.valueToCode(block, 'VALUE', Blockly.Processing.ORDER_NONE) || '0';
   const low = Blockly.Processing.valueToCode(block, 'LOW', Blockly.Processing.ORDER_NONE) || '0';
   const high = Blockly.Processing.valueToCode(block, 'HIGH', Blockly.Processing.ORDER_NONE) || '100';
-  const code = 'constrain(' + val + ', ' + low + ', ' + high + ')';
+  const code = 'constrain(floatVal(' + val + '), floatVal(' + low + '), floatVal(' + high + '))';
   return [code, Blockly.Processing.ORDER_FUNCTION_CALL];
 };
 
 Blockly.Processing.forBlock['math_modulo'] = function(block) {
   const argument0 = Blockly.Processing.valueToCode(block, 'DIVIDEND', Blockly.Processing.ORDER_DIVISION) || '0';
   const argument1 = Blockly.Processing.valueToCode(block, 'DIVISOR', Blockly.Processing.ORDER_DIVISION) || '0';
-  const code = argument0 + ' % ' + argument1;
+  const code = 'floatVal(' + argument0 + ') % floatVal(' + argument1 + ')';
   return [code, Blockly.Processing.ORDER_DIVISION];
 };
 
@@ -122,7 +121,7 @@ Blockly.Processing.forBlock['math_map'] = function(block) {
   const tL = Blockly.Processing.valueToCode(block, 'TO_LOW', Blockly.Processing.ORDER_NONE) || '0';
   const tH = Blockly.Processing.valueToCode(block, 'TO_HIGH', Blockly.Processing.ORDER_NONE) || '255';
   
-  const code = 'map((float)' + val + ', (float)' + fL + ', (float)' + fH + ', (float)' + tL + ', (float)' + tH + ')';
+  const code = 'map(floatVal(' + val + '), floatVal(' + fL + '), floatVal(' + fH + '), floatVal(' + tL + '), floatVal(' + tH + '))';
   return [code, Blockly.Processing.ORDER_FUNCTION_CALL];
 };
 

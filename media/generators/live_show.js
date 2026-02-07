@@ -24,3 +24,9 @@ Blockly.Processing.forBlock['live_get_param'] = function(block) {
   return [param, Blockly.Processing.ORDER_ATOMIC];
 };
 
+Blockly.Processing.forBlock['sb_log_to_screen'] = function(block) {
+  const msg = Blockly.Processing.valueToCode(block, 'MSG', Blockly.Processing.ORDER_ATOMIC) || '""';
+  const type = block.getFieldValue('TYPE');
+  return "logToScreen(String.valueOf(" + msg + "), " + type + ");\n";
+};
+

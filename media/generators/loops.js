@@ -32,18 +32,22 @@ Blockly.Processing.forBlock['controls_whileUntil'] = function(block) {
 };
 
 Blockly.Processing.forBlock['controls_for'] = function(block) {
-  const variable0 = Blockly.Processing.nameDB_.getName(block.getFieldValue('VAR'), Blockly.Variables.NAME_TYPE);
+  const varId = block.getFieldValue('VAR');
+  const variable0 = Blockly.Processing.nameDB_.getName(varId, Blockly.Variables.NAME_TYPE);
   const argument0 = Blockly.Processing.valueToCode(block, 'FROM', Blockly.Processing.ORDER_ASSIGNMENT) || '0';
   const argument1 = Blockly.Processing.valueToCode(block, 'TO', Blockly.Processing.ORDER_ASSIGNMENT) || '0';
   const increment = Blockly.Processing.valueToCode(block, 'BY', Blockly.Processing.ORDER_ASSIGNMENT) || '1';
   let branch = Blockly.Processing.statementToCode(block, 'DO');
-  let code;
   
+  // FORCE this variable to be declared as float globally
+  Blockly.Processing.global_vars_[variable0] = "float " + variable0 + " = 0.0f;";
+
+  let code;
   const isNumber = (val) => !isNaN(parseFloat(val)) && isFinite(val);
 
   if (isNumber(argument0) && isNumber(argument1) && isNumber(increment)) {
     const up = Number(argument0) <= Number(argument1);
-    code = 'for (int ' + variable0 + ' = ' + argument0 + '; ' + 
+    code = 'for (' + variable0 + ' = ' + argument0 + '; ' + 
         variable0 + (up ? ' <= ' : ' >= ') + argument1 + '; ' + 
         variable0;
     const step = Math.abs(Number(increment));
@@ -54,9 +58,9 @@ Blockly.Processing.forBlock['controls_for'] = function(block) {
     }
     code += ') {\n' + branch + '}\n';
   } else {
-    code = 'for (int ' + variable0 + ' = ' + argument0 + '; ' + 
-        variable0 + ' <= ' + argument1 + '; ' + 
-        variable0 + ' += ' + increment + ') {\n' + branch + '}\n';
+    code = 'for (' + variable0 + ' = floatVal(' + argument0 + '); ' + 
+        variable0 + ' <= floatVal(' + argument1 + '); ' + 
+        variable0 + ' += floatVal(' + increment + ')) {\n' + branch + '}\n';
   }
   return code;
 };

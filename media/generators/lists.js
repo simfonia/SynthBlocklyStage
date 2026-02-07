@@ -44,10 +44,54 @@ Blockly.Processing.forBlock['lists_setIndex'] = function(block) {
   const value = Blockly.Processing.valueToCode(block, 'TO', Blockly.Processing.ORDER_ASSIGNMENT) || 'null';
   const at = Blockly.Processing.getRelativeIndex(block, 'AT');
   
-  if (mode === 'SET') {
-    return list + '.set(' + at + ', ' + value + ');\n';
-  } else if (mode === 'INSERT') {
-    return list + '.add(' + at + ', ' + value + ');\n';
-  }
-  return '';
-};
+    if (mode === 'SET') {
+  
+      return list + '.set(' + at + ', ' + value + ');\n';
+  
+    } else if (mode === 'INSERT') {
+  
+      return list + '.add(' + at + ', ' + value + ');\n';
+  
+    }
+  
+    return '';
+  
+  };
+  
+  
+  
+  Blockly.Processing.forBlock['lists_split'] = function(block) {
+  
+    const input = Blockly.Processing.valueToCode(block, 'INPUT', Blockly.Processing.ORDER_MEMBER) || '""';
+  
+    const delimiter = Blockly.Processing.valueToCode(block, 'DELIM', Blockly.Processing.ORDER_NONE) || '""';
+  
+    const mode = block.getFieldValue('MODE');
+  
+    
+  
+    if (mode === 'SPLIT') {
+  
+      // Java: new ArrayList<Object>(Arrays.asList(str.split(delim)))
+  
+      // Note: split takes a regex, so we might need to handle escaping if delim is special, 
+  
+      // but for simple cases like ":" it works fine.
+  
+      const code = 'new ArrayList<Object>(Arrays.asList(' + input + '.split(' + delimiter + ')))';
+  
+      return [code, Blockly.Processing.ORDER_ATOMIC];
+  
+    } else {
+  
+      // JOIN: String.join(delim, list)
+  
+      const code = 'String.join(' + delimiter + ', ' + input + ')';
+  
+      return [code, Blockly.Processing.ORDER_ATOMIC];
+  
+    }
+  
+  };
+  
+  

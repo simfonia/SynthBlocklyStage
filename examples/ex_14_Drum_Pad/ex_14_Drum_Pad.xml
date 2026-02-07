@@ -1,0 +1,166 @@
+<xml xmlns="https://developers.google.com/blockly/xml">
+  <variables>
+    <variable id="ha,_*1.4{#wE5_3p{f1)">serial_data</variable>
+  </variables>
+  <block type="processing_setup" id="h7$EL5+)ydwXj,Ndz$]." x="10" y="10">
+    <statement name="DO">
+      <block type="sb_minim_init" id="XSb%(0S,Q8x.k2`JT_k+">
+        <next>
+          <block type="visual_stage_setup" id="g=~o:`k`60v@-B#v%,s0">
+            <field name="W">1200</field>
+            <field name="H">400</field>
+            <field name="BG_COLOR">#000000</field>
+            <field name="FG_COLOR">#ff0096</field>
+            <next>
+              <block type="serial_init" id="init_ser">
+                <field name="INDEX">0</field>
+                <field name="BAUD">9600</field>
+                <next>
+                  <block type="sb_select_current_instrument" id="drp9)2;.N}W^}GhEW?8G">
+                    <field name="NAME">Piano</field>
+                    <next>
+                      <block type="sb_define_chord" id="c_c">
+                        <field name="NAME">C</field>
+                        <field name="NOTES">C4,E4,G4</field>
+                        <next>
+                          <block type="sb_define_chord" id="c_f">
+                            <field name="NAME">F</field>
+                            <field name="NOTES">F4,A4,C5</field>
+                          </block>
+                        </next>
+                      </block>
+                    </next>
+                  </block>
+                </next>
+              </block>
+            </next>
+          </block>
+        </next>
+      </block>
+    </statement>
+  </block>
+  <block type="sb_instrument_container" id="c_piano" x="450" y="10">
+    <field name="NAME">Piano</field>
+    <statement name="STACK">
+      <block type="sb_set_wave" id="|.z6AL#705Pt[;tDQOM0">
+        <field name="TYPE">TRIANGLE</field>
+        <next>
+          <block type="sb_set_adsr" id="A#(P9a{B=VoQvi~m/Q08">
+            <value name="A">
+              <shadow type="math_number" id="eMYewYI-+J(!CRL$#jME">
+                <field name="NUM">0.01</field>
+              </shadow>
+            </value>
+            <value name="D">
+              <shadow type="math_number" id="0M-Y#H,iX0czpgU})Uq6">
+                <field name="NUM">0.3</field>
+              </shadow>
+            </value>
+            <value name="S">
+              <shadow type="math_number" id="]W4g^$?gNkgB*Lc5MfU7">
+                <field name="NUM">0.4</field>
+              </shadow>
+            </value>
+            <value name="R">
+              <shadow type="math_number" id="ZC7)TC`Y#Fiqk3ci^Rcc">
+                <field name="NUM">0.5</field>
+              </shadow>
+            </value>
+          </block>
+        </next>
+      </block>
+    </statement>
+  </block>
+  <block type="sb_serial_data_received" id="serial_in" x="10" y="290">
+    <field name="DATA" id="ha,_*1.4{#wE5_3p{f1)">serial_data</field>
+    <statement name="DO">
+      <block type="controls_if" id="key_logic">
+        <mutation elseif="3"></mutation>
+        <value name="IF0">
+          <block type="sb_serial_check_key_mask" id="k1">
+            <field name="KEY">1</field>
+            <value name="DATA">
+              <block type="variables_get" id="v1">
+                <field name="VAR" id="ha,_*1.4{#wE5_3p{f1)">serial_data</field>
+              </block>
+            </value>
+          </block>
+        </value>
+        <statement name="DO0">
+          <block type="sb_play_drum" id="M8}F}:ZkKGp}o$@wDu$`">
+            <field name="TYPE">KICK</field>
+            <value name="VELOCITY">
+              <shadow type="math_number" id="f@34hiLwkzYW{*0SCl2k">
+                <field name="NUM">100</field>
+              </shadow>
+            </value>
+          </block>
+        </statement>
+        <value name="IF1">
+          <block type="sb_serial_check_key_mask" id="k2">
+            <field name="KEY">2</field>
+            <value name="DATA">
+              <block type="variables_get" id="v2">
+                <field name="VAR" id="ha,_*1.4{#wE5_3p{f1)">serial_data</field>
+              </block>
+            </value>
+          </block>
+        </value>
+        <statement name="DO1">
+          <block type="sb_play_drum" id="#z6BxJNk~~^_:)u^KR(E">
+            <field name="TYPE">CLAP</field>
+            <value name="VELOCITY">
+              <shadow type="math_number" id="}HK5BB.,/T4e-(?]rv92">
+                <field name="NUM">100</field>
+              </shadow>
+            </value>
+          </block>
+        </statement>
+        <value name="IF2">
+          <block type="sb_serial_check_key_mask" id="k3">
+            <field name="KEY">3</field>
+            <value name="DATA">
+              <block type="variables_get" id="v3">
+                <field name="VAR" id="ha,_*1.4{#wE5_3p{f1)">serial_data</field>
+              </block>
+            </value>
+          </block>
+        </value>
+        <statement name="DO2">
+          <block type="sb_play_chord_by_name" id="m376{ZXRp;%:N_-KMgN#">
+            <field name="INST_NAME">Piano</field>
+            <field name="NAME">C</field>
+            <field name="DUR">8n</field>
+            <value name="VELOCITY">
+              <shadow type="math_number" id="Ip0RIG3~,k9yv(sP+Yor">
+                <field name="NUM">100</field>
+              </shadow>
+            </value>
+          </block>
+        </statement>
+        <value name="IF3">
+          <block type="sb_serial_check_key_mask" id="k4">
+            <field name="KEY">4</field>
+            <value name="DATA">
+              <block type="variables_get" id="v4">
+                <field name="VAR" id="ha,_*1.4{#wE5_3p{f1)">serial_data</field>
+              </block>
+            </value>
+          </block>
+        </value>
+        <statement name="DO3">
+          <block type="sb_play_chord_by_name" id="T8#%imt(4[%b?JLHGGy.">
+            <field name="INST_NAME">Piano</field>
+            <field name="NAME">F</field>
+            <field name="DUR">8n</field>
+            <value name="VELOCITY">
+              <shadow type="math_number" id="1/[iqbO]ftd!..YZQ!*%">
+                <field name="NUM">100</field>
+              </shadow>
+            </value>
+          </block>
+        </statement>
+      </block>
+    </statement>
+  </block>
+</xml>

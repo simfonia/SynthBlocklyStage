@@ -48,10 +48,12 @@ LinkedHashMap<String, String> instrumentMap = new LinkedHashMap<String, String>(
 LinkedHashMap<String, float[]> instrumentADSR = new LinkedHashMap<String, float[]>();
 MidiBus myBus;
 Minim minim;
+Object key_id_var = "0";
 Sampler currentSample;
 Sampler kick;
 Sampler snare;
 Serial myPort;
+String _25O_8_604_253bnA_7DgAPggU__ = "";
 String currentInstrument = "default";
 String lastInstrument = "";
 Summer mainMixer;
@@ -216,13 +218,20 @@ class SBWaveshaper extends ddf.minim.ugens.Summer {
 
     void checkMainMixer() {
       if (minim == null) minim = new Minim(this);
-      if (out == null) out = minim.getLineOut(); // Minim LineOut is stereo by default
+      if (out == null) out = minim.getLineOut(); 
       if (mainMixer == null) {
         mainMixer = new Summer();
         masterEffectEnd = mainMixer;
         masterGainUGen = new Gain(0.f);
-        // Ensure the end of the chain is stereo
         masterEffectEnd.patch(masterGainUGen).patch(out);
+        
+        // FORCE STEREO: Patch a silent stereo Pan to mainMixer
+        Oscil silent = new Oscil(0, 0, Waves.SINE);
+        Pan p = new Pan(0);
+        silent.patch(p).patch(mainMixer);
+        
+        // PRE-INIT DEFAULT INSTRUMENT
+        getInstrumentMixer("default");
       }
     }
   
@@ -231,17 +240,48 @@ class SBWaveshaper extends ddf.minim.ugens.Summer {
       if (instrumentMixers.containsKey(name)) return (ddf.minim.ugens.Summer)instrumentMixers.get(name);
       
       ddf.minim.ugens.Summer s = new ddf.minim.ugens.Summer();
-      // Force Pan to know it's heading into a stereo mixer
       ddf.minim.ugens.Pan p = new ddf.minim.ugens.Pan(0.f);
       
-      // Key Fix: Patch order matters. Ensure the path to 'out' is solid.
-      s.patch(p);
-      p.patch(mainMixer);
+      synchronized(mainMixer) {
+        s.patch(p);
+        p.patch(mainMixer);
+      }
       
       instrumentMixers.put(name, s);
       instrumentPans.put(name, p);
       instrumentEffectEnds.put(name, s);
       return s;
+    }
+
+    void playBuiltinDrum(String type, float vel) {
+      checkMainMixer();
+      String instName = "_builtin_" + type;
+      if (!samplerMap.containsKey(instName)) {
+        String path = "drum/";
+        if (type.equals("KICK")) path += "kick.wav";
+        else if (type.equals("SNARE")) path += "snare.wav";
+        else if (type.equals("CH")) path += "ch.wav";
+        else if (type.equals("OH")) path += "oh.wav";
+        else if (type.equals("CLAP")) path += "clap.wav";
+        else return;
+        
+        Sampler s = new Sampler(path, 4, minim);
+        Gain g = new Gain(0.f);
+        
+        // Fix: Use getInstrumentMixer to support panning for drums
+        s.patch(g).patch(getInstrumentMixer(instName));
+        
+        samplerMap.put(instName, s);
+        samplerGainMap.put(instName, g);
+        instrumentMap.put(instName, "DRUM");
+      }
+      
+      Sampler s = samplerMap.get(instName);
+      Gain g = samplerGainMap.get(instName);
+      if (s != null && g != null) {
+        g.setValue(map(vel, 0, 127, -40, 0));
+        s.trigger();
+      }
     }
     void updateFilter(String name, float freq, float q) {
     Object obj = instrumentFilters.get(name);
@@ -491,12 +531,17 @@ class SBWaveshaper extends ddf.minim.ugens.Summer {
   }
 
   void playChordByNameInternal(String instName, String name, float durationMs, float vel) {
+    if (instName == null || instName.length() == 0 || instName.equals("(請選擇樂器)")) {
+      instName = currentInstrument;
+    }
     String[] notes = chords.get(name);
     if (notes != null) {
       for (String n : notes) {
         int midi = noteToMidi(n);
         if (midi >= 0) playNoteForDuration(instName, midi, vel, durationMs);
       }
+    } else {
+      logToScreen("Chord not found: " + name, 2);
     }
   }
 
@@ -588,34 +633,6 @@ class SBWaveshaper extends ddf.minim.ugens.Summer {
     adsr.unpatchAfterRelease(mainMixer);
   }
 
-  void playBuiltinDrum(String type, float vel) {
-    checkMainMixer();
-    String instName = "_builtin_" + type;
-    if (!samplerMap.containsKey(instName)) {
-      String path = "drum/";
-      if (type.equals("KICK")) path += "kick.wav";
-      else if (type.equals("SNARE")) path += "snare.wav";
-      else if (type.equals("CH")) path += "ch.wav";
-      else if (type.equals("OH")) path += "oh.wav";
-      else if (type.equals("CLAP")) path += "clap.wav";
-      else return;
-      
-      Sampler s = new Sampler(path, 4, minim);
-      Gain g = new Gain(0.f);
-      s.patch(g).patch(mainMixer);
-      samplerMap.put(instName, s);
-      samplerGainMap.put(instName, g);
-      instrumentMap.put(instName, "DRUM");
-    }
-    
-    Sampler s = samplerMap.get(instName);
-    Gain g = samplerGainMap.get(instName);
-    if (s != null && g != null) {
-      g.setValue(map(vel, 0, 127, -40, 0));
-      s.trigger();
-    }
-  }
-
 void logToScreen(String msg, int type) {
     if (cp5 == null) { println("[Early Log] " + msg); return; }
     Textarea target = (type >= 1) ? cp5.get(Textarea.class, "alertsArea") : cp5.get(Textarea.class, "consoleArea");
@@ -642,6 +659,7 @@ void logToScreen(String msg, int type) {
       if (myPort != null) { myPort.stop(); }
       try {
         myPort = new Serial(this, ports[n], serialBaud);
+        myPort.bufferUntil('\n');
         logToScreen("Serial Connected: " + ports[n], 1);
       } catch (Exception e) {
         logToScreen("Serial Error: Port Busy or Unavailable", 3);
@@ -739,6 +757,60 @@ void logToScreen(String msg, int type) {
     
   }
 
+void serialEvent(Serial p) {
+  try {
+    _25O_8_604_253bnA_7DgAPggU__ = p.readString();
+    if (_25O_8_604_253bnA_7DgAPggU__ != null) {
+      _25O_8_604_253bnA_7DgAPggU__ = _25O_8_604_253bnA_7DgAPggU__.toString().trim();
+      if (_25O_8_604_253bnA_7DgAPggU__.toString().length() > 0) {
+        println("[Serial] Received: " + _25O_8_604_253bnA_7DgAPggU__);
+        logToScreen("Serial In: " + _25O_8_604_253bnA_7DgAPggU__, 0);
+          key_id_var = new ArrayList<Object>(Arrays.asList(_25O_8_604_253bnA_7DgAPggU__.split(":"))).get(1);
+  if (floatVal(key_id_var) == floatVal(1)) {
+    { 
+      float ms = durationToMs("4n");
+      playChordByNameInternal("Piano", "C", ms, (float)100);
+    }
+  } else if (floatVal(key_id_var) == floatVal(2)) {
+    { 
+      float ms = durationToMs("4n");
+      playChordByNameInternal("Piano", "Dm", ms, (float)100);
+    }
+  } else if (floatVal(key_id_var) == floatVal(3)) {
+    { 
+      float ms = durationToMs("4n");
+      playChordByNameInternal("Piano", "Em", ms, (float)100);
+    }
+  } else if (floatVal(key_id_var) == floatVal(4)) {
+    { 
+      float ms = durationToMs("4n");
+      playChordByNameInternal("(請選擇樂器)", "F", ms, (float)100);
+    }
+  } else if (floatVal(key_id_var) == floatVal(5)) {
+    { 
+      float ms = durationToMs("4n");
+      playChordByNameInternal("Piano", "G", ms, (float)100);
+    }
+  } else if (floatVal(key_id_var) == floatVal(6)) {
+    { 
+      float ms = durationToMs("4n");
+      playChordByNameInternal("Piano", "Am", ms, (float)100);
+    }
+  } else if (floatVal(key_id_var) == floatVal(7)) {
+    { 
+      float ms = durationToMs("4n");
+      playChordByNameInternal("Piano", "Bdim", ms, (float)100);
+    }
+  }
+
+      }
+    }
+  } catch (Exception e) {
+    println("[Serial Error] " + e.getMessage());
+    e.printStackTrace();
+  }
+}
+
 void setup() {
   checkMainMixer();
     size(1600, 600);
@@ -789,68 +861,27 @@ void setup() {
   cp5.addButton("copyLogs").setPosition(1405, 5).setSize(90, 25).setCaptionLabel("COPY LOG");
   cp5.addButton("clearLogs").setPosition(1500, 5).setSize(90, 25).setCaptionLabel("CLEAR LOG");
   logToScreen("System Initialized.", 0);
-    bpm = floatVal(120);
-    if (!instrumentMap.containsKey("Lead")) instrumentMap.put("Lead", "TRIANGLE");
-  if (!instrumentADSR.containsKey("Lead")) instrumentADSR.put("Lead", new float[]{defAdsrA, defAdsrD, defAdsrS, defAdsrR});
-    checkMainMixer();
-    if (!melodicSamplers.containsKey("Lead")) melodicSamplers.put("Lead", new MelodicSampler(minim, "Lead"));
-    melodicSamplers.get("Lead").loadSamples("piano");
-    instrumentMap.put("Lead", "MELODIC_SAMPLER");
-    instrumentADSR.put("Lead", new float[]{defAdsrA, defAdsrD, defAdsrS, defAdsrR});
-    instrumentVolumes.put("Lead", floatVal(100) / 100.0f);
-    if (!instrumentMap.containsKey("clap")) instrumentMap.put("clap", "TRIANGLE");
-  if (!instrumentADSR.containsKey("clap")) instrumentADSR.put("clap", new float[]{defAdsrA, defAdsrD, defAdsrS, defAdsrR});
-    checkMainMixer();
-    samplerMap.put("clap", new ddf.minim.ugens.Sampler("drum/clap.wav", 4, minim));
-    samplerGainMap.put("clap", new Gain(0.f));
-    ((ddf.minim.ugens.Sampler)samplerMap.get("clap")).patch((Gain)samplerGainMap.get("clap")).patch(getInstrumentMixer("clap"));
-    instrumentMap.put("clap", "DRUM");
-    instrumentADSR.put("clap", new float[]{defAdsrA, defAdsrD, defAdsrS, defAdsrR});
-    instrumentVolumes.put("clap", floatVal(90) / 100.0f);
-    new Thread(new Runnable() {
-      public void run() {
-        activeMelodyCount++;
-        try { Thread.sleep(200); } catch(Exception e) {}
-        int timeout = 0;
-        while(isCountingIn && timeout < 500) { try { Thread.sleep(10); timeout++; } catch(Exception e) {} }
-          for (int count = 0; count < 1; count++) {
-            parseAndPlayNote("Lead", "G5Q", floatVal(50));
-            parseAndPlayNote("Lead", "E5Q", floatVal(50));
-            parseAndPlayNote("Lead", "E5Q", floatVal(50));
-            parseAndPlayNote("clap", "XQ", floatVal(100));
-          }
-          for (int count2 = 0; count2 < 1; count2++) {
-            parseAndPlayNote("Lead", "F5Q", floatVal(50));
-            parseAndPlayNote("Lead", "D5Q", floatVal(50));
-            parseAndPlayNote("Lead", "D5Q", floatVal(50));
-            parseAndPlayNote("clap", "XQ", floatVal(100));
-          }
-        
-        activeMelodyCount--;
-      }
-    }).start();
-    new Thread(new Runnable() {
-      public void run() {
-        activeMelodyCount++;
-        try { Thread.sleep(200); } catch(Exception e) {}
-        int timeout = 0;
-        while(isCountingIn && timeout < 500) { try { Thread.sleep(10); timeout++; } catch(Exception e) {} }
-          for (int count3 = 0; count3 < 2; count3++) {
-            parseAndPlayNote("Lead", "C3E", floatVal(80));
-            parseAndPlayNote("Lead", "G3E", floatVal(30));
-            parseAndPlayNote("Lead", "E3E", floatVal(30));
-            parseAndPlayNote("Lead", "G3E", floatVal(30));
-          }
-          for (int count4 = 0; count4 < 2; count4++) {
-            parseAndPlayNote("Lead", "D3E", floatVal(80));
-            parseAndPlayNote("Lead", "G3E", floatVal(30));
-            parseAndPlayNote("Lead", "F3E", floatVal(30));
-            parseAndPlayNote("Lead", "G3E", floatVal(30));
-          }
-        
-        activeMelodyCount--;
-      }
-    }).start();
+    println("--- Available Serial Ports ---");
+    println(Serial.list());
+    serialBaud = 9600;
+    try {
+      myPort = new Serial(this, Serial.list()[0], serialBaud);
+      myPort.bufferUntil('\n');
+    } catch (Exception e) {
+      println("Serial Init Failed: " + e.getMessage());
+    }
+    currentInstrument = "Piano";
+    chords.put("C", new String[]{"C3", "E3", "G3"});
+    chords.put("Dm", new String[]{"D3", "F3", "A3"});
+    chords.put("Em", new String[]{"E3", "G3", "B3"});
+    chords.put("F", new String[]{"F3", "A3", "C4"});
+    chords.put("G", new String[]{"G3", "B3", "D4"});
+    chords.put("Am", new String[]{"A3", "C4", "E4"});
+    chords.put("Bdim", new String[]{"B3", "D4", "F4"});
+    if (!instrumentMap.containsKey("Piano")) instrumentMap.put("Piano", "TRIANGLE");
+  if (!instrumentADSR.containsKey("Piano")) instrumentADSR.put("Piano", new float[]{defAdsrA, defAdsrD, defAdsrS, defAdsrR});
+    instrumentMap.put("Piano", "TRIANGLE");
+    instrumentADSR.put("Piano", new float[]{(float)0.02, (float)0.1, (float)0.3, (float)0.2});
 }
 
 
@@ -919,9 +950,4 @@ void draw() {
     }
   }
   updateInstrumentUISync();
-    if (floatVal(frameCount) > floatVal(60)) {
-      if (!((activeMelodyCount > 0))) {
-        exit();
-      }
-    }
 }

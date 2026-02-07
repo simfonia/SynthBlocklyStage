@@ -192,31 +192,74 @@ Blockly.Processing.injectAudioCore = function() {
     }
   }
 
-  void checkMainMixer() {
-    if (minim == null) minim = new Minim(this);
-    if (out == null) out = minim.getLineOut();
-    if (mainMixer == null) {
-      mainMixer = new Summer();
-      masterEffectEnd = mainMixer;
-      masterGainUGen = new Gain(0.f);
-      masterEffectEnd.patch(masterGainUGen).patch(out);
+    void checkMainMixer() {
+      if (minim == null) minim = new Minim(this);
+      if (out == null) out = minim.getLineOut(); 
+      if (mainMixer == null) {
+        mainMixer = new Summer();
+        masterEffectEnd = mainMixer;
+        masterGainUGen = new Gain(0.f);
+        masterEffectEnd.patch(masterGainUGen).patch(out);
+        
+        // FORCE STEREO: Patch a silent stereo Pan to mainMixer
+        Oscil silent = new Oscil(0, 0, Waves.SINE);
+        Pan p = new Pan(0);
+        silent.patch(p).patch(mainMixer);
+        
+        // PRE-INIT DEFAULT INSTRUMENT
+        getInstrumentMixer("default");
+      }
     }
-  }
+  
+    ddf.minim.ugens.Summer getInstrumentMixer(String name) {
+      checkMainMixer();
+      if (instrumentMixers.containsKey(name)) return (ddf.minim.ugens.Summer)instrumentMixers.get(name);
+      
+      ddf.minim.ugens.Summer s = new ddf.minim.ugens.Summer();
+      ddf.minim.ugens.Pan p = new ddf.minim.ugens.Pan(0.f);
+      
+      synchronized(mainMixer) {
+        s.patch(p);
+        p.patch(mainMixer);
+      }
+      
+      instrumentMixers.put(name, s);
+      instrumentPans.put(name, p);
+      instrumentEffectEnds.put(name, s);
+      return s;
+    }
 
-  ddf.minim.ugens.Summer getInstrumentMixer(String name) {
-    checkMainMixer();
-    if (instrumentMixers.containsKey(name)) return (ddf.minim.ugens.Summer)instrumentMixers.get(name);
-    ddf.minim.ugens.Summer s = new ddf.minim.ugens.Summer();
-    ddf.minim.ugens.Pan p = new ddf.minim.ugens.Pan(0.f);
-    s.patch(p).patch(mainMixer);
-    instrumentMixers.put(name, s);
-    instrumentPans.put(name, p);
-    // 關鍵：效果器鏈應該從 Summer 開始，插在 Pan 之前
-    instrumentEffectEnds.put(name, s);
-    return s;
-  }
-
-  void updateFilter(String name, float freq, float q) {
+    void playBuiltinDrum(String type, float vel) {
+      checkMainMixer();
+      String instName = "_builtin_" + type;
+      if (!samplerMap.containsKey(instName)) {
+        String path = "drum/";
+        if (type.equals("KICK")) path += "kick.wav";
+        else if (type.equals("SNARE")) path += "snare.wav";
+        else if (type.equals("CH")) path += "ch.wav";
+        else if (type.equals("OH")) path += "oh.wav";
+        else if (type.equals("CLAP")) path += "clap.wav";
+        else return;
+        
+        Sampler s = new Sampler(path, 4, minim);
+        Gain g = new Gain(0.f);
+        
+        // Fix: Use getInstrumentMixer to support panning for drums
+        s.patch(g).patch(getInstrumentMixer(instName));
+        
+        samplerMap.put(instName, s);
+        samplerGainMap.put(instName, g);
+        instrumentMap.put(instName, "DRUM");
+      }
+      
+      Sampler s = samplerMap.get(instName);
+      Gain g = samplerGainMap.get(instName);
+      if (s != null && g != null) {
+        g.setValue(map(vel, 0, 127, -40, 0));
+        s.trigger();
+      }
+    }
+    void updateFilter(String name, float freq, float q) {
     Object obj = instrumentFilters.get(name);
     if (obj != null) {
       try {
@@ -261,6 +304,7 @@ Blockly.Processing.injectAudioCore = function() {
   int noteToMidi(String note) {
     String n = note.toUpperCase();
     if (n.equals("R")) return -1;
+    if (n.equals("X")) return 69; // Support 'X' as a general trigger
     int octave = 4;
     if (n.length() > 1 && Character.isDigit(n.charAt(n.length()-1))) {
       octave = Character.getNumericValue(n.charAt(n.length()-1));
@@ -463,12 +507,17 @@ Blockly.Processing.injectAudioCore = function() {
   }
 
   void playChordByNameInternal(String instName, String name, float durationMs, float vel) {
+    if (instName == null || instName.length() == 0 || instName.equals("(請選擇樂器)")) {
+      instName = currentInstrument;
+    }
     String[] notes = chords.get(name);
     if (notes != null) {
       for (String n : notes) {
         int midi = noteToMidi(n);
         if (midi >= 0) playNoteForDuration(instName, midi, vel, durationMs);
       }
+    } else {
+      logToScreen("Chord not found: " + name, 2);
     }
   }
 
@@ -480,7 +529,7 @@ Blockly.Processing.injectAudioCore = function() {
   }
 
   void parseAndPlayNote(String name, String token, float vel) {
-    token = token.trim(); if (token.length() < 2) return;
+    token = token.trim(); if (token.length() < 1) return;
     activeMelodyCount++;
     float totalMs = 0;
     String noteName = "";
@@ -491,8 +540,17 @@ Blockly.Processing.injectAudioCore = function() {
       float multiplier = 1.0f;
       if (p.endsWith(".")) { multiplier = 1.5f; p = p.substring(0, p.length() - 1); }
       else if (p.endsWith("_T")) { multiplier = 2.0f / 3.0f; p = p.substring(0, p.length() - 2); }
+      
+      if (p.length() == 0) continue;
       char durChar = p.charAt(p.length() - 1);
       String prefix = p.substring(0, p.length() - 1);
+      
+      // If the last character is NOT a duration identifier, default to 'Q'
+      if (durChar != 'W' && durChar != 'H' && durChar != 'Q' && durChar != 'E' && durChar != 'S') {
+        prefix = p;
+        durChar = 'Q';
+      }
+      
       if (j == 0) noteName = prefix;
       float baseMs = 0;
       if (durChar == 'W') baseMs = (60000.0f / bpm) * 4.0f;
@@ -552,6 +610,7 @@ Blockly.Processing.injectAudioCore = function() {
   }
   `;
 };
+
 
 // Helper to register generator safely
 const registerGenerator = (type, func) => {
@@ -615,7 +674,7 @@ registerGenerator('sb_trigger_sample', function(block) {
   const velocity = Blockly.Processing.valueToCode(block, 'VELOCITY', Blockly.Processing.ORDER_ATOMIC) || '100';
   const note = block.getFieldValue('NOTE') || 'C4Q';
   
-  return `parseAndPlayNote("${name}", "${note}", (float)${velocity});\n`;
+  return `parseAndPlayNote("${name}", "${note}", floatVal(${velocity}));\n`;
 });
 
 registerGenerator('sb_create_harmonic_synth', function(block) {
@@ -657,20 +716,28 @@ registerGenerator('sb_select_current_instrument', function(block) {
 registerGenerator('sb_set_instrument_volume', function(block) {
   const name = block.getFieldValue('NAME');
   const volume = Blockly.Processing.valueToCode(block, 'VOLUME', Blockly.Processing.ORDER_ATOMIC) || '100';
-  return `instrumentVolumes.put("${name}", (float)${volume} / 100.0f);\n`;
+  return `instrumentVolumes.put("${name}", floatVal(${volume}) / 100.0f);\n`;
 });
 
 registerGenerator('sb_play_note', function(block) {
   Blockly.Processing.injectAudioCore();
   const pitch = Blockly.Processing.valueToCode(block, 'PITCH', Blockly.Processing.ORDER_ATOMIC) || '60';
   const velocity = Blockly.Processing.valueToCode(block, 'VELOCITY', Blockly.Processing.ORDER_ATOMIC) || '100';
-  return `playNoteInternal(currentInstrument, (int)${pitch}, (float)${velocity});\n`;
+  return `playNoteInternal(currentInstrument, (int)floatVal(${pitch}), floatVal(${velocity}));\n`;
+});
+
+registerGenerator('sb_play_drum', function(block) {
+  Blockly.Processing.injectAudioCore();
+  const type = block.getFieldValue('TYPE');
+  const velocity = Blockly.Processing.valueToCode(block, 'VELOCITY', Blockly.Processing.ORDER_ATOMIC) || '100';
+  
+  return `playBuiltinDrum("${type}", floatVal(${velocity}));\n`;
 });
 
 registerGenerator('sb_stop_note', function(block) {
   Blockly.Processing.injectAudioCore();
   const pitch = Blockly.Processing.valueToCode(block, 'PITCH', Blockly.Processing.ORDER_ATOMIC) || '60';
-  return `stopNoteInternal(currentInstrument, (int)${pitch});\n`;
+  return `stopNoteInternal(currentInstrument, (int)floatVal(${pitch}));\n`;
 });
 
 registerGenerator('sb_play_melody', function(block) {
@@ -695,7 +762,7 @@ registerGenerator('sb_rhythm_sequence', function(block) {
   code += '  public void run() {\n';
   code += '    int timeout = 0;\n';
   code += '    while(isCountingIn && timeout < 500) { try { Thread.sleep(10); timeout++; } catch(Exception e) {} }\n';
-  code += '    try { Thread.sleep((long)(((' + measure + '-1) * 4 * 60000) / bpm)); } catch(Exception e) {}\n';
+  code += '    try { Thread.sleep((long)(((floatVal(' + measure + ')-1) * 4 * 60000) / bpm)); } catch(Exception e) {}\n';
   code += '    String rawPattern = "' + pattern + '";\n';
   code += '    ArrayList<String> parsed = new ArrayList<String>();\n';
   code += '    if (rawPattern.contains(",")) {\n';
@@ -736,17 +803,17 @@ registerGenerator('sb_rhythm_sequence', function(block) {
           code += '        if (instrumentMap.getOrDefault("' + source + '", "").equals("DRUM")) {\n';
           code += '          if (token.equalsIgnoreCase("x")) {\n';
           code += '             float volScale = instrumentVolumes.getOrDefault("' + source + '", 1.0f);\n';
-          code += '             samplerGainMap.get("' + source + '").setValue(map(' + velocity + ' * volScale, 0, 127, -40, 0));\n';
+          code += '             samplerGainMap.get("' + source + '").setValue(map(floatVal(' + velocity + ') * volScale, 0, 127, -40, 0));\n';
           code += '             samplerMap.get("' + source + '").trigger();\n';
           code += '          }\n';
           code += '        } else {\n';
   code += '          if (' + isChordMode + ') {\n';
   code += '            if (token.equals("x")) token = "C";\n';
-  code += '            if (chords.containsKey(token)) playChordByNameInternal("' + source + '", token, noteDur * 0.9f, (float)' + velocity + ');\n';
-  code += '            else { int midi = noteToMidi(token); if (midi >= 0) playNoteForDuration("' + source + '", midi, (float)' + velocity + ', noteDur * 0.9f); }\n';
+  code += '            if (chords.containsKey(token)) playChordByNameInternal("' + source + '", token, noteDur * 0.9f, floatVal(' + velocity + '));\n';
+  code += '            else { int midi = noteToMidi(token); if (midi >= 0) playNoteForDuration("' + source + '", midi, floatVal(' + velocity + '), noteDur * 0.9f); }\n';
   code += '          } else {\n';
-  code += '            if (token.equalsIgnoreCase("x")) playNoteForDuration("' + source + '", 60, (float)' + velocity + ', noteDur * 0.8f);\n';
-  code += '            else { int midi = noteToMidi(token); if (midi >= 0) playNoteForDuration("' + source + '", midi, (float)' + velocity + ', noteDur * 0.9f); }\n';
+  code += '            if (token.equalsIgnoreCase("x")) playNoteForDuration("' + source + '", 60, floatVal(' + velocity + '), noteDur * 0.8f);\n';
+  code += '            else { int midi = noteToMidi(token); if (midi >= 0) playNoteForDuration("' + source + '", midi, floatVal(' + velocity + '), noteDur * 0.9f); }\n';
   code += '          }\n';
   code += '        }\n';
   code += '      }\n';
@@ -769,11 +836,11 @@ registerGenerator('sb_transport_count_in', function(block) {
     public void run() {
       try {
         Thread.sleep(1000); 
-        logToScreen("--- COUNT IN START (" + ${beats} + "/" + ${beatUnit} + ") ---", 1);
-        float beatDelay = (60000.0f / bpm) * (4.0f / ${beatUnit});
-        for (int m=0; m<${measures}; m++) {
-          for (int b=0; b<(int)${beats}; b++) {
-            playClick((b==0 ? 880.0f : 440.0f), (float)${velocity});
+        logToScreen("--- COUNT IN START (" + floatVal(${beats}) + "/" + floatVal(${beatUnit}) + ") ---", 1);
+        float beatDelay = (60000.0f / bpm) * (4.0f / floatVal(${beatUnit}));
+        for (int m=0; m<(int)floatVal(${measures}); m++) {
+          for (int b=0; b<(int)floatVal(${beats}); b++) {
+            playClick((b==0 ? 880.0f : 440.0f), floatVal(${velocity}));
             Thread.sleep((long)beatDelay);
           }
         }
@@ -792,7 +859,7 @@ registerGenerator('sb_transport_count_in', function(block) {
 registerGenerator('sb_transport_set_bpm', function(block) {
   Blockly.Processing.injectAudioCore();
   const bpm = Blockly.Processing.valueToCode(block, 'BPM', Blockly.Processing.ORDER_ATOMIC) || '120';
-  return `bpm = (float)${bpm};\n`;
+  return `bpm = floatVal(${bpm});\n`;
 });
 
 registerGenerator('sb_tone_loop', function(block) {
@@ -858,13 +925,14 @@ registerGenerator('sb_define_chord', function(block) {
 
 registerGenerator('sb_play_chord_by_name', function(block) {
   Blockly.Processing.injectAudioCore();
+  const inst = block.getFieldValue('INST_NAME');
   const name = block.getFieldValue('NAME');
   const dur = block.getFieldValue('DUR') || '4n';
   const velocity = Blockly.Processing.valueToCode(block, 'VELOCITY', Blockly.Processing.ORDER_ATOMIC) || '100';
   
   return `{ 
   float ms = durationToMs("${dur}");
-  playChordByNameInternal("${name}", ms, (float)${velocity});
+  playChordByNameInternal("${inst}", "${name}", ms, (float)${velocity});
 }
 `;
 });
@@ -1247,167 +1315,109 @@ registerGenerator('sb_set_adsr', function(block) {
 });
 
 registerGenerator('sb_set_wave', function(block) {
-
   if (!Blockly.Processing.currentGenInstrumentName) return '// sb_set_wave must be inside sb_instrument_container\n';
-
   const type = block.getFieldValue('TYPE');
-
   return `instrumentMap.put("${Blockly.Processing.currentGenInstrumentName}", "${type}");\n`;
-
 });
-
-
 
 registerGenerator('sb_set_noise', function(block) {
-
-
-
   if (!Blockly.Processing.currentGenInstrumentName) return '// sb_set_noise must be inside sb_instrument_container\n';
-
-
-
   const type = block.getFieldValue('TYPE');
-
-
-
   return `instrumentMap.put("${Blockly.Processing.currentGenInstrumentName}", "NOISE_${type}");\n`;
-
-
-
 });
-
-
-
-
-
-
 
 registerGenerator('sb_mixed_source', function(block) {
-
-
-
-
-
-
-
   if (!Blockly.Processing.currentGenInstrumentName) return '// sb_mixed_source must be inside sb_instrument_container\n';
 
-
-
-
-
-
-
   const wave = block.getFieldValue('WAVE');
-
-
-
-
-
-
-
   const noise = block.getFieldValue('NOISE');
-
-
-
-
-
-
-
   const level = Blockly.Processing.valueToCode(block, 'LEVEL', Blockly.Processing.ORDER_ATOMIC) || '30';
-
-
-
-
-
-
-
-  const jitter = (block.hasJitter_) ? (Blockly.Processing.valueToCode(block, 'JITTER_INPUT', Blockly.Processing.ORDER_ATOMIC) || '5') : '0';
-
-
-
-
-
-
-
-  const sRate = (block.hasSweep_) ? (Blockly.Processing.valueToCode(block, 'SWEEP_INPUT', Blockly.Processing.ORDER_ATOMIC) || '0.5') : '0';
-
-
-
-
-
-
-
-  const sDepth = (block.hasSweep_) ? (Blockly.Processing.valueToCode(block, 'SWEEP_DEPTH_INPUT', Blockly.Processing.ORDER_ATOMIC) || '20') : '0';
-
-
-
-
-
-
-
   
-
-
-
-
-
-
-
+  const jitter = (block.hasJitter_) ? (Blockly.Processing.valueToCode(block, 'JITTER_INPUT', Blockly.Processing.ORDER_ATOMIC) || '5') : '0';
+  const sRate = (block.hasSweep_) ? (Blockly.Processing.valueToCode(block, 'SWEEP_INPUT', Blockly.Processing.ORDER_ATOMIC) || '0.5') : '0';
+  const sDepth = (block.hasSweep_) ? (Blockly.Processing.valueToCode(block, 'SWEEP_DEPTH_INPUT', Blockly.Processing.ORDER_ATOMIC) || '20') : '0';
+  
   const name = Blockly.Processing.currentGenInstrumentName;
-
-
-
-
-
-
-
   let code = `instrumentMap.put("${name}", "MIXED");\n`;
-
-
-
-
-
-
-
-  code += `instrumentMixConfigs.put("${name}", "${wave},${noise}," + ${level} + ",${jitter},${sRate},${sDepth}");\n`;
-
-
-
-
-
-
-
+  code += `instrumentMixConfigs.put("${name}", "${wave},${noise}," + floatVal(${level}) + "," + floatVal(${jitter}) + "," + floatVal(${sRate}) + "," + floatVal(${sDepth}));\n`;
   return code;
-
-
-
-
-
-
-
 });
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 registerGenerator('sb_set_panning', function(block) {
-
   const name = block.getFieldValue('NAME');
-
   const val = Blockly.Processing.valueToCode(block, 'VALUE', Blockly.Processing.ORDER_ATOMIC) || '0';
+  return `updatePanning("${name}", floatVal(${val}));\n`;
+});
 
-  return `updatePanning("${name}", (float)${val});\n`;
+registerGenerator('sb_set_effect_param', function(block) {
+  const target = block.getFieldValue('TARGET');
+  const type = block.getFieldValue('EFFECT_TYPE');
+  const param = (type === 'panning') ? 'pan' : block.getFieldValue('PARAM_NAME');
+  const val = Blockly.Processing.valueToCode(block, 'VALUE', Blockly.Processing.ORDER_ATOMIC) || "0";
+  
+  Blockly.Processing.definitions_['SB_Param_Helper'] = `
+  void setEffectParam(String instName, String effectType, String paramName, float value) {
+    if (effectType.equals("adsr")) {
+      float[] adsr = instrumentADSR.get(instName);
+      if (adsr == null) adsr = new float[]{defAdsrA, defAdsrD, defAdsrS, defAdsrR};
+      if (paramName.equals("adsrA")) adsr[0] = value;
+      else if (paramName.equals("adsrD")) adsr[1] = value;
+      else if (paramName.equals("adsrS")) adsr[2] = value;
+      else if (paramName.equals("adsrR")) adsr[3] = value;
+      instrumentADSR.put(instName, adsr);
+      if (currentInstrument.equals(instName)) {
+        if (paramName.equals("adsrA")) adsrA = value;
+        else if (paramName.equals("adsrD")) adsrD = value;
+        else if (paramName.equals("adsrS")) adsrS = value;
+        else if (paramName.equals("adsrR")) adsrR = value;
+        if (cp5 != null && cp5.getController(paramName) != null) cp5.getController(paramName).setValue(value);
+      }
+      return;
+    }
 
+    Object effect = null;
+    if (effectType.equals("filter")) effect = instrumentFilters.get(instName);
+    else if (effectType.equals("reverb")) effect = instrumentReverbs.get(instName);
+    else if (effectType.equals("delay")) effect = instrumentDelays.get(instName);
+    else if (effectType.equals("bitcrush")) effect = instrumentBitCrushers.get(instName);
+    else if (effectType.equals("compressor")) effect = instrumentCompressors.get(instName);
+    else if (effectType.equals("limiter")) effect = instrumentLimiters.get(instName);
+    else if (effectType.equals("flanger")) effect = instrumentFlangers.get(instName);
+    else if (effectType.equals("autofilter")) effect = instrumentAutoFilters.get(instName);
+    else if (effectType.equals("pitchmod")) effect = instrumentPitchMods.get(instName);
+    else if (effectType.equals("waveshaper")) effect = instrumentWaveshapers.get(instName);
+    else if (effectType.equals("panning")) { updatePanning(instName, value); return; }
+    
+    if (effect != null) {
+      try {
+        java.lang.reflect.Field f = effect.getClass().getField(paramName);
+        Object control = f.get(effect);
+        java.lang.reflect.Method m = control.getClass().getMethod("setLastValue", float.class);
+        m.invoke(control, value);
+      } catch (Exception e) {
+        try {
+          String methodName = "set" + paramName.substring(0,1).toUpperCase() + paramName.substring(1);
+          java.lang.reflect.Method m = effect.getClass().getMethod(methodName, float.class);
+          m.invoke(effect, value);
+        } catch(Exception ex) {}
+      }
+    }
+  }`;
+
+  return `setEffectParam("${target}", "${type}", "${param}", floatVal(${val}));\n`;
+});
+
+registerGenerator('sb_update_adsr', function(block) {
+  const target = block.getFieldValue('TARGET');
+  const a = Blockly.Processing.valueToCode(block, 'A', Blockly.Processing.ORDER_ATOMIC) || "0.01";
+  const d = Blockly.Processing.valueToCode(block, 'D', Blockly.Processing.ORDER_ATOMIC) || "0.1";
+  const s = Blockly.Processing.valueToCode(block, 'S', Blockly.Processing.ORDER_ATOMIC) || "0.5";
+  const r = Blockly.Processing.valueToCode(block, 'R', Blockly.Processing.ORDER_ATOMIC) || "0.5";
+
+  let code = `instrumentADSR.put("${target}", new float[]{floatVal(${a}), floatVal(${d}), floatVal(${s}), floatVal(${r})});\n`;
+  code += `if (currentInstrument.equals("${target}")) {\n`;
+  code += `  adsrA = floatVal(${a}); adsrD = floatVal(${d}); adsrS = floatVal(${s}); adsrR = floatVal(${r});\n`;
+  code += `  if (cp5 != null) { cp5.getController("adsrA").setValue(adsrA); cp5.getController("adsrD").setValue(adsrD); cp5.getController("adsrS").setValue(adsrS); cp5.getController("adsrR").setValue(adsrR); }\n`;
+  code += `}\n`;
+  return code;
 });

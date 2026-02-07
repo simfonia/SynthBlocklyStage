@@ -251,7 +251,7 @@ const RHYTHM_V2_MUTATOR = {
     for (let i = 0; i < this.itemCount_; i++) {
       const input = this.appendDummyInput('TRACK' + i)
           .appendField("樂器")
-          .appendField(new Blockly.FieldDropdown(getInstrumentOptions), 'INST' + i)
+          .appendField(createInstrumentField(Blockly.Msg['SB_SELECT_INSTRUMENT_PROMPT']), 'INST' + i)
           .appendField("力度")
           .appendField(new Blockly.FieldTextInput("100"), 'VEL' + i)
           .appendField("模式")
@@ -304,14 +304,14 @@ const SETUP_EFFECT_MUTATOR = {
     };
 
     if (type === 'filter') {
-      this.appendDummyInput('FILTER_TYPE')
+      this.appendDummyInput('FILTER_TYPE').setAlign(Blockly.ALIGN_RIGHT)
           .appendField(Blockly.Msg['SB_EFFECT_FILTER_INTERNAL_TYPE_FIELD'])
           .appendField(new Blockly.FieldDropdown([["lowpass", "lowpass"], ["highpass", "highpass"], ["bandpass", "bandpass"]]), "FILTER_TYPE_VALUE");
       this.appendValueInput('FILTER_FREQ').setCheck("Number").setAlign(Blockly.ALIGN_RIGHT)
-          .appendField(Blockly.Msg['SB_EFFECT_FILTER_FREQ_FIELD'] + " (20-20000)");
+          .appendField(Blockly.Msg['SB_EFFECT_FILTER_FREQ_FIELD']);
       this.appendValueInput('FILTER_Q').setCheck("Number").setAlign(Blockly.ALIGN_RIGHT)
-          .appendField(Blockly.Msg['SB_EFFECT_FILTER_Q_FIELD'] + " (0-0.9)");
-      this.appendDummyInput('FILTER_ROLLOFF')
+          .appendField(Blockly.Msg['SB_EFFECT_FILTER_Q_FIELD']);
+      this.appendDummyInput('FILTER_ROLLOFF').setAlign(Blockly.ALIGN_RIGHT)
           .appendField(Blockly.Msg['SB_EFFECT_ROLLOFF_FIELD'])
           .appendField(new Blockly.FieldDropdown([["-12dB", "-12"], ["-24dB", "-24"], ["-48dB", "-48"]]), "FILTER_ROLLOFF_VALUE");
       
@@ -324,53 +324,53 @@ const SETUP_EFFECT_MUTATOR = {
       }
     } else if (type === 'delay') {
       this.appendValueInput('DELAY_TIME').setCheck("Number").setAlign(Blockly.ALIGN_RIGHT)
-          .appendField(Blockly.Msg['SB_EFFECT_DELAY_TIME_FIELD'] + " (0-5s)");
+          .appendField(Blockly.Msg['SB_EFFECT_DELAY_TIME_FIELD']);
       this.appendValueInput('FEEDBACK').setCheck("Number").setAlign(Blockly.ALIGN_RIGHT)
-          .appendField(Blockly.Msg['SB_EFFECT_FEEDBACK_FIELD'] + " (0-1)");
+          .appendField(Blockly.Msg['SB_EFFECT_FEEDBACK_FIELD']);
       
       addShadow('DELAY_TIME', 0.5);
       addShadow('FEEDBACK', 0.5);
     } else if (type === 'bitcrush') {
       this.appendValueInput('BITDEPTH').setCheck("Number").setAlign(Blockly.ALIGN_RIGHT)
-          .appendField(Blockly.Msg['SB_EFFECT_BITDEPTH_FIELD'] + " (1-16)");
+          .appendField(Blockly.Msg['SB_EFFECT_BITDEPTH_FIELD']);
       
       addShadow('BITDEPTH', 8);
     } else if (type === 'waveshaper') {
       this.appendValueInput('DISTORTION_AMOUNT').setCheck("Number").setAlign(Blockly.ALIGN_RIGHT)
-          .appendField(Blockly.Msg['SB_EFFECT_DISTORTION_AMOUNT_FIELD'] + " (0.1-10)");
+          .appendField(Blockly.Msg['SB_EFFECT_DISTORTION_AMOUNT_FIELD']);
       
       addShadow('DISTORTION_AMOUNT', 2);
     } else if (type === 'reverb') {
       this.appendValueInput('ROOMSIZE').setCheck("Number").setAlign(Blockly.ALIGN_RIGHT)
-          .appendField(Blockly.Msg['SB_EFFECT_ROOMSIZE_FIELD'] + " (0-1)");
+          .appendField(Blockly.Msg['SB_EFFECT_ROOMSIZE_FIELD']);
       this.appendValueInput('DAMPING').setCheck("Number").setAlign(Blockly.ALIGN_RIGHT)
-          .appendField(Blockly.Msg['SB_EFFECT_DAMPING_FIELD'] + " (0-1)");
+          .appendField(Blockly.Msg['SB_EFFECT_DAMPING_FIELD']);
       this.appendValueInput('WET').setCheck("Number").setAlign(Blockly.ALIGN_RIGHT)
-          .appendField(Blockly.Msg['SB_EFFECT_WET_FIELD'] + " (0-1)");
+          .appendField(Blockly.Msg['SB_EFFECT_WET_FIELD']);
       
       addShadow('ROOMSIZE', 0.5);
       addShadow('DAMPING', 0.5);
       addShadow('WET', 0.3);
     } else if (type === 'flanger') {
       this.appendValueInput('DELAY_TIME').setCheck("Number").setAlign(Blockly.ALIGN_RIGHT)
-          .appendField(Blockly.Msg['SB_EFFECT_DELAY_TIME_FIELD'] + " (ms)");
+          .appendField(Blockly.Msg['SB_EFFECT_DELAY_TIME_FIELD']);
       this.appendValueInput('RATE').setCheck("Number").setAlign(Blockly.ALIGN_RIGHT)
-          .appendField(Blockly.Msg['SB_EFFECT_RATE_FIELD'] + " (0.1-5)");
+          .appendField(Blockly.Msg['SB_EFFECT_RATE_FIELD']);
       this.appendValueInput('DEPTH').setCheck("Number").setAlign(Blockly.ALIGN_RIGHT)
-          .appendField(Blockly.Msg['SB_EFFECT_DEPTH_FIELD'] + " (ms)");
+          .appendField(Blockly.Msg['SB_EFFECT_DEPTH_FIELD']);
       this.appendValueInput('FEEDBACK').setCheck("Number").setAlign(Blockly.ALIGN_RIGHT)
-          .appendField(Blockly.Msg['SB_EFFECT_FEEDBACK_FIELD'] + " (0-1)");
+          .appendField(Blockly.Msg['SB_EFFECT_FEEDBACK_FIELD']);
       
       addShadow('DELAY_TIME', 1);
       addShadow('RATE', 0.5);
       addShadow('DEPTH', 1);
       addShadow('FEEDBACK', 0.5);
     } else if (type === 'compressor') {
-      this.appendValueInput('THRESHOLD').setCheck("Number").setAlign(Blockly.ALIGN_RIGHT).appendField(Blockly.Msg['SB_EFFECT_THRESHOLD_FIELD'] + " (-60~0)");
-      this.appendValueInput('RATIO').setCheck("Number").setAlign(Blockly.ALIGN_RIGHT).appendField(Blockly.Msg['SB_EFFECT_RATIO_FIELD'] + " (1-20)");
-      this.appendValueInput('ATTACK').setCheck("Number").setAlign(Blockly.ALIGN_RIGHT).appendField(Blockly.Msg['SB_EFFECT_ATTACK_FIELD'] + " (0.001-1)");
-      this.appendValueInput('RELEASE').setCheck("Number").setAlign(Blockly.ALIGN_RIGHT).appendField(Blockly.Msg['SB_EFFECT_RELEASE_FIELD'] + " (0.01-2)");
-      this.appendValueInput('MAKEUP').setCheck("Number").setAlign(Blockly.ALIGN_RIGHT).appendField(Blockly.Msg['SB_EFFECT_MAKEUP_FIELD'] + " (0-24)");
+      this.appendValueInput('THRESHOLD').setCheck("Number").setAlign(Blockly.ALIGN_RIGHT).appendField(Blockly.Msg['SB_EFFECT_THRESHOLD_FIELD']);
+      this.appendValueInput('RATIO').setCheck("Number").setAlign(Blockly.ALIGN_RIGHT).appendField(Blockly.Msg['SB_EFFECT_RATIO_FIELD']);
+      this.appendValueInput('ATTACK').setCheck("Number").setAlign(Blockly.ALIGN_RIGHT).appendField(Blockly.Msg['SB_EFFECT_ATTACK_FIELD']);
+      this.appendValueInput('RELEASE').setCheck("Number").setAlign(Blockly.ALIGN_RIGHT).appendField(Blockly.Msg['SB_EFFECT_RELEASE_FIELD']);
+      this.appendValueInput('MAKEUP').setCheck("Number").setAlign(Blockly.ALIGN_RIGHT).appendField(Blockly.Msg['SB_EFFECT_MAKEUP_FIELD']);
       
       addShadow('THRESHOLD', -20);
       addShadow('RATIO', 4);
@@ -378,20 +378,20 @@ const SETUP_EFFECT_MUTATOR = {
       addShadow('RELEASE', 0.25);
       addShadow('MAKEUP', 0);
     } else if (type === 'limiter') {
-      this.appendValueInput('THRESHOLD').setCheck("Number").setAlign(Blockly.ALIGN_RIGHT).appendField(Blockly.Msg['SB_EFFECT_THRESHOLD_FIELD'] + " (-24~0)");
-      this.appendValueInput('ATTACK').setCheck("Number").setAlign(Blockly.ALIGN_RIGHT).appendField(Blockly.Msg['SB_EFFECT_ATTACK_FIELD'] + " (0.001-0.1)");
-      this.appendValueInput('RELEASE').setCheck("Number").setAlign(Blockly.ALIGN_RIGHT).appendField(Blockly.Msg['SB_EFFECT_RELEASE_FIELD'] + " (0.01-1)");
+      this.appendValueInput('THRESHOLD').setCheck("Number").setAlign(Blockly.ALIGN_RIGHT).appendField(Blockly.Msg['SB_EFFECT_THRESHOLD_FIELD']);
+      this.appendValueInput('ATTACK').setCheck("Number").setAlign(Blockly.ALIGN_RIGHT).appendField(Blockly.Msg['SB_EFFECT_ATTACK_FIELD']);
+      this.appendValueInput('RELEASE').setCheck("Number").setAlign(Blockly.ALIGN_RIGHT).appendField(Blockly.Msg['SB_EFFECT_RELEASE_FIELD']);
       
       addShadow('THRESHOLD', -3);
       addShadow('ATTACK', 0.001);
       addShadow('RELEASE', 0.1);
     } else if (type === 'autofilter') {
       this.appendValueInput('RATE').setCheck("Number").setAlign(Blockly.ALIGN_RIGHT)
-          .appendField(Blockly.Msg['SB_EFFECT_RATE_FIELD'] + " (0.1-5)");
+          .appendField(Blockly.Msg['SB_EFFECT_RATE_FIELD']);
       this.appendValueInput('DEPTH').setCheck("Number").setAlign(Blockly.ALIGN_RIGHT)
-          .appendField(Blockly.Msg['SB_EFFECT_DEPTH_FIELD'] + " (%)");
+          .appendField(Blockly.Msg['SB_EFFECT_DEPTH_FIELD']);
       this.appendValueInput('FILTER_Q').setCheck("Number").setAlign(Blockly.ALIGN_RIGHT)
-          .appendField(Blockly.Msg['SB_EFFECT_FILTER_Q_FIELD'] + " (0-0.9)");
+          .appendField(Blockly.Msg['SB_EFFECT_FILTER_Q_FIELD']);
       addShadow('RATE', 0.5); addShadow('DEPTH', 20); addShadow('FILTER_Q', 0.4);
     } else if (type === 'pitchmod') {
       this.appendDummyInput('MOD_TYPE').setAlign(Blockly.ALIGN_RIGHT)
@@ -403,7 +403,7 @@ const SETUP_EFFECT_MUTATOR = {
       this.appendValueInput('RATE').setCheck("Number").setAlign(Blockly.ALIGN_RIGHT)
           .appendField(Blockly.Msg['SB_EFFECT_RATE_FIELD']);
       this.appendValueInput('DEPTH').setCheck("Number").setAlign(Blockly.ALIGN_RIGHT)
-          .appendField(Blockly.Msg['SB_EFFECT_DEPTH_FIELD'] + " (cents)");
+          .appendField(Blockly.Msg['SB_EFFECT_DEPTH_FIELD']);
       addShadow('RATE', 5); addShadow('DEPTH', 10);
     }
   }
@@ -508,6 +508,29 @@ Blockly.defineBlocksWithJsonArray([
     "tooltip": "%{BKY_AUDIO_PLAY_NOTE_TOOLTIP}"
   },
   {
+    "type": "sb_play_drum",
+    "message0": "%{BKY_SB_PLAY_DRUM_MESSAGE}",
+    "args0": [
+      {
+        "type": "field_dropdown",
+        "name": "TYPE",
+        "options": [
+          ["Kick", "KICK"],
+          ["Snare", "SNARE"],
+          ["Hi-Hat (Closed)", "CH"],
+          ["Hi-Hat (Open)", "OH"],
+          ["Clap", "CLAP"]
+        ]
+      },
+      { "type": "input_value", "name": "VELOCITY", "check": "Number" }
+    ],
+    "previousStatement": null,
+    "nextStatement": null,
+    "inputsInline": true,
+    "colour": "%{BKY_PERFORMANCE_HUE}",
+    "tooltip": "%{BKY_SB_PLAY_DRUM_TOOLTIP}"
+  },
+  {
     "type": "sb_stop_note",
     "message0": "%{BKY_AUDIO_STOP_NOTE}",
     "args0": [
@@ -518,34 +541,6 @@ Blockly.defineBlocksWithJsonArray([
     "inputsInline": true,
     "colour": "%{BKY_PERFORMANCE_HUE}",
     "tooltip": "%{BKY_AUDIO_STOP_NOTE_TOOLTIP}"
-  },
-  {
-    "type": "sb_rhythm_sequence",
-    "message0": "%{BKY_AUDIO_RHYTHM_SEQUENCE}",
-    "args0": [
-      { "type": "input_dummy" },
-      {
-        "type": "field_input",
-        "name": "SOURCE",
-        "text": "MySynth"
-      },
-      {
-        "type": "field_dropdown",
-        "name": "CHORD_MODE",
-        "options": [
-          ["%{BKY_AUDIO_RHYTHM_MODE_MONO}", "FALSE"],
-          ["%{BKY_AUDIO_RHYTHM_MODE_CHORD}", "TRUE"]
-        ]
-      },
-      { "type": "input_value", "name": "MEASURE", "check": "Number" },
-      { "type": "field_input", "name": "PATTERN", "text": "x--- x--- x--- x---" },
-      { "type": "input_value", "name": "VELOCITY", "check": "Number" }
-    ],
-    "previousStatement": null,
-    "nextStatement": null,
-    "inputsInline": true,
-    "colour": "%{BKY_PERFORMANCE_HUE}",
-    "tooltip": "%{BKY_AUDIO_RHYTHM_SEQUENCE_TOOLTIP}"
   },
   {
     "type": "sb_rhythm_sequencer_v2",
@@ -622,24 +617,7 @@ Blockly.defineBlocksWithJsonArray([
           "tooltip": "定義一個自訂和弦名稱，可在旋律中使用。%{BKY_HELP_HINT}",
           "helpUrl": "melody"
         },
-        {
-          "type": "sb_play_chord_by_name",
-          "message0": "%{BKY_AUDIO_PLAY_CHORD_BY_NAME}",
-          "args0": [
-            {
-              "type": "field_input",
-              "name": "NAME",
-              "text": "CM7"
-            },
-            { "type": "field_input", "name": "DUR", "text": "4n" },
-            { "type": "input_value", "name": "VELOCITY", "check": "Number" }
-          ],
-          "previousStatement": null,
-          "nextStatement": null,
-          "colour": "%{BKY_PERFORMANCE_HUE}",
-          "tooltip": "根據名稱演奏已定義的和弦。%{BKY_HELP_HINT}",
-          "helpUrl": "melody"
-        },    // Custom Synths (Container Style - No Name)
+    // Custom Synths (Container Style - No Name)
     {
       "type": "sb_create_harmonic_synth",
       "message0": "%{BKY_AUDIO_CREATE_HARMONIC_SYNTH}",
@@ -857,11 +835,12 @@ Blockly.Blocks['sb_setup_effect'] = {
       ],
       "previousStatement": null,
       "nextStatement": null,
-      "colour": Blockly.Msg['INSTRUMENT_CONTROL_HUE'] || "#D22F73",
+      "colour": Blockly.Msg['EFFECTS_HUE'] || "#8E44AD",
       "tooltip": Blockly.Msg['SB_SETUP_EFFECT_TOOLTIP'] + Blockly.Msg['HELP_HINT'],
       "helpUrl": "effects",
       "mutator": "setup_effect_mutator"
     });
+    this.setInputsInline(false); // 強制多行呈現
     this.updateShape_('filter');
   }
 };
@@ -1053,7 +1032,7 @@ Blockly.Blocks['sb_select_current_instrument'] = {
   init: function() {
     this.appendDummyInput()
         .appendField(Blockly.Msg['AUDIO_SELECT_INSTRUMENT'].replace('%1', '').trim())
-        .appendField(createInstrumentField('MySynth'), "NAME");
+        .appendField(createInstrumentField(Blockly.Msg['SB_SELECT_INSTRUMENT_PROMPT']), "NAME");
     this.setPreviousStatement(true, null); this.setNextStatement(true, null);
     this.setColour(Blockly.Msg['INSTRUMENT_CONTROL_HUE'] || "#D22F73");
     this.setTooltip(Blockly.Msg['AUDIO_SELECT_INSTRUMENT_TOOLTIP']);
@@ -1064,7 +1043,7 @@ Blockly.Blocks['sb_set_instrument_volume'] = {
   init: function() {
     this.appendDummyInput()
         .appendField(Blockly.Msg['AUDIO_SET_INSTRUMENT_VOLUME'].split('%1')[0].trim())
-        .appendField(createInstrumentField('MySynth'), "NAME")
+        .appendField(createInstrumentField(Blockly.Msg['SB_SELECT_INSTRUMENT_PROMPT']), "NAME")
         .appendField(Blockly.Msg['AUDIO_SET_INSTRUMENT_VOLUME'].split('%1')[1].replace('%2', '').trim());
     this.appendValueInput("VOLUME").setCheck("Number");
     this.setPreviousStatement(true, null); this.setNextStatement(true, null);
@@ -1077,14 +1056,34 @@ Blockly.Blocks['sb_trigger_sample'] = {
   init: function() {
     this.appendDummyInput()
         .appendField(Blockly.Msg['AUDIO_TRIGGER_SAMPLE'].split('%1')[0].trim())
-        .appendField(createInstrumentField('MySynth'), "NAME")
+        .appendField(createInstrumentField(Blockly.Msg['SB_SELECT_INSTRUMENT_PROMPT']), "NAME")
         .appendField(Blockly.Msg['AUDIO_TRIGGER_SAMPLE'].split('%1')[1].split('%2')[0].trim())
         .appendField(new Blockly.FieldTextInput("C4Q"), "NOTE")
         .appendField(Blockly.Msg['AUDIO_TRIGGER_SAMPLE'].split('%2')[1].replace('%3', '').trim());
     this.appendValueInput("VELOCITY").setCheck("Number");
     this.setPreviousStatement(true, null); this.setNextStatement(true, null);
     this.setColour(Blockly.Msg['PERFORMANCE_HUE'] || "#E67E22");
-    this.setTooltip(Blockly.Msg['BKY_AUDIO_TRIGGER_SAMPLE_TOOLTIP']);
+    this.setTooltip(Blockly.Msg['AUDIO_TRIGGER_SAMPLE_TOOLTIP']);
+  }
+};
+
+Blockly.Blocks['sb_play_chord_by_name'] = {
+  init: function() {
+    this.appendDummyInput()
+        .appendField(Blockly.Msg['AUDIO_PLAY_CHORD_BY_NAME'].split('%1')[0].trim())
+        .appendField(createInstrumentField(Blockly.Msg['SB_SELECT_INSTRUMENT_PROMPT']), "INST_NAME")
+        .appendField(Blockly.Msg['AUDIO_PLAY_CHORD_BY_NAME'].split('%2')[0].split('%1')[1] || "和弦")
+        .appendField(new Blockly.FieldTextInput("CM7"), "NAME")
+        .appendField(Blockly.Msg['AUDIO_PLAY_CHORD_BY_NAME'].split('%3')[0].split('%2')[1] || "時值")
+        .appendField(new Blockly.FieldTextInput("4n"), "DUR")
+        .appendField(Blockly.Msg['AUDIO_PLAY_CHORD_BY_NAME'].split('%3')[1] || "力度");
+    this.appendValueInput("VELOCITY").setCheck("Number");
+    
+    this.setPreviousStatement(true, null);
+    this.setNextStatement(true, null);
+    this.setInputsInline(true);
+    this.setColour(Blockly.Msg['PERFORMANCE_HUE'] || "#E67E22");
+    this.setTooltip(Blockly.Msg['AUDIO_PLAY_CHORD_BY_NAME_TOOLTIP']);
   }
 };
 
@@ -1092,7 +1091,7 @@ Blockly.Blocks['sb_play_melody'] = {
   init: function() {
     this.appendDummyInput()
         .appendField(Blockly.Msg['AUDIO_PLAY_MELODY'].split('%1')[0].trim())
-        .appendField(createInstrumentField('MySynth', 'INSTRUMENT'), "INSTRUMENT");
+        .appendField(createInstrumentField(Blockly.Msg['SB_SELECT_INSTRUMENT_PROMPT'], 'INSTRUMENT'), "INSTRUMENT");
     this.appendDummyInput()
         .appendField(new FieldMultilineInput("C4Q, E4Q, G4H"), "MELODY");
     this.setPreviousStatement(true, null); this.setNextStatement(true, null);
@@ -1101,15 +1100,207 @@ Blockly.Blocks['sb_play_melody'] = {
   }
 };
 
+Blockly.Blocks['sb_rhythm_sequence'] = {
+  init: function() {
+    this.appendDummyInput()
+        .appendField(Blockly.Msg['AUDIO_RHYTHM_SEQUENCE'].split('%1')[0].trim())
+        .appendField(createInstrumentField(Blockly.Msg['SB_SELECT_INSTRUMENT_PROMPT'], 'SOURCE'), "SOURCE")
+        .appendField(Blockly.Msg['AUDIO_RHYTHM_SEQUENCE'].split('%2')[0].split('%1')[1] || "模式")
+        .appendField(new Blockly.FieldDropdown([
+          [Blockly.Msg['AUDIO_RHYTHM_MODE_MONO'], "FALSE"],
+          [Blockly.Msg['AUDIO_RHYTHM_MODE_CHORD'], "TRUE"]
+        ]), "CHORD_MODE")
+        .appendField(Blockly.Msg['AUDIO_RHYTHM_SEQUENCE'].split('%3')[0].split('%2')[1] || "小節");
+    this.appendValueInput("MEASURE").setCheck("Number");
+    this.appendDummyInput()
+        .appendField(Blockly.Msg['AUDIO_RHYTHM_SEQUENCE'].split('%4')[0].split('%3')[1] || "節奏")
+        .appendField(new Blockly.FieldTextInput("x--- x--- x--- x---"), "PATTERN");
+    this.appendDummyInput()
+        .appendField(Blockly.Msg['AUDIO_RHYTHM_SEQUENCE'].split('%5')[1] || "力度");
+    this.appendValueInput("VELOCITY").setCheck("Number");
+    
+    this.setPreviousStatement(true, null);
+    this.setNextStatement(true, null);
+    this.setInputsInline(true);
+    this.setColour(Blockly.Msg['PERFORMANCE_HUE'] || "#E67E22");
+    this.setTooltip(Blockly.Msg['AUDIO_RHYTHM_SEQUENCE_TOOLTIP']);
+  }
+};
+
 Blockly.Blocks['sb_set_panning'] = {
   init: function() {
     this.appendDummyInput()
         .appendField(Blockly.Msg['SB_SET_PANNING_MESSAGE'].split('%1')[0].trim())
-        .appendField(createInstrumentField('MySynth'), "NAME")
+        .appendField(createInstrumentField(Blockly.Msg['SB_SELECT_INSTRUMENT_PROMPT']), "NAME")
         .appendField(Blockly.Msg['SB_SET_PANNING_MESSAGE'].split('%1')[1].replace('%2', '').trim());
     this.appendValueInput("VALUE").setCheck("Number");
     this.setPreviousStatement(true, null); this.setNextStatement(true, null);
     this.setColour(Blockly.Msg['INSTRUMENT_CONTROL_HUE'] || "#D22F73");
     this.setTooltip(Blockly.Msg['SB_SET_PANNING_TOOLTIP']);
+  }
+};
+
+Blockly.Blocks['sb_set_effect_param'] = {
+  init: function() {
+    var instance = this;
+    
+    // 動態獲獲取效果器清單
+    var getEffectOptions = function() {
+      var options = [];
+      var target = instance.getFieldValue('TARGET');
+      if (!target || target === Blockly.Msg['SB_SELECT_INSTRUMENT_PROMPT']) {
+        return [[Blockly.Msg['SB_NO_INSTRUMENT_SELECTED'] || "(尚未選取樂器)", "none"]];
+      }
+      
+      var workspace = instance.workspace;
+      var blocks = workspace.getAllBlocks(false);
+      var container = blocks.find(b => b.type === 'sb_instrument_container' && b.getFieldValue('NAME') === target);
+      
+      if (container) {
+        var child = container.getInputTargetBlock('STACK');
+        while (child) {
+          if (child.type === 'sb_setup_effect') {
+            var type = child.getFieldValue('EFFECT_TYPE');
+            var label = child.getField('EFFECT_TYPE').getText();
+            if (!options.find(o => o[1] === type)) {
+              options.push([label, type]);
+            }
+          }
+          child = child.getNextBlock();
+        }
+      }
+      
+      if (options.length === 0) {
+        options.push([Blockly.Msg['SB_NO_EFFECTS_AVAILABLE'] || "(無可用效果器)", "none"]);
+      }
+      return options;
+    };
+
+    this.appendDummyInput()
+        .appendField(Blockly.Msg['SB_SET_EFFECT_PARAM_TITLE'].split('%1')[0])
+        .appendField(createInstrumentField(Blockly.Msg['SB_SELECT_INSTRUMENT_PROMPT']), "TARGET")
+        .appendField(Blockly.Msg['SB_SET_EFFECT_PARAM_TITLE'].split('%2')[0].split('%1')[1] || "類型")
+        .appendField(new Blockly.FieldDropdown(getEffectOptions, function(val) { 
+          this.sourceBlock_.updateShape_(val); 
+        }), "EFFECT_TYPE");
+
+    this.setPreviousStatement(true, null);
+    this.setNextStatement(true, null);
+    this.setColour(Blockly.Msg['EFFECTS_HUE'] || "#8E44AD");
+    this.setTooltip(Blockly.Msg['SB_SET_EFFECT_PARAM_TOOLTIP']);
+    this.updateShape_('panning');
+  },
+  mutationToDom: function() {
+    var container = Blockly.utils.xml.createElement('mutation');
+    container.setAttribute('effect_type', this.getFieldValue('EFFECT_TYPE'));
+    return container;
+  },
+  domToMutation: function(xmlElement) {
+    var type = xmlElement.getAttribute('effect_type');
+    this.updateShape_(type);
+  },
+  updateShape_: function(type) {
+    if (this.getInput('PARAMS')) this.removeInput('PARAMS');
+    if (this.getInput('VALUE')) this.removeInput('VALUE');
+    
+    var input = this.appendDummyInput('PARAMS');
+    
+    if (type === 'filter') {
+      input.appendField(Blockly.Msg['SB_SET_EFFECT_PARAM_PARAM'].split('%1')[0])
+           .appendField(new Blockly.FieldDropdown([
+             [Blockly.Msg['SB_EFFECT_FILTER_FREQ_FIELD'], "frequency"], 
+             [Blockly.Msg['SB_EFFECT_FILTER_Q_FIELD'], "resonance"]
+           ]), "PARAM_NAME");
+    } else if (type === 'adsr') {
+      input.appendField(Blockly.Msg['SB_SET_EFFECT_PARAM_PARAM'].split('%1')[0])
+           .appendField(new Blockly.FieldDropdown([
+             ["Attack (A)", "adsrA"],
+             ["Decay (D)", "adsrD"], 
+             ["Sustain (S)", "adsrS"],
+             ["Release (R)", "adsrR"]
+           ]), "PARAM_NAME");
+    } else if (type === 'reverb') {
+      input.appendField(Blockly.Msg['SB_SET_EFFECT_PARAM_PARAM'].split('%1')[0])
+           .appendField(new Blockly.FieldDropdown([
+             [Blockly.Msg['SB_EFFECT_ROOMSIZE_FIELD'], "roomSize"],
+             [Blockly.Msg['SB_EFFECT_DAMPING_FIELD'], "damping"],
+             [Blockly.Msg['SB_EFFECT_WET_FIELD'], "wet"]
+           ]), "PARAM_NAME");
+    } else if (type === 'delay') {
+      input.appendField(Blockly.Msg['SB_SET_EFFECT_PARAM_PARAM'].split('%1')[0])
+           .appendField(new Blockly.FieldDropdown([
+             [Blockly.Msg['SB_EFFECT_DELAY_TIME_FIELD'], "delTime"],
+             [Blockly.Msg['SB_EFFECT_FEEDBACK_FIELD'], "delAmp"]
+           ]), "PARAM_NAME");
+    } else if (type === 'bitcrush') {
+      input.appendField(Blockly.Msg['SB_SET_EFFECT_PARAM_PARAM'].split('%1')[0])
+           .appendField(new Blockly.FieldDropdown([
+             [Blockly.Msg['SB_EFFECT_BITDEPTH_FIELD'], "bitRes"]
+           ]), "PARAM_NAME");
+    } else if (type === 'waveshaper') {
+      input.appendField(Blockly.Msg['SB_SET_EFFECT_PARAM_PARAM'].split('%1')[0])
+           .appendField(new Blockly.FieldDropdown([
+             [Blockly.Msg['SB_EFFECT_DISTORTION_AMOUNT_FIELD'], "amount"]
+           ]), "PARAM_NAME");
+    } else if (type === 'compressor') {
+      input.appendField(Blockly.Msg['SB_SET_EFFECT_PARAM_PARAM'].split('%1')[0])
+           .appendField(new Blockly.FieldDropdown([
+             [Blockly.Msg['SB_EFFECT_THRESHOLD_FIELD'], "threshold"],
+             [Blockly.Msg['SB_EFFECT_RATIO_FIELD'], "ratio"],
+             [Blockly.Msg['SB_EFFECT_ATTACK_FIELD'], "attack"],
+             [Blockly.Msg['SB_EFFECT_RELEASE_FIELD'], "release"],
+             [Blockly.Msg['SB_EFFECT_MAKEUP_FIELD'], "makeup"]
+           ]), "PARAM_NAME");
+    } else if (type === 'limiter') {
+      input.appendField(Blockly.Msg['SB_SET_EFFECT_PARAM_PARAM'].split('%1')[0])
+           .appendField(new Blockly.FieldDropdown([
+             [Blockly.Msg['SB_EFFECT_THRESHOLD_FIELD'], "threshold"],
+             [Blockly.Msg['SB_EFFECT_ATTACK_FIELD'], "attack"],
+             [Blockly.Msg['SB_EFFECT_RELEASE_FIELD'], "release"]
+           ]), "PARAM_NAME");
+    } else if (type === 'flanger') {
+      input.appendField(Blockly.Msg['SB_SET_EFFECT_PARAM_PARAM'].split('%1')[0])
+           .appendField(new Blockly.FieldDropdown([
+             [Blockly.Msg['SB_EFFECT_DELAY_TIME_FIELD'], "delay"],
+             [Blockly.Msg['SB_EFFECT_RATE_FIELD'], "rate"],
+             [Blockly.Msg['SB_EFFECT_DEPTH_FIELD'], "depth"],
+             [Blockly.Msg['SB_EFFECT_FEEDBACK_FIELD'], "feedback"]
+           ]), "PARAM_NAME");
+    } else if (type === 'autofilter') {
+      input.appendField(Blockly.Msg['SB_SET_EFFECT_PARAM_PARAM'].split('%1')[0])
+           .appendField(new Blockly.FieldDropdown([
+             [Blockly.Msg['SB_EFFECT_RATE_FIELD'], "rate"],
+             [Blockly.Msg['SB_EFFECT_DEPTH_FIELD'], "depth"],
+             [Blockly.Msg['SB_EFFECT_FILTER_Q_FIELD'], "resonance"]
+           ]), "PARAM_NAME");
+    } else if (type === 'pitchmod') {
+      input.appendField(Blockly.Msg['SB_SET_EFFECT_PARAM_PARAM'].split('%1')[0])
+           .appendField(new Blockly.FieldDropdown([
+             [Blockly.Msg['SB_EFFECT_RATE_FIELD'], "rate"],
+             [Blockly.Msg['SB_EFFECT_DEPTH_FIELD'], "depth"]
+           ]), "PARAM_NAME");
+    } else if (type === 'panning') {
+       input.appendField(Blockly.Msg['SB_SET_EFFECT_PARAM_PAN_LABEL']); 
+    }
+    
+    this.appendValueInput("VALUE")
+        .setCheck("Number")
+        .appendField(Blockly.Msg['SB_SET_EFFECT_PARAM_VALUE']);
+  }
+};
+
+Blockly.Blocks['sb_update_adsr'] = {
+  init: function() {
+    this.appendDummyInput()
+        .appendField(Blockly.Msg['SB_UPDATE_ADSR_TITLE'].split('%1')[0])
+        .appendField(createInstrumentField(Blockly.Msg['SB_SELECT_INSTRUMENT_PROMPT']), "TARGET");
+    this.appendValueInput("A").setCheck("Number").appendField("A");
+    this.appendValueInput("D").setCheck("Number").appendField("D");
+    this.appendValueInput("S").setCheck("Number").appendField("S");
+    this.appendValueInput("R").setCheck("Number").appendField("R");
+    this.setPreviousStatement(true, null);
+    this.setNextStatement(true, null);
+    this.setColour(Blockly.Msg['INSTRUMENT_CONTROL_HUE'] || "#D22F73");
+    this.setTooltip(Blockly.Msg['SB_UPDATE_ADSR_TOOLTIP']);
   }
 };

@@ -12,31 +12,26 @@
     - `blockly/`: Blockly 核心庫與插件 (field-colour, field-multilineinput)。
     - `blocks/`: 積木定義
         - `audio.js`: 音源、演奏、取樣器、音量、ADSR。
+        - `live_show.js`: 參數更新、日誌寫入。
         - `structure.js`: 基礎框架、偵測幀數。
         - `visual.js`: 繪圖積木、設定幀率。
         - `serial.js`, `midi.js`, `ui.js`, `math.js`, `text.js`, `lists.js`, `tools.js`.
     - `generators/`: Processing (Java) 產生器
         - `_core.js`: 核心產碼架構與事件佔位符。
         - `audio.js`: 演奏引擎與 MelodicSampler 類別。
+        - `live_show.js`: 動態參數更新與日誌寫入產生器。
         - `visual.js`, `serial.js`, `midi.js`, `functions.js`, `variables.js`.
     - `docs/`: 積木說明文件 (HTML)
-        - `effects_en.html`, `effects_zh-hant.html`: 效果器與調變指南。
-        - `mixed_source_en.html`, `mixed_source_zh-hant.html`: 混合音源與 Lo-Fi 製作配方。
-        - `sound_sources_zh-hant.html`: 取樣器與 ADSR 說明。
-        - `performance_zh-hant.html`, `melody_zh-hant.html` 等。
-    - `samples/`: 音訊取樣庫
-        - `piano/`, `violin/`, `drum/`, `jazzkit/`, `sound/`, `test/`.
-    - `icons/`: 介面圖示資源。
 - `examples/`: XML 範例庫
     - `ex_00_play/`, `ex_01_Melody_and_Chord/`, `ex_02_instrument/`, `ex_03_Rock/`, `ex_04_sampler/`.
     - `ex_05_Step_Sequencer/`, `ex_06_Function/`, `ex_07_Function2/`, `ex_08_Step_Sequencer_V2/`.
-    - `08_Serial_KICK/`, `09_wah-wah/`, `ex_91_MIDI/`.
-    - `test_wait/`, `test/`.
+    - `ex_09_effect/`, `ex_10_LoFi/`.
+    - `ex_11_Serial_KICK/`, `ex_12_wah_wah/`, `ex_13_Chord_Pad/`, `ex_14_Drum_Pad/`.
+    - `ex_91_MIDI/`.
 - `log/`: 紀錄檔
-    - `work/`: 每日開發日誌 (如 2026-02-03.md)。
+    - `work/`: 每日開發日誌 (如 2026-02-07.md)。
     - `handover.md`: 任務交接。
     - `details.md`: 技術踩坑紀錄。
     - `todo.md`: 任務清單。
-- `backup/`: 重要檔案版本備份。
 - `package.json`: 擴充功能配置。
 - `README.md`: 專案說明文件。

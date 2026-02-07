@@ -237,15 +237,22 @@ async function init() {
     const theme = Blockly.Theme.defineTheme('synth_stage_theme', {
         'base': Blockly.Themes.Classic,
         'categoryStyles': {
-            'logic_category': { 'colour': '#5C81A6' },
-            'loop_category': { 'colour': '#5CA65C' },
-            'math_category': { 'colour': '#5C68A6' },
-            'text_category': { 'colour': '#A65C81' },
-            'variable_category': { 'colour': '#A6745C' },
-            'procedure_category': { 'colour': '#995CA6' },
-            'structure_category': { 'colour': '#16A085' }
+            'logic_category': { 'colour': Blockly.Msg['LOGIC_HUE'] || '#5C81A6' },
+            'loop_category': { 'colour': Blockly.Msg['LOOPS_HUE'] || '#5CA65C' },
+            'math_category': { 'colour': Blockly.Msg['MATH_HUE'] || '#5C68A6' },
+            'text_category': { 'colour': Blockly.Msg['TEXT_HUE'] || '#A65C81' },
+            'variable_category': { 'colour': Blockly.Msg['VARIABLES_HUE'] || '#A6745C' },
+            'procedure_category': { 'colour': Blockly.Msg['FUNCTIONS_HUE'] || '#995CA6' },
+            'structure_category': { 'colour': Blockly.Msg['STRUCTURE_HUE'] || '#16A085' },
+            'live_show_category': { 'colour': Blockly.Msg['LIVE_SHOW_HUE'] || '#2C3E50' },
+            'audio_effects_category': { 'colour': Blockly.Msg['EFFECTS_HUE'] || '#8E44AD' },
+            'performance_category': { 'colour': Blockly.Msg['PERFORMANCE_HUE'] || '#E67E22' },
+            'instrument_control_category': { 'colour': Blockly.Msg['INSTRUMENT_CONTROL_HUE'] || '#FF5722' }
         },
-        'blockStyles': {},
+        'blockStyles': {
+            'variable_blocks': { 'colourPrimary': Blockly.Msg['VARIABLES_HUE'] || '#A6745C' },
+            'procedure_blocks': { 'colourPrimary': Blockly.Msg['FUNCTIONS_HUE'] || '#995CA6' }
+        },
         'componentStyles': {
             'workspaceBackgroundColour': '#f7f7f7',
             'toolboxBackgroundColour': '#ffffff',
@@ -419,8 +426,9 @@ function triggerAutoSave() {
                 break;
             case 'initializeWorkspace':
                 // Check if this is a fresh new project (empty/default XML)
-                const isNew = message.xml.includes('<xml xmlns="https://developers.google.com/blockly/xml"></xml>');
-                loadXmlToWorkspace(message.xml, !isNew, message.fileName, message.fullPath);
+                const isNew = message.xml.includes('<xml xmlns="https://developers.google.com/blockly/xml"></xml>') || 
+                              message.isTemplate; // New flag from extension
+                loadXmlToWorkspace(message.xml, !isNew, message.fileName, message.fullPath, isNew);
                 break;
             case 'promptResponse':
                 const callback = dialogCallbacks.get(message.id);
@@ -466,14 +474,15 @@ function generateAndSendCode() {
     });
 }
 
-function loadXmlToWorkspace(xmlText, establishedPath = true, fileName = "", fullPath = "") {
+function loadXmlToWorkspace(xmlText, establishedPath = true, fileName = "", fullPath = "", forceDirty = false) {
     if (!xmlText) return;
     try {
         Blockly.Events.disable(); // Prevent dirty state during initial load
         const xml = Blockly.utils.xml.textToDom(xmlText);
         Blockly.Xml.clearWorkspaceAndLoadFromXml(xml, workspace);
         Blockly.Events.enable();
-        isDirty = false;
+        
+        isDirty = forceDirty; // Use the forceDirty flag
         hasPath = establishedPath;
         
         // Update Filename UI

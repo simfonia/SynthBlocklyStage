@@ -53,5 +53,26 @@ Blockly.defineBlocksWithJsonArray([
     "output": "Number",
     "colour": "#2C3E50",
     "tooltip": "讀取目前的舞台參數數值。"
+  },
+  {
+    "type": "sb_log_to_screen",
+    "message0": "%{BKY_SB_LOG_TO_SCREEN}",
+    "args0": [
+      { "type": "input_value", "name": "MSG" },
+      {
+        "type": "field_dropdown",
+        "name": "TYPE",
+        "options": [
+          ["%{BKY_SB_LOG_TYPE_INFO}", "0"],
+          ["%{BKY_SB_LOG_TYPE_MSG}", "1"],
+          ["%{BKY_SB_LOG_TYPE_WARN}", "2"],
+          ["%{BKY_SB_LOG_TYPE_ERR}", "3"]
+        ]
+      }
+    ],
+    "previousStatement": null,
+    "nextStatement": null,
+    "colour": "#2C3E50",
+    "tooltip": "%{BKY_SB_LOG_TO_SCREEN_TOOLTIP}"
   }
 ]);
