@@ -89,6 +89,11 @@ float floatVal(Object o) {
   try { return Float.parseFloat(o.toString()); }
   catch (Exception e) { return 0.0f; }
 }
+int getMidi(Object o) {
+  if (o == null) return -1;
+  if (o instanceof Number) return ((Number)o).intValue();
+  return noteToMidi(o.toString());
+}
 
 class SBWaveshaper extends ddf.minim.ugens.Summer {
     float amount = 1.0f;
@@ -529,12 +534,17 @@ class SBWaveshaper extends ddf.minim.ugens.Summer {
   }
 
   void playChordByNameInternal(String instName, String name, float durationMs, float vel) {
+    if (instName == null || instName.length() == 0 || instName.equals("(請選擇樂器)")) {
+      instName = currentInstrument;
+    }
     String[] notes = chords.get(name);
     if (notes != null) {
       for (String n : notes) {
         int midi = noteToMidi(n);
         if (midi >= 0) playNoteForDuration(instName, midi, vel, durationMs);
       }
+    } else {
+      logToScreen("Chord not found: " + name, 2);
     }
   }
 

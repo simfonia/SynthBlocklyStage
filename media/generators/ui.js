@@ -58,6 +58,7 @@ Blockly.Processing.forBlock['ui_set_font_size'] = function(block) {
 
 Blockly.Processing.forBlock['ui_key_event'] = function(block) {
   const keyChar = block.getFieldValue('KEY');
+  const mode = block.getFieldValue('MODE') || 'PRESSED';
   const branch = Blockly.Processing.statementToCode(block, 'DO');
   
   if (!Blockly.Processing.keyEvents_) {
@@ -67,6 +68,7 @@ Blockly.Processing.forBlock['ui_key_event'] = function(block) {
   // Store the event code
   Blockly.Processing.keyEvents_.push({
     key: keyChar.toLowerCase(),
+    mode: mode,
     code: branch
   });
 

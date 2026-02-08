@@ -89,6 +89,11 @@ float floatVal(Object o) {
   try { return Float.parseFloat(o.toString()); }
   catch (Exception e) { return 0.0f; }
 }
+int getMidi(Object o) {
+  if (o == null) return -1;
+  if (o instanceof Number) return ((Number)o).intValue();
+  return noteToMidi(o.toString());
+}
 
 class SBWaveshaper extends ddf.minim.ugens.Summer {
     float amount = 1.0f;

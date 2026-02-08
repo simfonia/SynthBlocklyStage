@@ -83,6 +83,18 @@ int stageBgColor;
 int stageFgColor;
 volatile boolean isCountingIn = false;
 
+float floatVal(Object o) {
+  if (o == null) return 0.0f;
+  if (o instanceof Number) return ((Number)o).floatValue();
+  try { return Float.parseFloat(o.toString()); }
+  catch (Exception e) { return 0.0f; }
+}
+int getMidi(Object o) {
+  if (o == null) return -1;
+  if (o instanceof Number) return ((Number)o).intValue();
+  return noteToMidi(o.toString());
+}
+
 class SBWaveshaper extends ddf.minim.ugens.Summer {
     float amount = 1.0f;
     SBWaveshaper() { super(); }
@@ -207,31 +219,74 @@ class SBWaveshaper extends ddf.minim.ugens.Summer {
     }
   }
 
-  void checkMainMixer() {
-    if (minim == null) minim = new Minim(this);
-    if (out == null) out = minim.getLineOut();
-    if (mainMixer == null) {
-      mainMixer = new Summer();
-      masterEffectEnd = mainMixer;
-      masterGainUGen = new Gain(0.f);
-      masterEffectEnd.patch(masterGainUGen).patch(out);
+    void checkMainMixer() {
+      if (minim == null) minim = new Minim(this);
+      if (out == null) out = minim.getLineOut(); 
+      if (mainMixer == null) {
+        mainMixer = new Summer();
+        masterEffectEnd = mainMixer;
+        masterGainUGen = new Gain(0.f);
+        masterEffectEnd.patch(masterGainUGen).patch(out);
+        
+        // FORCE STEREO: Patch a silent stereo Pan to mainMixer
+        Oscil silent = new Oscil(0, 0, Waves.SINE);
+        Pan p = new Pan(0);
+        silent.patch(p).patch(mainMixer);
+        
+        // PRE-INIT DEFAULT INSTRUMENT
+        getInstrumentMixer("default");
+      }
     }
-  }
+  
+    ddf.minim.ugens.Summer getInstrumentMixer(String name) {
+      checkMainMixer();
+      if (instrumentMixers.containsKey(name)) return (ddf.minim.ugens.Summer)instrumentMixers.get(name);
+      
+      ddf.minim.ugens.Summer s = new ddf.minim.ugens.Summer();
+      ddf.minim.ugens.Pan p = new ddf.minim.ugens.Pan(0.f);
+      
+      synchronized(mainMixer) {
+        s.patch(p);
+        p.patch(mainMixer);
+      }
+      
+      instrumentMixers.put(name, s);
+      instrumentPans.put(name, p);
+      instrumentEffectEnds.put(name, s);
+      return s;
+    }
 
-  ddf.minim.ugens.Summer getInstrumentMixer(String name) {
-    checkMainMixer();
-    if (instrumentMixers.containsKey(name)) return (ddf.minim.ugens.Summer)instrumentMixers.get(name);
-    ddf.minim.ugens.Summer s = new ddf.minim.ugens.Summer();
-    ddf.minim.ugens.Pan p = new ddf.minim.ugens.Pan(0.f);
-    s.patch(p).patch(mainMixer);
-    instrumentMixers.put(name, s);
-    instrumentPans.put(name, p);
-    // 關鍵：效果器鏈應該從 Summer 開始，插在 Pan 之前
-    instrumentEffectEnds.put(name, s);
-    return s;
-  }
-
-  void updateFilter(String name, float freq, float q) {
+    void playBuiltinDrum(String type, float vel) {
+      checkMainMixer();
+      String instName = "_builtin_" + type;
+      if (!samplerMap.containsKey(instName)) {
+        String path = "drum/";
+        if (type.equals("KICK")) path += "kick.wav";
+        else if (type.equals("SNARE")) path += "snare.wav";
+        else if (type.equals("CH")) path += "ch.wav";
+        else if (type.equals("OH")) path += "oh.wav";
+        else if (type.equals("CLAP")) path += "clap.wav";
+        else return;
+        
+        Sampler s = new Sampler(path, 4, minim);
+        Gain g = new Gain(0.f);
+        
+        // Fix: Use getInstrumentMixer to support panning for drums
+        s.patch(g).patch(getInstrumentMixer(instName));
+        
+        samplerMap.put(instName, s);
+        samplerGainMap.put(instName, g);
+        instrumentMap.put(instName, "DRUM");
+      }
+      
+      Sampler s = samplerMap.get(instName);
+      Gain g = samplerGainMap.get(instName);
+      if (s != null && g != null) {
+        g.setValue(map(vel, 0, 127, -40, 0));
+        s.trigger();
+      }
+    }
+    void updateFilter(String name, float freq, float q) {
     Object obj = instrumentFilters.get(name);
     if (obj != null) {
       try {
@@ -276,6 +331,7 @@ class SBWaveshaper extends ddf.minim.ugens.Summer {
   int noteToMidi(String note) {
     String n = note.toUpperCase();
     if (n.equals("R")) return -1;
+    if (n.equals("X")) return 69; // Support 'X' as a general trigger
     int octave = 4;
     if (n.length() > 1 && Character.isDigit(n.charAt(n.length()-1))) {
       octave = Character.getNumericValue(n.charAt(n.length()-1));
@@ -478,12 +534,17 @@ class SBWaveshaper extends ddf.minim.ugens.Summer {
   }
 
   void playChordByNameInternal(String instName, String name, float durationMs, float vel) {
+    if (instName == null || instName.length() == 0 || instName.equals("(請選擇樂器)")) {
+      instName = currentInstrument;
+    }
     String[] notes = chords.get(name);
     if (notes != null) {
       for (String n : notes) {
         int midi = noteToMidi(n);
         if (midi >= 0) playNoteForDuration(instName, midi, vel, durationMs);
       }
+    } else {
+      logToScreen("Chord not found: " + name, 2);
     }
   }
 
@@ -495,7 +556,7 @@ class SBWaveshaper extends ddf.minim.ugens.Summer {
   }
 
   void parseAndPlayNote(String name, String token, float vel) {
-    token = token.trim(); if (token.length() < 2) return;
+    token = token.trim(); if (token.length() < 1) return;
     activeMelodyCount++;
     float totalMs = 0;
     String noteName = "";
@@ -506,8 +567,17 @@ class SBWaveshaper extends ddf.minim.ugens.Summer {
       float multiplier = 1.0f;
       if (p.endsWith(".")) { multiplier = 1.5f; p = p.substring(0, p.length() - 1); }
       else if (p.endsWith("_T")) { multiplier = 2.0f / 3.0f; p = p.substring(0, p.length() - 2); }
+      
+      if (p.length() == 0) continue;
       char durChar = p.charAt(p.length() - 1);
       String prefix = p.substring(0, p.length() - 1);
+      
+      // If the last character is NOT a duration identifier, default to 'Q'
+      if (durChar != 'W' && durChar != 'H' && durChar != 'Q' && durChar != 'E' && durChar != 'S') {
+        prefix = p;
+        durChar = 'Q';
+      }
+      
       if (j == 0) noteName = prefix;
       float baseMs = 0;
       if (durChar == 'W') baseMs = (60000.0f / bpm) * 4.0f;
@@ -567,6 +637,7 @@ class SBWaveshaper extends ddf.minim.ugens.Summer {
   }
 
 void logToScreen(String msg, int type) {
+    if (cp5 == null) { println("[Early Log] " + msg); return; }
     Textarea target = (type >= 1) ? cp5.get(Textarea.class, "alertsArea") : cp5.get(Textarea.class, "consoleArea");
     if (target != null) {
       String prefix = (type == 3) ? "[ERR] " : (type == 2) ? "[WARN] " : (type == 1) ? "[!] " : "[INFO] ";
@@ -591,6 +662,7 @@ void logToScreen(String msg, int type) {
       if (myPort != null) { myPort.stop(); }
       try {
         myPort = new Serial(this, ports[n], serialBaud);
+        myPort.bufferUntil('\n');
         logToScreen("Serial Connected: " + ports[n], 1);
       } catch (Exception e) {
         logToScreen("Serial Error: Port Busy or Unavailable", 3);
@@ -693,7 +765,7 @@ void A() {
       public void run() {
         int timeout = 0;
         while(isCountingIn && timeout < 500) { try { Thread.sleep(10); timeout++; } catch(Exception e) {} }
-        try { Thread.sleep((long)(((1-1) * 4 * 60000) / bpm)); } catch(Exception e) {}
+        try { Thread.sleep((long)(((floatVal(1)-1) * 4 * 60000) / bpm)); } catch(Exception e) {}
         String rawPattern = "x--- --x- --x- x---";
         ArrayList<String> parsed = new ArrayList<String>();
         if (rawPattern.contains(",")) {
@@ -734,17 +806,17 @@ void A() {
             if (instrumentMap.getOrDefault("Clap", "").equals("DRUM")) {
               if (token.equalsIgnoreCase("x")) {
                  float volScale = instrumentVolumes.getOrDefault("Clap", 1.0f);
-                 samplerGainMap.get("Clap").setValue(map(100 * volScale, 0, 127, -40, 0));
+                 samplerGainMap.get("Clap").setValue(map(floatVal(100) * volScale, 0, 127, -40, 0));
                  samplerMap.get("Clap").trigger();
               }
             } else {
               if (false) {
                 if (token.equals("x")) token = "C";
-                if (chords.containsKey(token)) playChordByNameInternal("Clap", token, noteDur * 0.9f, (float)100);
-                else { int midi = noteToMidi(token); if (midi >= 0) playNoteForDuration("Clap", midi, (float)100, noteDur * 0.9f); }
+                if (chords.containsKey(token)) playChordByNameInternal("Clap", token, noteDur * 0.9f, floatVal(100));
+                else { int midi = noteToMidi(token); if (midi >= 0) playNoteForDuration("Clap", midi, floatVal(100), noteDur * 0.9f); }
               } else {
-                if (token.equalsIgnoreCase("x")) playNoteForDuration("Clap", 60, (float)100, noteDur * 0.8f);
-                else { int midi = noteToMidi(token); if (midi >= 0) playNoteForDuration("Clap", midi, (float)100, noteDur * 0.9f); }
+                if (token.equalsIgnoreCase("x")) playNoteForDuration("Clap", 60, floatVal(100), noteDur * 0.8f);
+                else { int midi = noteToMidi(token); if (midi >= 0) playNoteForDuration("Clap", midi, floatVal(100), noteDur * 0.9f); }
               }
             }
           }
@@ -756,7 +828,7 @@ void A() {
       public void run() {
         int timeout = 0;
         while(isCountingIn && timeout < 500) { try { Thread.sleep(10); timeout++; } catch(Exception e) {} }
-        try { Thread.sleep((long)(((1-1) * 4 * 60000) / bpm)); } catch(Exception e) {}
+        try { Thread.sleep((long)(((floatVal(1)-1) * 4 * 60000) / bpm)); } catch(Exception e) {}
         String rawPattern = "Dm7... Dm7--- ..Dm7. ..Dm7.";
         ArrayList<String> parsed = new ArrayList<String>();
         if (rawPattern.contains(",")) {
@@ -797,17 +869,17 @@ void A() {
             if (instrumentMap.getOrDefault("Piano", "").equals("DRUM")) {
               if (token.equalsIgnoreCase("x")) {
                  float volScale = instrumentVolumes.getOrDefault("Piano", 1.0f);
-                 samplerGainMap.get("Piano").setValue(map(100 * volScale, 0, 127, -40, 0));
+                 samplerGainMap.get("Piano").setValue(map(floatVal(100) * volScale, 0, 127, -40, 0));
                  samplerMap.get("Piano").trigger();
               }
             } else {
               if (true) {
                 if (token.equals("x")) token = "C";
-                if (chords.containsKey(token)) playChordByNameInternal("Piano", token, noteDur * 0.9f, (float)100);
-                else { int midi = noteToMidi(token); if (midi >= 0) playNoteForDuration("Piano", midi, (float)100, noteDur * 0.9f); }
+                if (chords.containsKey(token)) playChordByNameInternal("Piano", token, noteDur * 0.9f, floatVal(100));
+                else { int midi = noteToMidi(token); if (midi >= 0) playNoteForDuration("Piano", midi, floatVal(100), noteDur * 0.9f); }
               } else {
-                if (token.equalsIgnoreCase("x")) playNoteForDuration("Piano", 60, (float)100, noteDur * 0.8f);
-                else { int midi = noteToMidi(token); if (midi >= 0) playNoteForDuration("Piano", midi, (float)100, noteDur * 0.9f); }
+                if (token.equalsIgnoreCase("x")) playNoteForDuration("Piano", 60, floatVal(100), noteDur * 0.8f);
+                else { int midi = noteToMidi(token); if (midi >= 0) playNoteForDuration("Piano", midi, floatVal(100), noteDur * 0.9f); }
               }
             }
           }
@@ -819,7 +891,7 @@ void A() {
       public void run() {
         int timeout = 0;
         while(isCountingIn && timeout < 500) { try { Thread.sleep(10); timeout++; } catch(Exception e) {} }
-        try { Thread.sleep((long)(((1-1) * 4 * 60000) / bpm)); } catch(Exception e) {}
+        try { Thread.sleep((long)(((floatVal(1)-1) * 4 * 60000) / bpm)); } catch(Exception e) {}
         String rawPattern = "D2--- ---- A2--- ----";
         ArrayList<String> parsed = new ArrayList<String>();
         if (rawPattern.contains(",")) {
@@ -860,17 +932,17 @@ void A() {
             if (instrumentMap.getOrDefault("Bass", "").equals("DRUM")) {
               if (token.equalsIgnoreCase("x")) {
                  float volScale = instrumentVolumes.getOrDefault("Bass", 1.0f);
-                 samplerGainMap.get("Bass").setValue(map(100 * volScale, 0, 127, -40, 0));
+                 samplerGainMap.get("Bass").setValue(map(floatVal(100) * volScale, 0, 127, -40, 0));
                  samplerMap.get("Bass").trigger();
               }
             } else {
               if (false) {
                 if (token.equals("x")) token = "C";
-                if (chords.containsKey(token)) playChordByNameInternal("Bass", token, noteDur * 0.9f, (float)100);
-                else { int midi = noteToMidi(token); if (midi >= 0) playNoteForDuration("Bass", midi, (float)100, noteDur * 0.9f); }
+                if (chords.containsKey(token)) playChordByNameInternal("Bass", token, noteDur * 0.9f, floatVal(100));
+                else { int midi = noteToMidi(token); if (midi >= 0) playNoteForDuration("Bass", midi, floatVal(100), noteDur * 0.9f); }
               } else {
-                if (token.equalsIgnoreCase("x")) playNoteForDuration("Bass", 60, (float)100, noteDur * 0.8f);
-                else { int midi = noteToMidi(token); if (midi >= 0) playNoteForDuration("Bass", midi, (float)100, noteDur * 0.9f); }
+                if (token.equalsIgnoreCase("x")) playNoteForDuration("Bass", 60, floatVal(100), noteDur * 0.8f);
+                else { int midi = noteToMidi(token); if (midi >= 0) playNoteForDuration("Bass", midi, floatVal(100), noteDur * 0.9f); }
               }
             }
           }
@@ -882,7 +954,7 @@ void A() {
       public void run() {
         int timeout = 0;
         while(isCountingIn && timeout < 500) { try { Thread.sleep(10); timeout++; } catch(Exception e) {} }
-        try { Thread.sleep((long)(((2-1) * 4 * 60000) / bpm)); } catch(Exception e) {}
+        try { Thread.sleep((long)(((floatVal(2)-1) * 4 * 60000) / bpm)); } catch(Exception e) {}
         String rawPattern = "x--- --x- --x- x---";
         ArrayList<String> parsed = new ArrayList<String>();
         if (rawPattern.contains(",")) {
@@ -923,17 +995,17 @@ void A() {
             if (instrumentMap.getOrDefault("Kick", "").equals("DRUM")) {
               if (token.equalsIgnoreCase("x")) {
                  float volScale = instrumentVolumes.getOrDefault("Kick", 1.0f);
-                 samplerGainMap.get("Kick").setValue(map(150 * volScale, 0, 127, -40, 0));
+                 samplerGainMap.get("Kick").setValue(map(floatVal(150) * volScale, 0, 127, -40, 0));
                  samplerMap.get("Kick").trigger();
               }
             } else {
               if (false) {
                 if (token.equals("x")) token = "C";
-                if (chords.containsKey(token)) playChordByNameInternal("Kick", token, noteDur * 0.9f, (float)150);
-                else { int midi = noteToMidi(token); if (midi >= 0) playNoteForDuration("Kick", midi, (float)150, noteDur * 0.9f); }
+                if (chords.containsKey(token)) playChordByNameInternal("Kick", token, noteDur * 0.9f, floatVal(150));
+                else { int midi = noteToMidi(token); if (midi >= 0) playNoteForDuration("Kick", midi, floatVal(150), noteDur * 0.9f); }
               } else {
-                if (token.equalsIgnoreCase("x")) playNoteForDuration("Kick", 60, (float)150, noteDur * 0.8f);
-                else { int midi = noteToMidi(token); if (midi >= 0) playNoteForDuration("Kick", midi, (float)150, noteDur * 0.9f); }
+                if (token.equalsIgnoreCase("x")) playNoteForDuration("Kick", 60, floatVal(150), noteDur * 0.8f);
+                else { int midi = noteToMidi(token); if (midi >= 0) playNoteForDuration("Kick", midi, floatVal(150), noteDur * 0.9f); }
               }
             }
           }
@@ -945,7 +1017,7 @@ void A() {
       public void run() {
         int timeout = 0;
         while(isCountingIn && timeout < 500) { try { Thread.sleep(10); timeout++; } catch(Exception e) {} }
-        try { Thread.sleep((long)(((2-1) * 4 * 60000) / bpm)); } catch(Exception e) {}
+        try { Thread.sleep((long)(((floatVal(2)-1) * 4 * 60000) / bpm)); } catch(Exception e) {}
         String rawPattern = "..G7. ..G7. ---- G7...";
         ArrayList<String> parsed = new ArrayList<String>();
         if (rawPattern.contains(",")) {
@@ -986,17 +1058,17 @@ void A() {
             if (instrumentMap.getOrDefault("Piano", "").equals("DRUM")) {
               if (token.equalsIgnoreCase("x")) {
                  float volScale = instrumentVolumes.getOrDefault("Piano", 1.0f);
-                 samplerGainMap.get("Piano").setValue(map(100 * volScale, 0, 127, -40, 0));
+                 samplerGainMap.get("Piano").setValue(map(floatVal(100) * volScale, 0, 127, -40, 0));
                  samplerMap.get("Piano").trigger();
               }
             } else {
               if (true) {
                 if (token.equals("x")) token = "C";
-                if (chords.containsKey(token)) playChordByNameInternal("Piano", token, noteDur * 0.9f, (float)100);
-                else { int midi = noteToMidi(token); if (midi >= 0) playNoteForDuration("Piano", midi, (float)100, noteDur * 0.9f); }
+                if (chords.containsKey(token)) playChordByNameInternal("Piano", token, noteDur * 0.9f, floatVal(100));
+                else { int midi = noteToMidi(token); if (midi >= 0) playNoteForDuration("Piano", midi, floatVal(100), noteDur * 0.9f); }
               } else {
-                if (token.equalsIgnoreCase("x")) playNoteForDuration("Piano", 60, (float)100, noteDur * 0.8f);
-                else { int midi = noteToMidi(token); if (midi >= 0) playNoteForDuration("Piano", midi, (float)100, noteDur * 0.9f); }
+                if (token.equalsIgnoreCase("x")) playNoteForDuration("Piano", 60, floatVal(100), noteDur * 0.8f);
+                else { int midi = noteToMidi(token); if (midi >= 0) playNoteForDuration("Piano", midi, floatVal(100), noteDur * 0.9f); }
               }
             }
           }
@@ -1008,7 +1080,7 @@ void A() {
       public void run() {
         int timeout = 0;
         while(isCountingIn && timeout < 500) { try { Thread.sleep(10); timeout++; } catch(Exception e) {} }
-        try { Thread.sleep((long)(((2-1) * 4 * 60000) / bpm)); } catch(Exception e) {}
+        try { Thread.sleep((long)(((floatVal(2)-1) * 4 * 60000) / bpm)); } catch(Exception e) {}
         String rawPattern = "G1--- ---- D2--- ----";
         ArrayList<String> parsed = new ArrayList<String>();
         if (rawPattern.contains(",")) {
@@ -1049,17 +1121,17 @@ void A() {
             if (instrumentMap.getOrDefault("Bass", "").equals("DRUM")) {
               if (token.equalsIgnoreCase("x")) {
                  float volScale = instrumentVolumes.getOrDefault("Bass", 1.0f);
-                 samplerGainMap.get("Bass").setValue(map(100 * volScale, 0, 127, -40, 0));
+                 samplerGainMap.get("Bass").setValue(map(floatVal(100) * volScale, 0, 127, -40, 0));
                  samplerMap.get("Bass").trigger();
               }
             } else {
               if (false) {
                 if (token.equals("x")) token = "C";
-                if (chords.containsKey(token)) playChordByNameInternal("Bass", token, noteDur * 0.9f, (float)100);
-                else { int midi = noteToMidi(token); if (midi >= 0) playNoteForDuration("Bass", midi, (float)100, noteDur * 0.9f); }
+                if (chords.containsKey(token)) playChordByNameInternal("Bass", token, noteDur * 0.9f, floatVal(100));
+                else { int midi = noteToMidi(token); if (midi >= 0) playNoteForDuration("Bass", midi, floatVal(100), noteDur * 0.9f); }
               } else {
-                if (token.equalsIgnoreCase("x")) playNoteForDuration("Bass", 60, (float)100, noteDur * 0.8f);
-                else { int midi = noteToMidi(token); if (midi >= 0) playNoteForDuration("Bass", midi, (float)100, noteDur * 0.9f); }
+                if (token.equalsIgnoreCase("x")) playNoteForDuration("Bass", 60, floatVal(100), noteDur * 0.8f);
+                else { int midi = noteToMidi(token); if (midi >= 0) playNoteForDuration("Bass", midi, floatVal(100), noteDur * 0.9f); }
               }
             }
           }
@@ -1071,7 +1143,7 @@ void A() {
       public void run() {
         int timeout = 0;
         while(isCountingIn && timeout < 500) { try { Thread.sleep(10); timeout++; } catch(Exception e) {} }
-        try { Thread.sleep((long)(((3-1) * 4 * 60000) / bpm)); } catch(Exception e) {}
+        try { Thread.sleep((long)(((floatVal(3)-1) * 4 * 60000) / bpm)); } catch(Exception e) {}
         String rawPattern = "CM7... CM7--- ..CM7. ..CM7.";
         ArrayList<String> parsed = new ArrayList<String>();
         if (rawPattern.contains(",")) {
@@ -1112,17 +1184,17 @@ void A() {
             if (instrumentMap.getOrDefault("Piano", "").equals("DRUM")) {
               if (token.equalsIgnoreCase("x")) {
                  float volScale = instrumentVolumes.getOrDefault("Piano", 1.0f);
-                 samplerGainMap.get("Piano").setValue(map(100 * volScale, 0, 127, -40, 0));
+                 samplerGainMap.get("Piano").setValue(map(floatVal(100) * volScale, 0, 127, -40, 0));
                  samplerMap.get("Piano").trigger();
               }
             } else {
               if (true) {
                 if (token.equals("x")) token = "C";
-                if (chords.containsKey(token)) playChordByNameInternal("Piano", token, noteDur * 0.9f, (float)100);
-                else { int midi = noteToMidi(token); if (midi >= 0) playNoteForDuration("Piano", midi, (float)100, noteDur * 0.9f); }
+                if (chords.containsKey(token)) playChordByNameInternal("Piano", token, noteDur * 0.9f, floatVal(100));
+                else { int midi = noteToMidi(token); if (midi >= 0) playNoteForDuration("Piano", midi, floatVal(100), noteDur * 0.9f); }
               } else {
-                if (token.equalsIgnoreCase("x")) playNoteForDuration("Piano", 60, (float)100, noteDur * 0.8f);
-                else { int midi = noteToMidi(token); if (midi >= 0) playNoteForDuration("Piano", midi, (float)100, noteDur * 0.9f); }
+                if (token.equalsIgnoreCase("x")) playNoteForDuration("Piano", 60, floatVal(100), noteDur * 0.8f);
+                else { int midi = noteToMidi(token); if (midi >= 0) playNoteForDuration("Piano", midi, floatVal(100), noteDur * 0.9f); }
               }
             }
           }
@@ -1134,7 +1206,7 @@ void A() {
       public void run() {
         int timeout = 0;
         while(isCountingIn && timeout < 500) { try { Thread.sleep(10); timeout++; } catch(Exception e) {} }
-        try { Thread.sleep((long)(((3-1) * 4 * 60000) / bpm)); } catch(Exception e) {}
+        try { Thread.sleep((long)(((floatVal(3)-1) * 4 * 60000) / bpm)); } catch(Exception e) {}
         String rawPattern = "C2--- ---- G2--- ----";
         ArrayList<String> parsed = new ArrayList<String>();
         if (rawPattern.contains(",")) {
@@ -1175,17 +1247,17 @@ void A() {
             if (instrumentMap.getOrDefault("Bass", "").equals("DRUM")) {
               if (token.equalsIgnoreCase("x")) {
                  float volScale = instrumentVolumes.getOrDefault("Bass", 1.0f);
-                 samplerGainMap.get("Bass").setValue(map(100 * volScale, 0, 127, -40, 0));
+                 samplerGainMap.get("Bass").setValue(map(floatVal(100) * volScale, 0, 127, -40, 0));
                  samplerMap.get("Bass").trigger();
               }
             } else {
               if (false) {
                 if (token.equals("x")) token = "C";
-                if (chords.containsKey(token)) playChordByNameInternal("Bass", token, noteDur * 0.9f, (float)100);
-                else { int midi = noteToMidi(token); if (midi >= 0) playNoteForDuration("Bass", midi, (float)100, noteDur * 0.9f); }
+                if (chords.containsKey(token)) playChordByNameInternal("Bass", token, noteDur * 0.9f, floatVal(100));
+                else { int midi = noteToMidi(token); if (midi >= 0) playNoteForDuration("Bass", midi, floatVal(100), noteDur * 0.9f); }
               } else {
-                if (token.equalsIgnoreCase("x")) playNoteForDuration("Bass", 60, (float)100, noteDur * 0.8f);
-                else { int midi = noteToMidi(token); if (midi >= 0) playNoteForDuration("Bass", midi, (float)100, noteDur * 0.9f); }
+                if (token.equalsIgnoreCase("x")) playNoteForDuration("Bass", 60, floatVal(100), noteDur * 0.8f);
+                else { int midi = noteToMidi(token); if (midi >= 0) playNoteForDuration("Bass", midi, floatVal(100), noteDur * 0.9f); }
               }
             }
           }
@@ -1197,7 +1269,7 @@ void A() {
       public void run() {
         int timeout = 0;
         while(isCountingIn && timeout < 500) { try { Thread.sleep(10); timeout++; } catch(Exception e) {} }
-        try { Thread.sleep((long)(((4-1) * 4 * 60000) / bpm)); } catch(Exception e) {}
+        try { Thread.sleep((long)(((floatVal(4)-1) * 4 * 60000) / bpm)); } catch(Exception e) {}
         String rawPattern = "..A7. ..A7. ---- A7...";
         ArrayList<String> parsed = new ArrayList<String>();
         if (rawPattern.contains(",")) {
@@ -1238,17 +1310,17 @@ void A() {
             if (instrumentMap.getOrDefault("Piano", "").equals("DRUM")) {
               if (token.equalsIgnoreCase("x")) {
                  float volScale = instrumentVolumes.getOrDefault("Piano", 1.0f);
-                 samplerGainMap.get("Piano").setValue(map(100 * volScale, 0, 127, -40, 0));
+                 samplerGainMap.get("Piano").setValue(map(floatVal(100) * volScale, 0, 127, -40, 0));
                  samplerMap.get("Piano").trigger();
               }
             } else {
               if (true) {
                 if (token.equals("x")) token = "C";
-                if (chords.containsKey(token)) playChordByNameInternal("Piano", token, noteDur * 0.9f, (float)100);
-                else { int midi = noteToMidi(token); if (midi >= 0) playNoteForDuration("Piano", midi, (float)100, noteDur * 0.9f); }
+                if (chords.containsKey(token)) playChordByNameInternal("Piano", token, noteDur * 0.9f, floatVal(100));
+                else { int midi = noteToMidi(token); if (midi >= 0) playNoteForDuration("Piano", midi, floatVal(100), noteDur * 0.9f); }
               } else {
-                if (token.equalsIgnoreCase("x")) playNoteForDuration("Piano", 60, (float)100, noteDur * 0.8f);
-                else { int midi = noteToMidi(token); if (midi >= 0) playNoteForDuration("Piano", midi, (float)100, noteDur * 0.9f); }
+                if (token.equalsIgnoreCase("x")) playNoteForDuration("Piano", 60, floatVal(100), noteDur * 0.8f);
+                else { int midi = noteToMidi(token); if (midi >= 0) playNoteForDuration("Piano", midi, floatVal(100), noteDur * 0.9f); }
               }
             }
           }
@@ -1260,7 +1332,7 @@ void A() {
       public void run() {
         int timeout = 0;
         while(isCountingIn && timeout < 500) { try { Thread.sleep(10); timeout++; } catch(Exception e) {} }
-        try { Thread.sleep((long)(((4-1) * 4 * 60000) / bpm)); } catch(Exception e) {}
+        try { Thread.sleep((long)(((floatVal(4)-1) * 4 * 60000) / bpm)); } catch(Exception e) {}
         String rawPattern = "A1--- ---- E2--- ----";
         ArrayList<String> parsed = new ArrayList<String>();
         if (rawPattern.contains(",")) {
@@ -1301,17 +1373,17 @@ void A() {
             if (instrumentMap.getOrDefault("Bass", "").equals("DRUM")) {
               if (token.equalsIgnoreCase("x")) {
                  float volScale = instrumentVolumes.getOrDefault("Bass", 1.0f);
-                 samplerGainMap.get("Bass").setValue(map(100 * volScale, 0, 127, -40, 0));
+                 samplerGainMap.get("Bass").setValue(map(floatVal(100) * volScale, 0, 127, -40, 0));
                  samplerMap.get("Bass").trigger();
               }
             } else {
               if (false) {
                 if (token.equals("x")) token = "C";
-                if (chords.containsKey(token)) playChordByNameInternal("Bass", token, noteDur * 0.9f, (float)100);
-                else { int midi = noteToMidi(token); if (midi >= 0) playNoteForDuration("Bass", midi, (float)100, noteDur * 0.9f); }
+                if (chords.containsKey(token)) playChordByNameInternal("Bass", token, noteDur * 0.9f, floatVal(100));
+                else { int midi = noteToMidi(token); if (midi >= 0) playNoteForDuration("Bass", midi, floatVal(100), noteDur * 0.9f); }
               } else {
-                if (token.equalsIgnoreCase("x")) playNoteForDuration("Bass", 60, (float)100, noteDur * 0.8f);
-                else { int midi = noteToMidi(token); if (midi >= 0) playNoteForDuration("Bass", midi, (float)100, noteDur * 0.9f); }
+                if (token.equalsIgnoreCase("x")) playNoteForDuration("Bass", 60, floatVal(100), noteDur * 0.8f);
+                else { int midi = noteToMidi(token); if (midi >= 0) playNoteForDuration("Bass", midi, floatVal(100), noteDur * 0.9f); }
               }
             }
           }
@@ -1327,7 +1399,7 @@ void B() {
       public void run() {
         int timeout = 0;
         while(isCountingIn && timeout < 500) { try { Thread.sleep(10); timeout++; } catch(Exception e) {} }
-        try { Thread.sleep((long)(((1-1) * 4 * 60000) / bpm)); } catch(Exception e) {}
+        try { Thread.sleep((long)(((floatVal(1)-1) * 4 * 60000) / bpm)); } catch(Exception e) {}
         String rawPattern = "Dm7--- ---- G7--- ----";
         ArrayList<String> parsed = new ArrayList<String>();
         if (rawPattern.contains(",")) {
@@ -1368,17 +1440,17 @@ void B() {
             if (instrumentMap.getOrDefault("Piano", "").equals("DRUM")) {
               if (token.equalsIgnoreCase("x")) {
                  float volScale = instrumentVolumes.getOrDefault("Piano", 1.0f);
-                 samplerGainMap.get("Piano").setValue(map(100 * volScale, 0, 127, -40, 0));
+                 samplerGainMap.get("Piano").setValue(map(floatVal(100) * volScale, 0, 127, -40, 0));
                  samplerMap.get("Piano").trigger();
               }
             } else {
               if (true) {
                 if (token.equals("x")) token = "C";
-                if (chords.containsKey(token)) playChordByNameInternal("Piano", token, noteDur * 0.9f, (float)100);
-                else { int midi = noteToMidi(token); if (midi >= 0) playNoteForDuration("Piano", midi, (float)100, noteDur * 0.9f); }
+                if (chords.containsKey(token)) playChordByNameInternal("Piano", token, noteDur * 0.9f, floatVal(100));
+                else { int midi = noteToMidi(token); if (midi >= 0) playNoteForDuration("Piano", midi, floatVal(100), noteDur * 0.9f); }
               } else {
-                if (token.equalsIgnoreCase("x")) playNoteForDuration("Piano", 60, (float)100, noteDur * 0.8f);
-                else { int midi = noteToMidi(token); if (midi >= 0) playNoteForDuration("Piano", midi, (float)100, noteDur * 0.9f); }
+                if (token.equalsIgnoreCase("x")) playNoteForDuration("Piano", 60, floatVal(100), noteDur * 0.8f);
+                else { int midi = noteToMidi(token); if (midi >= 0) playNoteForDuration("Piano", midi, floatVal(100), noteDur * 0.9f); }
               }
             }
           }
@@ -1390,7 +1462,7 @@ void B() {
       public void run() {
         int timeout = 0;
         while(isCountingIn && timeout < 500) { try { Thread.sleep(10); timeout++; } catch(Exception e) {} }
-        try { Thread.sleep((long)(((1-1) * 4 * 60000) / bpm)); } catch(Exception e) {}
+        try { Thread.sleep((long)(((floatVal(1)-1) * 4 * 60000) / bpm)); } catch(Exception e) {}
         String rawPattern = "D2--- ---- G1--- ----";
         ArrayList<String> parsed = new ArrayList<String>();
         if (rawPattern.contains(",")) {
@@ -1431,17 +1503,17 @@ void B() {
             if (instrumentMap.getOrDefault("Bass", "").equals("DRUM")) {
               if (token.equalsIgnoreCase("x")) {
                  float volScale = instrumentVolumes.getOrDefault("Bass", 1.0f);
-                 samplerGainMap.get("Bass").setValue(map(100 * volScale, 0, 127, -40, 0));
+                 samplerGainMap.get("Bass").setValue(map(floatVal(100) * volScale, 0, 127, -40, 0));
                  samplerMap.get("Bass").trigger();
               }
             } else {
               if (false) {
                 if (token.equals("x")) token = "C";
-                if (chords.containsKey(token)) playChordByNameInternal("Bass", token, noteDur * 0.9f, (float)100);
-                else { int midi = noteToMidi(token); if (midi >= 0) playNoteForDuration("Bass", midi, (float)100, noteDur * 0.9f); }
+                if (chords.containsKey(token)) playChordByNameInternal("Bass", token, noteDur * 0.9f, floatVal(100));
+                else { int midi = noteToMidi(token); if (midi >= 0) playNoteForDuration("Bass", midi, floatVal(100), noteDur * 0.9f); }
               } else {
-                if (token.equalsIgnoreCase("x")) playNoteForDuration("Bass", 60, (float)100, noteDur * 0.8f);
-                else { int midi = noteToMidi(token); if (midi >= 0) playNoteForDuration("Bass", midi, (float)100, noteDur * 0.9f); }
+                if (token.equalsIgnoreCase("x")) playNoteForDuration("Bass", 60, floatVal(100), noteDur * 0.8f);
+                else { int midi = noteToMidi(token); if (midi >= 0) playNoteForDuration("Bass", midi, floatVal(100), noteDur * 0.9f); }
               }
             }
           }
@@ -1453,7 +1525,7 @@ void B() {
       public void run() {
         int timeout = 0;
         while(isCountingIn && timeout < 500) { try { Thread.sleep(10); timeout++; } catch(Exception e) {} }
-        try { Thread.sleep((long)(((2-1) * 4 * 60000) / bpm)); } catch(Exception e) {}
+        try { Thread.sleep((long)(((floatVal(2)-1) * 4 * 60000) / bpm)); } catch(Exception e) {}
         String rawPattern = "CM7_End--- ---- ---- ----";
         ArrayList<String> parsed = new ArrayList<String>();
         if (rawPattern.contains(",")) {
@@ -1494,17 +1566,17 @@ void B() {
             if (instrumentMap.getOrDefault("Piano", "").equals("DRUM")) {
               if (token.equalsIgnoreCase("x")) {
                  float volScale = instrumentVolumes.getOrDefault("Piano", 1.0f);
-                 samplerGainMap.get("Piano").setValue(map(100 * volScale, 0, 127, -40, 0));
+                 samplerGainMap.get("Piano").setValue(map(floatVal(100) * volScale, 0, 127, -40, 0));
                  samplerMap.get("Piano").trigger();
               }
             } else {
               if (true) {
                 if (token.equals("x")) token = "C";
-                if (chords.containsKey(token)) playChordByNameInternal("Piano", token, noteDur * 0.9f, (float)100);
-                else { int midi = noteToMidi(token); if (midi >= 0) playNoteForDuration("Piano", midi, (float)100, noteDur * 0.9f); }
+                if (chords.containsKey(token)) playChordByNameInternal("Piano", token, noteDur * 0.9f, floatVal(100));
+                else { int midi = noteToMidi(token); if (midi >= 0) playNoteForDuration("Piano", midi, floatVal(100), noteDur * 0.9f); }
               } else {
-                if (token.equalsIgnoreCase("x")) playNoteForDuration("Piano", 60, (float)100, noteDur * 0.8f);
-                else { int midi = noteToMidi(token); if (midi >= 0) playNoteForDuration("Piano", midi, (float)100, noteDur * 0.9f); }
+                if (token.equalsIgnoreCase("x")) playNoteForDuration("Piano", 60, floatVal(100), noteDur * 0.8f);
+                else { int midi = noteToMidi(token); if (midi >= 0) playNoteForDuration("Piano", midi, floatVal(100), noteDur * 0.9f); }
               }
             }
           }
@@ -1516,7 +1588,7 @@ void B() {
       public void run() {
         int timeout = 0;
         while(isCountingIn && timeout < 500) { try { Thread.sleep(10); timeout++; } catch(Exception e) {} }
-        try { Thread.sleep((long)(((2-1) * 4 * 60000) / bpm)); } catch(Exception e) {}
+        try { Thread.sleep((long)(((floatVal(2)-1) * 4 * 60000) / bpm)); } catch(Exception e) {}
         String rawPattern = "C2--- ---- ---- ----";
         ArrayList<String> parsed = new ArrayList<String>();
         if (rawPattern.contains(",")) {
@@ -1557,17 +1629,17 @@ void B() {
             if (instrumentMap.getOrDefault("Bass", "").equals("DRUM")) {
               if (token.equalsIgnoreCase("x")) {
                  float volScale = instrumentVolumes.getOrDefault("Bass", 1.0f);
-                 samplerGainMap.get("Bass").setValue(map(100 * volScale, 0, 127, -40, 0));
+                 samplerGainMap.get("Bass").setValue(map(floatVal(100) * volScale, 0, 127, -40, 0));
                  samplerMap.get("Bass").trigger();
               }
             } else {
               if (false) {
                 if (token.equals("x")) token = "C";
-                if (chords.containsKey(token)) playChordByNameInternal("Bass", token, noteDur * 0.9f, (float)100);
-                else { int midi = noteToMidi(token); if (midi >= 0) playNoteForDuration("Bass", midi, (float)100, noteDur * 0.9f); }
+                if (chords.containsKey(token)) playChordByNameInternal("Bass", token, noteDur * 0.9f, floatVal(100));
+                else { int midi = noteToMidi(token); if (midi >= 0) playNoteForDuration("Bass", midi, floatVal(100), noteDur * 0.9f); }
               } else {
-                if (token.equalsIgnoreCase("x")) playNoteForDuration("Bass", 60, (float)100, noteDur * 0.8f);
-                else { int midi = noteToMidi(token); if (midi >= 0) playNoteForDuration("Bass", midi, (float)100, noteDur * 0.9f); }
+                if (token.equalsIgnoreCase("x")) playNoteForDuration("Bass", 60, floatVal(100), noteDur * 0.8f);
+                else { int midi = noteToMidi(token); if (midi >= 0) playNoteForDuration("Bass", midi, floatVal(100), noteDur * 0.9f); }
               }
             }
           }
@@ -1594,7 +1666,7 @@ void setup() {
     if (!instrumentMap.containsKey("Bass")) instrumentMap.put("Bass", "TRIANGLE");
   if (!instrumentADSR.containsKey("Bass")) instrumentADSR.put("Bass", new float[]{defAdsrA, defAdsrD, defAdsrS, defAdsrR});
     instrumentMap.put("Bass", "SAW");
-    instrumentVolumes.put("Bass", (float)50 / 100.0f);
+    instrumentVolumes.put("Bass", floatVal(50) / 100.0f);
     instrumentADSR.put("Bass", new float[]{(float)0.01, (float)0.5, (float)0, (float)0.5});
     if (!instrumentMap.containsKey("Clap")) instrumentMap.put("Clap", "TRIANGLE");
   if (!instrumentADSR.containsKey("Clap")) instrumentADSR.put("Clap", new float[]{defAdsrA, defAdsrD, defAdsrS, defAdsrR});
@@ -1674,11 +1746,11 @@ void setup() {
       public void run() {
         try {
           Thread.sleep(1000); 
-          logToScreen("--- COUNT IN START (" + 4 + "/" + 4 + ") ---", 1);
-          float beatDelay = (60000.0f / bpm) * (4.0f / 4);
-          for (int m=0; m<1; m++) {
-            for (int b=0; b<(int)4; b++) {
-              playClick((b==0 ? 880.0f : 440.0f), (float)100);
+          logToScreen("--- COUNT IN START (" + floatVal(4) + "/" + floatVal(4) + ") ---", 1);
+          float beatDelay = (60000.0f / bpm) * (4.0f / floatVal(4));
+          for (int m=0; m<(int)floatVal(1); m++) {
+            for (int b=0; b<(int)floatVal(4); b++) {
+              playClick((b==0 ? 880.0f : 440.0f), floatVal(100));
               Thread.sleep((long)beatDelay);
             }
           }
@@ -1690,7 +1762,7 @@ void setup() {
       }
     }).start();
     currentInstrument = "Sax";
-    bpm = (float)105;
+    bpm = floatVal(105);
     chords.put("Dm7", new String[]{"D4", "F4", "A4", "C5"});
     chords.put("G7", new String[]{"G3", "B3", "D4", "F4"});
     chords.put("CM7", new String[]{"C4", "E4", "G4", "B4"});

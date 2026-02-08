@@ -37,6 +37,48 @@ if (Blockly.Workspace.prototype.getVariableById === undefined) {
   };
 }
 
+// --- Strict Orphan Block Restriction ---
+const VALID_ROOTS = [
+    'processing_setup',
+    'processing_draw',
+    'processing_exit',
+    'ui_key_event',
+    'sb_perform',
+    'sb_tone_loop',
+    'sb_instrument_container',
+    'sb_define_chord',
+    'sb_serial_data_received',
+    'midi_on_note',
+    'midi_off_note',
+    'midi_on_controller_change',
+    'procedures_defnoreturn',
+    'procedures_defreturn',
+    'sb_comment' // Comments are allowed at top level
+];
+
+function updateOrphanBlocks(ws) {
+    if (!ws || ws.isDragging()) return;
+
+    Blockly.Events.setGroup(true);
+    try {
+        const topBlocks = ws.getTopBlocks(false);
+        topBlocks.forEach(topBlock => {
+            // 判斷此頂層積木是否為合法根節點
+            const isOrphan = !VALID_ROOTS.includes(topBlock.type);
+            
+            // 外科手術式更新：遍歷子樹並比對狀態
+            topBlock.getDescendants(false).forEach(block => {
+                const hasOrphanReason = block.hasDisabledReason('orphan');
+                if (hasOrphanReason !== isOrphan) {
+                    block.setDisabledReason(isOrphan, 'orphan');
+                }
+            });
+        });
+    } finally {
+        Blockly.Events.setGroup(false);
+    }
+}
+
 // --- Key Management System ---
 window.SB_KEYS = {
   // 系統保留：移調與還原，使用者絕對不能自訂
@@ -296,6 +338,7 @@ async function init() {
     document.addEventListener('keydown', unlockSounds);
 
     let autoSaveTimeout = null;
+    let orphanUpdateTimer = null;
 function triggerAutoSave() {
     // Prevent auto-saving for examples
     const projectName = document.getElementById('projectName');
@@ -333,7 +376,16 @@ function triggerAutoSave() {
     };
 
     workspace.addChangeListener((event) => {
-        // Only trigger isDirty for actual block changes, not UI or scrolling
+        // --- 效能優化：過濾無意義事件 ---
+        // 1. 忽略 UI 捲動或選取事件
+        if (event.isUiEvent) return;
+        // 2. 忽略由我們自己觸發的「禁用狀態」變更事件，防止無限遞迴
+        if (event.type === Blockly.Events.CHANGE && event.element === 'disabled') return;
+
+        // 關鍵效能優化：正在拖曳時跳過所有邏輯檢查，確保動畫（如垃圾桶）流暢
+        if (workspace && workspace.isDragging()) return;
+
+        // Only trigger isDirty for actual block changes
         const isBlockChange = [
             Blockly.Events.BLOCK_CREATE,
             Blockly.Events.BLOCK_DELETE,
@@ -341,18 +393,24 @@ function triggerAutoSave() {
             Blockly.Events.BLOCK_MOVE
         ].includes(event.type);
 
-        if (isBlockChange && !event.isUiEvent && workspace.getTopBlocks().length > 0) {
-            if (!isDirty) {
-                isDirty = true;
-                updateStatusUI();
-                console.log('[Status] Workspace is now DIRTY');
-            }
-            triggerAutoSave();
-            
-            // Check for key conflicts whenever workspace changes
-            if (window.checkKeyConflicts) {
-                window.checkKeyConflicts(workspace);
-            }
+        if (isBlockChange) {
+            // 延遲執行所有重型檢查，確保操作流暢
+            if (orphanUpdateTimer) clearTimeout(orphanUpdateTimer);
+            orphanUpdateTimer = setTimeout(() => {
+                if (workspace.getTopBlocks().length > 0) {
+                    if (!isDirty) {
+                        isDirty = true;
+                        updateStatusUI();
+                    }
+                    triggerAutoSave();
+                    
+                    // 靜止後才檢查按鍵衝突與孤兒積木
+                    if (window.checkKeyConflicts) {
+                        window.checkKeyConflicts(workspace);
+                    }
+                    updateOrphanBlocks(workspace);
+                }
+            }, 100); 
         }
     });
 
@@ -502,3 +560,16 @@ function loadXmlToWorkspace(xmlText, establishedPath = true, fileName = "", full
 
 // Start initialization
 init();
+
+// Add a blur event listener to handle cases where a drag is released outside the webview.
+window.addEventListener('blur', () => {
+    setTimeout(() => {
+        if (workspace && workspace.isDragging() && Blockly.Gesture.inProgress()) {
+            try {
+                Blockly.Gesture.clearForced();
+            } catch (e) {
+                console.warn('[Gesture] Clear failed:', e);
+            }
+        }
+    }, 10);
+});

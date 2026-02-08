@@ -13,6 +13,11 @@ Blockly.Blocks['ui_key_event'] = {
         .appendField(Blockly.Msg['UI_KEY_EVENT'].split('%1')[0])
         .appendField(new Blockly.FieldDropdown(() => window.getAvailableKeys(this)), "KEY")
         .appendField(Blockly.Msg['UI_KEY_EVENT'].split('%1')[1].split('%2')[0])
+        .appendField(new Blockly.FieldDropdown([
+          [Blockly.Msg['UI_KEY_PRESSED'], "PRESSED"],
+          [Blockly.Msg['UI_KEY_RELEASED'], "RELEASED"]
+        ]), "MODE")
+        .appendField(Blockly.Msg['UI_KEY_EVENT'].split('%2')[1] || "")
         .appendField(new Blockly.FieldLabel(""), "CONFLICT_LABEL");
     this.appendStatementInput("DO")
         .setCheck(null)

@@ -196,7 +196,6 @@
 
     <!-- 10. Instrument Control -->
     <category name="%{BKY_CAT_INSTRUMENT_CONTROL}" colour="%{BKY_INSTRUMENT_CONTROL_HUE}">
-        <block type="sb_select_current_instrument"></block>
         <block type="sb_set_panning">
             <value name="VALUE">
                 <shadow type="math_number">
@@ -263,10 +262,14 @@
             <mutation effect_type="filter"></mutation>
             <field name="EFFECT_TYPE">filter</field>
             <value name="FILTER_FREQ">
-                <shadow type="math_number"><field name="NUM">1000</field></shadow>
+                <shadow type="math_number">
+                    <field name="NUM">1000</field>
+                </shadow>
             </value>
             <value name="FILTER_Q">
-                <shadow type="math_number"><field name="NUM">1</field></shadow>
+                <shadow type="math_number">
+                    <field name="NUM">1</field>
+                </shadow>
             </value>
         </block>
         <block type="sb_set_effect_param">
@@ -282,6 +285,8 @@
 
     <!-- 12. Performance -->
     <category name="%{BKY_CAT_PERFORMANCE}" colour="%{BKY_PERFORMANCE_HUE}">
+        <!-- 選擇樂器 -->
+        <block type="sb_select_current_instrument"></block>
         <!-- 設定速度 -->
         <block type="sb_transport_set_bpm">
             <value name="BPM">
@@ -291,34 +296,20 @@
             </value>
         </block>
         <!-- 預備拍 -->
-              <block type="sb_transport_count_in">
-                <value name="MEASURES">
-                  <shadow type="math_number">
-                    <field name="NUM">1</field>
-                  </shadow>
-                </value>
-                <value name="BEATS">
-                  <shadow type="math_number">
-                    <field name="NUM">4</field>
-                  </shadow>
-                </value>
-                <value name="BEAT_UNIT">
-                  <shadow type="math_number">
-                    <field name="NUM">4</field>
-                  </shadow>
-                </value>
-                <value name="VELOCITY">
-                  <shadow type="math_number">
-                    <field name="NUM">100</field>
-                  </shadow>
-                </value>
-              </block>        <!-- 定義和弦 -->
-        <block type="sb_define_chord"></block>
-        <!-- 演奏持續音 (MIDI) -->
-        <block type="sb_play_note">
-            <value name="PITCH">
+        <block type="sb_transport_count_in">
+            <value name="MEASURES">
                 <shadow type="math_number">
-                    <field name="NUM">60</field>
+                    <field name="NUM">1</field>
+                </shadow>
+            </value>
+            <value name="BEATS">
+                <shadow type="math_number">
+                    <field name="NUM">4</field>
+                </shadow>
+            </value>
+            <value name="BEAT_UNIT">
+                <shadow type="math_number">
+                    <field name="NUM">4</field>
                 </shadow>
             </value>
             <value name="VELOCITY">
@@ -327,14 +318,30 @@
                 </shadow>
             </value>
         </block>
-        <block type="sb_stop_note">
+        <!-- 定義和弦 -->
+        <block type="sb_define_chord"></block>
+        <!-- 演奏持續音 (MIDI) -->
+        <block type="sb_play_note">
             <value name="PITCH">
+                <shadow type="text">
+                    <field name="TEXT">60</field>
+                </shadow>
+            </value>
+            <value name="VELOCITY">
                 <shadow type="math_number">
-                    <field name="NUM">60</field>
+                    <field name="NUM">100</field>
                 </shadow>
             </value>
         </block>
-        <!-- 播放單音 -->
+        <!-- 停止持續音 (MIDI) -->
+        <block type="sb_stop_note">
+            <value name="PITCH">
+                <shadow type="text">
+                    <field name="TEXT">60</field>
+                </shadow>
+            </value>
+        </block>
+        <!-- 演奏單音 -->
         <block type="sb_trigger_sample">
             <value name="VELOCITY">
                 <shadow type="math_number">
@@ -342,6 +349,7 @@
                 </shadow>
             </value>
         </block>
+        <!-- 演奏電子鼓 -->
         <block type="sb_play_drum">
             <value name="VELOCITY">
                 <shadow type="math_number">
@@ -353,6 +361,11 @@
         <block type="sb_play_melody"></block>
         <!-- 演奏和弦 -->
         <block type="sb_play_chord_by_name">
+            <value name="DUR">
+                <shadow type="text">
+                    <field name="TEXT">4n</field>
+                </shadow>
+            </value>
             <value name="VELOCITY">
                 <shadow type="math_number">
                     <field name="NUM">100</field>
@@ -368,13 +381,8 @@
                 </shadow>
             </value>
         </block>
-        <block type="sb_musical_section">
-            <value name="DURATION">
-                <shadow type="math_number">
-                    <field name="NUM">4</field>
-                </shadow>
-            </value>
-        </block>
+        <block type="sb_tone_loop"></block>
+        <block type="sb_perform"></block>
         <block type="sb_rhythm_sequence">
             <value name="MEASURE">
                 <shadow type="math_number">
@@ -387,9 +395,14 @@
                 </shadow>
             </value>
         </block>
+        <block type="sb_musical_section">
+            <value name="DURATION">
+                <shadow type="math_number">
+                    <field name="NUM">4</field>
+                </shadow>
+            </value>
+        </block>
         <block type="sb_rhythm_sequencer_v2"></block>
-        <block type="sb_tone_loop"></block>
-        <block type="sb_perform"></block>
     </category>
 
     <sep></sep>

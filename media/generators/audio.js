@@ -721,9 +721,10 @@ registerGenerator('sb_set_instrument_volume', function(block) {
 
 registerGenerator('sb_play_note', function(block) {
   Blockly.Processing.injectAudioCore();
+  const name = block.getFieldValue('NAME');
   const pitch = Blockly.Processing.valueToCode(block, 'PITCH', Blockly.Processing.ORDER_ATOMIC) || '60';
   const velocity = Blockly.Processing.valueToCode(block, 'VELOCITY', Blockly.Processing.ORDER_ATOMIC) || '100';
-  return `playNoteInternal(currentInstrument, (int)floatVal(${pitch}), floatVal(${velocity}));\n`;
+  return `playNoteInternal("${name}", getMidi(${pitch}), floatVal(${velocity}));\n`;
 });
 
 registerGenerator('sb_play_drum', function(block) {
@@ -736,8 +737,9 @@ registerGenerator('sb_play_drum', function(block) {
 
 registerGenerator('sb_stop_note', function(block) {
   Blockly.Processing.injectAudioCore();
+  const name = block.getFieldValue('NAME');
   const pitch = Blockly.Processing.valueToCode(block, 'PITCH', Blockly.Processing.ORDER_ATOMIC) || '60';
-  return `stopNoteInternal(currentInstrument, (int)floatVal(${pitch}));\n`;
+  return `stopNoteInternal("${name}", getMidi(${pitch}));\n`;
 });
 
 registerGenerator('sb_play_melody', function(block) {
@@ -927,12 +929,13 @@ registerGenerator('sb_play_chord_by_name', function(block) {
   Blockly.Processing.injectAudioCore();
   const inst = block.getFieldValue('INST_NAME');
   const name = block.getFieldValue('NAME');
-  const dur = block.getFieldValue('DUR') || '4n';
+  const dur = Blockly.Processing.valueToCode(block, 'DUR', Blockly.Processing.ORDER_ATOMIC) || '"4n"';
   const velocity = Blockly.Processing.valueToCode(block, 'VELOCITY', Blockly.Processing.ORDER_ATOMIC) || '100';
   
   return `{ 
-  float ms = durationToMs("${dur}");
-  playChordByNameInternal("${inst}", "${name}", ms, (float)${velocity});
+  Object dVal = ${dur};
+  float ms = (dVal instanceof Number) ? ((Number)dVal).floatValue() : durationToMs(dVal.toString());
+  playChordByNameInternal("${inst}", "${name}", ms, floatVal(${velocity}));
 }
 `;
 });

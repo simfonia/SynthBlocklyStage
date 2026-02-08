@@ -71,6 +71,11 @@ Blockly.Processing.init = function(workspace) {
     "  if (o instanceof Number) return ((Number)o).floatValue();\n" +
     "  try { return Float.parseFloat(o.toString()); }\n" +
     "  catch (Exception e) { return 0.0f; }\n" +
+    "}\n" +
+    "int getMidi(Object o) {\n" +
+    "  if (o == null) return -1;\n" +
+    "  if (o instanceof Number) return ((Number)o).intValue();\n" +
+    "  return noteToMidi(o.toString());\n" +
     "}";
 
   if (!Blockly.Processing.nameDB_) {
@@ -157,7 +162,12 @@ Blockly.Processing.finish = function(code) {
   let releasedEventsCode = "";
   if (Blockly.Processing.keyEvents_) {
     Blockly.Processing.keyEvents_.forEach(ev => {
-      pressedEventsCode += `if (k == '${ev.key}') {\n      ${ev.code.replace(/\n/g, '\n      ')}\n    }\n    `;
+      let eventCode = `if (k == '${ev.key}') {\n      ${ev.code.replace(/\n/g, '\n      ')}\n    }\n    `;
+      if (ev.mode === 'RELEASED') {
+        releasedEventsCode += eventCode;
+      } else {
+        pressedEventsCode += eventCode;
+      }
     });
   }
   

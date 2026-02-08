@@ -12,19 +12,19 @@
 
 const HARMONIC_PARTIALS_MUTATOR = {
   itemCount_: 3,
-  
-  mutationToDom: function() {
+
+  mutationToDom: function () {
     const container = Blockly.utils.xml.createElement('mutation');
     container.setAttribute('items', this.itemCount_);
     return container;
   },
 
-  domToMutation: function(xmlElement) {
+  domToMutation: function (xmlElement) {
     this.itemCount_ = parseInt(xmlElement.getAttribute('items'), 10);
     this.updateShape_();
   },
 
-  decompose: function(workspace) {
+  decompose: function (workspace) {
     const containerBlock = workspace.newBlock('sb_harmonic_partial_container');
     containerBlock.initSvg();
     let connection = containerBlock.nextConnection;
@@ -37,7 +37,7 @@ const HARMONIC_PARTIALS_MUTATOR = {
     return containerBlock;
   },
 
-  compose: function(containerBlock) {
+  compose: function (containerBlock) {
     let itemBlock = containerBlock.getNextBlock();
     this.itemCount_ = 0;
     while (itemBlock) {
@@ -47,7 +47,7 @@ const HARMONIC_PARTIALS_MUTATOR = {
     this.updateShape_();
   },
 
-  updateShape_: function() {
+  updateShape_: function () {
     // 1. Save existing connections
     const connections = [];
     for (let i = 1; i <= 100; i++) {
@@ -66,10 +66,10 @@ const HARMONIC_PARTIALS_MUTATOR = {
     // 3. Rebuild and Restore
     for (let i = 1; i <= this.itemCount_; i++) {
       const input = this.appendValueInput('PARTIAL' + i)
-          .setCheck('Number')
-          .appendField(Blockly.Msg['AUDIO_HARMONIC_FIELD'].replace('%1', i));
-      if (connections[i-1]) {
-        input.connection.connect(connections[i-1]);
+        .setCheck('Number')
+        .appendField(Blockly.Msg['AUDIO_HARMONIC_FIELD'].replace('%1', i));
+      if (connections[i - 1]) {
+        input.connection.connect(connections[i - 1]);
       }
     }
   }
@@ -77,16 +77,16 @@ const HARMONIC_PARTIALS_MUTATOR = {
 
 const ADDITIVE_SYNTH_MUTATOR = {
   itemCount_: 2,
-  mutationToDom: function() {
+  mutationToDom: function () {
     const container = Blockly.utils.xml.createElement('mutation');
     container.setAttribute('items', this.itemCount_);
     return container;
   },
-  domToMutation: function(xmlElement) {
+  domToMutation: function (xmlElement) {
     this.itemCount_ = parseInt(xmlElement.getAttribute('items'), 10);
     this.updateShape_();
   },
-  decompose: function(workspace) {
+  decompose: function (workspace) {
     const containerBlock = workspace.newBlock('sb_additive_synth_container');
     containerBlock.initSvg();
     let connection = containerBlock.nextConnection;
@@ -98,7 +98,7 @@ const ADDITIVE_SYNTH_MUTATOR = {
     }
     return containerBlock;
   },
-  compose: function(containerBlock) {
+  compose: function (containerBlock) {
     let itemBlock = containerBlock.getNextBlock();
     this.itemCount_ = 0;
     while (itemBlock) {
@@ -107,7 +107,7 @@ const ADDITIVE_SYNTH_MUTATOR = {
     }
     this.updateShape_();
   },
-  updateShape_: function() {
+  updateShape_: function () {
     // 1. Save field data
     const fieldValues = [];
     for (let i = 1; i <= 100; i++) {
@@ -126,38 +126,38 @@ const ADDITIVE_SYNTH_MUTATOR = {
     // 3. Rebuild and Restore
     for (let i = 1; i <= this.itemCount_; i++) {
       this.appendDummyInput('COMP' + i)
-          .appendField("波形")
-          .appendField(new Blockly.FieldDropdown([["Triangle","TRIANGLE"],["Sine","SINE"],["Square","SQUARE"],["Saw","SAW"]]), "WAVE" + i)
-          .appendField("倍率")
-          .appendField(new Blockly.FieldTextInput("1.0"), "RATIO" + i)
-          .appendField("振幅")
-          .appendField(new Blockly.FieldTextInput("0.5"), "AMP" + i);
-      
-      if (fieldValues[i-1]) {
-        this.setFieldValue(fieldValues[i-1].wave, 'WAVE' + i);
-        this.setFieldValue(fieldValues[i-1].ratio, 'RATIO' + i);
-        this.setFieldValue(fieldValues[i-1].amp, 'AMP' + i);
+        .appendField("波形")
+        .appendField(new Blockly.FieldDropdown([["Triangle", "TRIANGLE"], ["Sine", "SINE"], ["Square", "SQUARE"], ["Saw", "SAW"]]), "WAVE" + i)
+        .appendField("倍率")
+        .appendField(new Blockly.FieldTextInput("1.0"), "RATIO" + i)
+        .appendField("振幅")
+        .appendField(new Blockly.FieldTextInput("0.5"), "AMP" + i);
+
+      if (fieldValues[i - 1]) {
+        this.setFieldValue(fieldValues[i - 1].wave, 'WAVE' + i);
+        this.setFieldValue(fieldValues[i - 1].ratio, 'RATIO' + i);
+        this.setFieldValue(fieldValues[i - 1].amp, 'AMP' + i);
       }
     }
   }
 };
 
 const DRUM_SAMPLER_MUTATOR = {
-  mutationToDom: function() {
+  mutationToDom: function () {
     const container = Blockly.utils.xml.createElement('mutation');
     container.setAttribute('type', this.getFieldValue('PATH') || 'Kick');
     return container;
   },
-  domToMutation: function(xmlElement) {
+  domToMutation: function (xmlElement) {
     this.updateShape_(xmlElement.getAttribute('type') || 'Kick');
   },
-  updateShape_: function(type) {
+  updateShape_: function (type) {
     const inputExists = this.getInput('CUSTOM_PATH');
     if (type === 'CUSTOM') {
       if (!inputExists) {
         this.appendDummyInput('CUSTOM_PATH')
-            .appendField(Blockly.Msg['AUDIO_SAMPLER_PATH_FIELD'] || "路徑")
-            .appendField(new Blockly.FieldTextInput("drum/kick.wav"), "CUSTOM_PATH_VALUE");
+          .appendField(Blockly.Msg['AUDIO_SAMPLER_PATH_FIELD'] || "路徑")
+          .appendField(new Blockly.FieldTextInput("drum/kick.wav"), "CUSTOM_PATH_VALUE");
       }
     } else {
       if (inputExists) {
@@ -168,21 +168,21 @@ const DRUM_SAMPLER_MUTATOR = {
 };
 
 const MELODIC_SAMPLER_MUTATOR = {
-  mutationToDom: function() {
+  mutationToDom: function () {
     const container = Blockly.utils.xml.createElement('mutation');
     container.setAttribute('type', this.getFieldValue('TYPE') || 'PIANO');
     return container;
   },
-  domToMutation: function(xmlElement) {
+  domToMutation: function (xmlElement) {
     this.updateShape_(xmlElement.getAttribute('type') || 'PIANO');
   },
-  updateShape_: function(type) {
+  updateShape_: function (type) {
     const inputExists = this.getInput('CUSTOM_PATH');
     if (type === 'CUSTOM') {
       if (!inputExists) {
         this.appendDummyInput('CUSTOM_PATH')
-            .appendField(Blockly.Msg['AUDIO_SAMPLER_PATH_FIELD'] || "路徑")
-            .appendField(new Blockly.FieldTextInput("piano"), "CUSTOM_PATH_VALUE");
+          .appendField(Blockly.Msg['AUDIO_SAMPLER_PATH_FIELD'] || "路徑")
+          .appendField(new Blockly.FieldTextInput("piano"), "CUSTOM_PATH_VALUE");
       }
     } else {
       if (inputExists) {
@@ -194,7 +194,7 @@ const MELODIC_SAMPLER_MUTATOR = {
 
 // Helper mixin to trigger updateShape on field change
 const SAMPLER_HELPER = {
-  onchange: function(e) {
+  onchange: function (e) {
     if (!this.workspace || this.isInFlyout) return;
     // Check if the change is on this block and is the source field
     if (e.type === Blockly.Events.BLOCK_CHANGE && e.blockId === this.id && (e.name === 'PATH' || e.name === 'TYPE')) {
@@ -205,16 +205,16 @@ const SAMPLER_HELPER = {
 
 const RHYTHM_V2_MUTATOR = {
   itemCount_: 1,
-  mutationToDom: function() {
+  mutationToDom: function () {
     const container = Blockly.utils.xml.createElement('mutation');
     container.setAttribute('items', this.itemCount_);
     return container;
   },
-  domToMutation: function(xmlElement) {
+  domToMutation: function (xmlElement) {
     this.itemCount_ = parseInt(xmlElement.getAttribute('items'), 10);
     this.updateShape_();
   },
-  decompose: function(workspace) {
+  decompose: function (workspace) {
     const containerBlock = workspace.newBlock('sb_rhythm_v2_container');
     containerBlock.initSvg();
     let connection = containerBlock.nextConnection;
@@ -226,7 +226,7 @@ const RHYTHM_V2_MUTATOR = {
     }
     return containerBlock;
   },
-  compose: function(containerBlock) {
+  compose: function (containerBlock) {
     let itemBlock = containerBlock.getNextBlock();
     this.itemCount_ = 0;
     while (itemBlock) {
@@ -235,7 +235,7 @@ const RHYTHM_V2_MUTATOR = {
     }
     this.updateShape_();
   },
-  updateShape_: function() {
+  updateShape_: function () {
     const trackData = [];
     for (let i = 0; i < 50; i++) {
       if (!this.getField('INST' + i)) break;
@@ -250,14 +250,14 @@ const RHYTHM_V2_MUTATOR = {
     while (this.getInput('TRACK' + i)) { this.removeInput('TRACK' + i); i++; }
     for (let i = 0; i < this.itemCount_; i++) {
       const input = this.appendDummyInput('TRACK' + i)
-          .appendField("樂器")
-          .appendField(createInstrumentField(Blockly.Msg['SB_SELECT_INSTRUMENT_PROMPT']), 'INST' + i)
-          .appendField("力度")
-          .appendField(new Blockly.FieldTextInput("100"), 'VEL' + i)
-          .appendField("模式")
-          .appendField(new Blockly.FieldDropdown([["單音", "FALSE"], ["和弦", "TRUE"]]), 'MODE' + i)
-          .appendField("節奏")
-          .appendField(new Blockly.FieldTextInput("x--- x--- x--- x---"), 'PATTERN' + i);
+        .appendField("樂器")
+        .appendField(createInstrumentField(Blockly.Msg['SB_SELECT_INSTRUMENT_PROMPT']), 'INST' + i)
+        .appendField("力度")
+        .appendField(new Blockly.FieldTextInput("100"), 'VEL' + i)
+        .appendField("模式")
+        .appendField(new Blockly.FieldDropdown([["單音", "FALSE"], ["和弦", "TRUE"]]), 'MODE' + i)
+        .appendField("節奏")
+        .appendField(new Blockly.FieldTextInput("x--- x--- x--- x---"), 'PATTERN' + i);
       if (trackData[i]) {
         this.setFieldValue(trackData[i].inst, 'INST' + i);
         this.setFieldValue(trackData[i].vel, 'VEL' + i);
@@ -269,7 +269,7 @@ const RHYTHM_V2_MUTATOR = {
 };
 
 const SETUP_EFFECT_MUTATOR = {
-  mutationToDom: function() {
+  mutationToDom: function () {
     const container = Blockly.utils.xml.createElement('mutation');
     container.setAttribute('effect_type', this.getFieldValue('EFFECT_TYPE') || 'filter');
     if (this.getFieldValue('EFFECT_TYPE') === 'filter') {
@@ -278,14 +278,14 @@ const SETUP_EFFECT_MUTATOR = {
     }
     return container;
   },
-  domToMutation: function(xmlElement) {
+  domToMutation: function (xmlElement) {
     this.updateShape_(xmlElement.getAttribute('effect_type') || 'filter', xmlElement);
   },
-  updateShape_: function(type, xmlElement) {
+  updateShape_: function (type, xmlElement) {
     const params = [
-      'FILTER_TYPE', 'FILTER_FREQ', 'FILTER_Q', 'FILTER_ROLLOFF', 
-      'DELAY_TIME', 'FEEDBACK', 
-      'BITDEPTH', 
+      'FILTER_TYPE', 'FILTER_FREQ', 'FILTER_Q', 'FILTER_ROLLOFF',
+      'DELAY_TIME', 'FEEDBACK',
+      'BITDEPTH',
       'THRESHOLD', 'RATIO', 'ATTACK', 'RELEASE', 'MAKEUP',
       'WET', 'DISTORTION_AMOUNT', 'DECAY', 'PREDELAY',
       'RATE', 'DEPTH', 'MOD_TYPE', 'SWEEP_INPUT', 'SWEEP_DEPTH_INPUT', 'JITTER_INPUT'
@@ -305,16 +305,16 @@ const SETUP_EFFECT_MUTATOR = {
 
     if (type === 'filter') {
       this.appendDummyInput('FILTER_TYPE').setAlign(Blockly.ALIGN_RIGHT)
-          .appendField(Blockly.Msg['SB_EFFECT_FILTER_INTERNAL_TYPE_FIELD'])
-          .appendField(new Blockly.FieldDropdown([["lowpass", "lowpass"], ["highpass", "highpass"], ["bandpass", "bandpass"]]), "FILTER_TYPE_VALUE");
+        .appendField(Blockly.Msg['SB_EFFECT_FILTER_INTERNAL_TYPE_FIELD'])
+        .appendField(new Blockly.FieldDropdown([["lowpass", "lowpass"], ["highpass", "highpass"], ["bandpass", "bandpass"]]), "FILTER_TYPE_VALUE");
       this.appendValueInput('FILTER_FREQ').setCheck("Number").setAlign(Blockly.ALIGN_RIGHT)
-          .appendField(Blockly.Msg['SB_EFFECT_FILTER_FREQ_FIELD']);
+        .appendField(Blockly.Msg['SB_EFFECT_FILTER_FREQ_FIELD']);
       this.appendValueInput('FILTER_Q').setCheck("Number").setAlign(Blockly.ALIGN_RIGHT)
-          .appendField(Blockly.Msg['SB_EFFECT_FILTER_Q_FIELD']);
+        .appendField(Blockly.Msg['SB_EFFECT_FILTER_Q_FIELD']);
       this.appendDummyInput('FILTER_ROLLOFF').setAlign(Blockly.ALIGN_RIGHT)
-          .appendField(Blockly.Msg['SB_EFFECT_ROLLOFF_FIELD'])
-          .appendField(new Blockly.FieldDropdown([["-12dB", "-12"], ["-24dB", "-24"], ["-48dB", "-48"]]), "FILTER_ROLLOFF_VALUE");
-      
+        .appendField(Blockly.Msg['SB_EFFECT_ROLLOFF_FIELD'])
+        .appendField(new Blockly.FieldDropdown([["-12dB", "-12"], ["-24dB", "-24"], ["-48dB", "-48"]]), "FILTER_ROLLOFF_VALUE");
+
       addShadow('FILTER_FREQ', 1000);
       addShadow('FILTER_Q', 0.5);
 
@@ -324,43 +324,43 @@ const SETUP_EFFECT_MUTATOR = {
       }
     } else if (type === 'delay') {
       this.appendValueInput('DELAY_TIME').setCheck("Number").setAlign(Blockly.ALIGN_RIGHT)
-          .appendField(Blockly.Msg['SB_EFFECT_DELAY_TIME_FIELD']);
+        .appendField(Blockly.Msg['SB_EFFECT_DELAY_TIME_FIELD']);
       this.appendValueInput('FEEDBACK').setCheck("Number").setAlign(Blockly.ALIGN_RIGHT)
-          .appendField(Blockly.Msg['SB_EFFECT_FEEDBACK_FIELD']);
-      
+        .appendField(Blockly.Msg['SB_EFFECT_FEEDBACK_FIELD']);
+
       addShadow('DELAY_TIME', 0.5);
       addShadow('FEEDBACK', 0.5);
     } else if (type === 'bitcrush') {
       this.appendValueInput('BITDEPTH').setCheck("Number").setAlign(Blockly.ALIGN_RIGHT)
-          .appendField(Blockly.Msg['SB_EFFECT_BITDEPTH_FIELD']);
-      
+        .appendField(Blockly.Msg['SB_EFFECT_BITDEPTH_FIELD']);
+
       addShadow('BITDEPTH', 8);
     } else if (type === 'waveshaper') {
       this.appendValueInput('DISTORTION_AMOUNT').setCheck("Number").setAlign(Blockly.ALIGN_RIGHT)
-          .appendField(Blockly.Msg['SB_EFFECT_DISTORTION_AMOUNT_FIELD']);
-      
+        .appendField(Blockly.Msg['SB_EFFECT_DISTORTION_AMOUNT_FIELD']);
+
       addShadow('DISTORTION_AMOUNT', 2);
     } else if (type === 'reverb') {
       this.appendValueInput('ROOMSIZE').setCheck("Number").setAlign(Blockly.ALIGN_RIGHT)
-          .appendField(Blockly.Msg['SB_EFFECT_ROOMSIZE_FIELD']);
+        .appendField(Blockly.Msg['SB_EFFECT_ROOMSIZE_FIELD']);
       this.appendValueInput('DAMPING').setCheck("Number").setAlign(Blockly.ALIGN_RIGHT)
-          .appendField(Blockly.Msg['SB_EFFECT_DAMPING_FIELD']);
+        .appendField(Blockly.Msg['SB_EFFECT_DAMPING_FIELD']);
       this.appendValueInput('WET').setCheck("Number").setAlign(Blockly.ALIGN_RIGHT)
-          .appendField(Blockly.Msg['SB_EFFECT_WET_FIELD']);
-      
+        .appendField(Blockly.Msg['SB_EFFECT_WET_FIELD']);
+
       addShadow('ROOMSIZE', 0.5);
       addShadow('DAMPING', 0.5);
       addShadow('WET', 0.3);
     } else if (type === 'flanger') {
       this.appendValueInput('DELAY_TIME').setCheck("Number").setAlign(Blockly.ALIGN_RIGHT)
-          .appendField(Blockly.Msg['SB_EFFECT_DELAY_TIME_FIELD']);
+        .appendField(Blockly.Msg['SB_EFFECT_DELAY_TIME_FIELD']);
       this.appendValueInput('RATE').setCheck("Number").setAlign(Blockly.ALIGN_RIGHT)
-          .appendField(Blockly.Msg['SB_EFFECT_RATE_FIELD']);
+        .appendField(Blockly.Msg['SB_EFFECT_RATE_FIELD']);
       this.appendValueInput('DEPTH').setCheck("Number").setAlign(Blockly.ALIGN_RIGHT)
-          .appendField(Blockly.Msg['SB_EFFECT_DEPTH_FIELD']);
+        .appendField(Blockly.Msg['SB_EFFECT_DEPTH_FIELD']);
       this.appendValueInput('FEEDBACK').setCheck("Number").setAlign(Blockly.ALIGN_RIGHT)
-          .appendField(Blockly.Msg['SB_EFFECT_FEEDBACK_FIELD']);
-      
+        .appendField(Blockly.Msg['SB_EFFECT_FEEDBACK_FIELD']);
+
       addShadow('DELAY_TIME', 1);
       addShadow('RATE', 0.5);
       addShadow('DEPTH', 1);
@@ -371,7 +371,7 @@ const SETUP_EFFECT_MUTATOR = {
       this.appendValueInput('ATTACK').setCheck("Number").setAlign(Blockly.ALIGN_RIGHT).appendField(Blockly.Msg['SB_EFFECT_ATTACK_FIELD']);
       this.appendValueInput('RELEASE').setCheck("Number").setAlign(Blockly.ALIGN_RIGHT).appendField(Blockly.Msg['SB_EFFECT_RELEASE_FIELD']);
       this.appendValueInput('MAKEUP').setCheck("Number").setAlign(Blockly.ALIGN_RIGHT).appendField(Blockly.Msg['SB_EFFECT_MAKEUP_FIELD']);
-      
+
       addShadow('THRESHOLD', -20);
       addShadow('RATIO', 4);
       addShadow('ATTACK', 0.01);
@@ -381,36 +381,36 @@ const SETUP_EFFECT_MUTATOR = {
       this.appendValueInput('THRESHOLD').setCheck("Number").setAlign(Blockly.ALIGN_RIGHT).appendField(Blockly.Msg['SB_EFFECT_THRESHOLD_FIELD']);
       this.appendValueInput('ATTACK').setCheck("Number").setAlign(Blockly.ALIGN_RIGHT).appendField(Blockly.Msg['SB_EFFECT_ATTACK_FIELD']);
       this.appendValueInput('RELEASE').setCheck("Number").setAlign(Blockly.ALIGN_RIGHT).appendField(Blockly.Msg['SB_EFFECT_RELEASE_FIELD']);
-      
+
       addShadow('THRESHOLD', -3);
       addShadow('ATTACK', 0.001);
       addShadow('RELEASE', 0.1);
     } else if (type === 'autofilter') {
       this.appendValueInput('RATE').setCheck("Number").setAlign(Blockly.ALIGN_RIGHT)
-          .appendField(Blockly.Msg['SB_EFFECT_RATE_FIELD']);
+        .appendField(Blockly.Msg['SB_EFFECT_RATE_FIELD']);
       this.appendValueInput('DEPTH').setCheck("Number").setAlign(Blockly.ALIGN_RIGHT)
-          .appendField(Blockly.Msg['SB_EFFECT_DEPTH_FIELD']);
+        .appendField(Blockly.Msg['SB_EFFECT_DEPTH_FIELD']);
       this.appendValueInput('FILTER_Q').setCheck("Number").setAlign(Blockly.ALIGN_RIGHT)
-          .appendField(Blockly.Msg['SB_EFFECT_FILTER_Q_FIELD']);
+        .appendField(Blockly.Msg['SB_EFFECT_FILTER_Q_FIELD']);
       addShadow('RATE', 0.5); addShadow('DEPTH', 20); addShadow('FILTER_Q', 0.4);
     } else if (type === 'pitchmod') {
       this.appendDummyInput('MOD_TYPE').setAlign(Blockly.ALIGN_RIGHT)
-          .appendField(Blockly.Msg['SB_EFFECT_MOD_TYPE_FIELD'])
-          .appendField(new Blockly.FieldDropdown([
-            [Blockly.Msg['SB_EFFECT_MOD_TYPE_JITTER'] || "Jitter", "NOISE"], 
-            [Blockly.Msg['SB_EFFECT_MOD_TYPE_VIBRATO'] || "Vibrato", "SINE"]
-          ]), "TYPE");
+        .appendField(Blockly.Msg['SB_EFFECT_MOD_TYPE_FIELD'])
+        .appendField(new Blockly.FieldDropdown([
+          [Blockly.Msg['SB_EFFECT_MOD_TYPE_JITTER'] || "Jitter", "NOISE"],
+          [Blockly.Msg['SB_EFFECT_MOD_TYPE_VIBRATO'] || "Vibrato", "SINE"]
+        ]), "TYPE");
       this.appendValueInput('RATE').setCheck("Number").setAlign(Blockly.ALIGN_RIGHT)
-          .appendField(Blockly.Msg['SB_EFFECT_RATE_FIELD']);
+        .appendField(Blockly.Msg['SB_EFFECT_RATE_FIELD']);
       this.appendValueInput('DEPTH').setCheck("Number").setAlign(Blockly.ALIGN_RIGHT)
-          .appendField(Blockly.Msg['SB_EFFECT_DEPTH_FIELD']);
+        .appendField(Blockly.Msg['SB_EFFECT_DEPTH_FIELD']);
       addShadow('RATE', 5); addShadow('DEPTH', 10);
     }
   }
 };
 
 const EFFECT_HELPER = {
-  onchange: function(e) {
+  onchange: function (e) {
     if (!this.workspace || this.isInFlyout) return;
     if (e.type === Blockly.Events.BLOCK_CHANGE && e.blockId === this.id && e.name === 'EFFECT_TYPE') {
       this.updateShape_(e.newValue);
@@ -419,7 +419,7 @@ const EFFECT_HELPER = {
 };
 
 // --- DYNAMIC DROPDOWN FOR CHORDS ---
-const getChordDropdown = function() {
+const getChordDropdown = function () {
   const chordBlocks = Blockly.getMainWorkspace().getBlocksByType('sb_define_chord');
   const options = [];
   for (let block of chordBlocks) {
@@ -495,19 +495,6 @@ Blockly.defineBlocksWithJsonArray([
     "helpUrl": "sound_sources"
   },
   {
-    "type": "sb_play_note",
-    "message0": "%{BKY_AUDIO_PLAY_NOTE}",
-    "args0": [
-      { "type": "input_value", "name": "PITCH", "check": "Number" },
-      { "type": "input_value", "name": "VELOCITY", "check": "Number" }
-    ],
-    "previousStatement": null,
-    "nextStatement": null,
-    "inputsInline": true,
-    "colour": "%{BKY_PERFORMANCE_HUE}",
-    "tooltip": "%{BKY_AUDIO_PLAY_NOTE_TOOLTIP}"
-  },
-  {
     "type": "sb_play_drum",
     "message0": "%{BKY_SB_PLAY_DRUM_MESSAGE}",
     "args0": [
@@ -529,18 +516,6 @@ Blockly.defineBlocksWithJsonArray([
     "inputsInline": true,
     "colour": "%{BKY_PERFORMANCE_HUE}",
     "tooltip": "%{BKY_SB_PLAY_DRUM_TOOLTIP}"
-  },
-  {
-    "type": "sb_stop_note",
-    "message0": "%{BKY_AUDIO_STOP_NOTE}",
-    "args0": [
-      { "type": "input_value", "name": "PITCH", "check": "Number" }
-    ],
-    "previousStatement": null,
-    "nextStatement": null,
-    "inputsInline": true,
-    "colour": "%{BKY_PERFORMANCE_HUE}",
-    "tooltip": "%{BKY_AUDIO_STOP_NOTE_TOOLTIP}"
   },
   {
     "type": "sb_rhythm_sequencer_v2",
@@ -604,40 +579,40 @@ Blockly.defineBlocksWithJsonArray([
     "tooltip": "%{BKY_AUDIO_PERFORM_ONCE_TOOLTIP}",
     "hat": true
   },
-    {
-      "type": "sb_define_chord",
-      "message0": "%{BKY_AUDIO_DEFINE_CHORD}",
-      "args0": [
-        { "type": "field_input", "name": "NAME", "text": "CM7" },
-        { "type": "field_input", "name": "NOTES", "text": "C4,E4,G4,B4" }
-      ],
-      "previousStatement": null,
-      "nextStatement": null,
-          "colour": "%{BKY_PERFORMANCE_HUE}",
-          "tooltip": "定義一個自訂和弦名稱，可在旋律中使用。%{BKY_HELP_HINT}",
-          "helpUrl": "melody"
-        },
-    // Custom Synths (Container Style - No Name)
-    {
-      "type": "sb_create_harmonic_synth",
-      "message0": "%{BKY_AUDIO_CREATE_HARMONIC_SYNTH}",
-      "previousStatement": null,
-      "nextStatement": null,
-          "colour": "%{BKY_SOUND_SOURCES_HUE}",
-          "tooltip": "%{BKY_AUDIO_CREATE_HARMONIC_SYNTH_TOOLTIP}%{BKY_HELP_HINT}",
-          "mutator": "harmonic_mutator",
-          "helpUrl": "custom_synth"
-        },
-        {
-          "type": "sb_create_additive_synth",
-          "message0": "%{BKY_AUDIO_CREATE_ADDITIVE_SYNTH}",
-          "previousStatement": null,
-          "nextStatement": null,
-          "colour": "%{BKY_SOUND_SOURCES_HUE}",
-          "tooltip": "%{BKY_AUDIO_CREATE_ADDITIVE_SYNTH_TOOLTIP}%{BKY_HELP_HINT}",
-          "mutator": "additive_mutator",
-          "helpUrl": "custom_synth"
-        },
+  {
+    "type": "sb_define_chord",
+    "message0": "%{BKY_AUDIO_DEFINE_CHORD}",
+    "args0": [
+      { "type": "field_input", "name": "NAME", "text": "CM7" },
+      { "type": "field_input", "name": "NOTES", "text": "C4,E4,G4,B4" }
+    ],
+    "previousStatement": null,
+    "nextStatement": null,
+    "colour": "%{BKY_PERFORMANCE_HUE}",
+    "tooltip": "定義一個自訂和弦名稱，可在旋律中使用。%{BKY_HELP_HINT}",
+    "helpUrl": "melody"
+  },
+  // Custom Synths (Container Style - No Name)
+  {
+    "type": "sb_create_harmonic_synth",
+    "message0": "%{BKY_AUDIO_CREATE_HARMONIC_SYNTH}",
+    "previousStatement": null,
+    "nextStatement": null,
+    "colour": "%{BKY_SOUND_SOURCES_HUE}",
+    "tooltip": "%{BKY_AUDIO_CREATE_HARMONIC_SYNTH_TOOLTIP}%{BKY_HELP_HINT}",
+    "mutator": "harmonic_mutator",
+    "helpUrl": "custom_synth"
+  },
+  {
+    "type": "sb_create_additive_synth",
+    "message0": "%{BKY_AUDIO_CREATE_ADDITIVE_SYNTH}",
+    "previousStatement": null,
+    "nextStatement": null,
+    "colour": "%{BKY_SOUND_SOURCES_HUE}",
+    "tooltip": "%{BKY_AUDIO_CREATE_ADDITIVE_SYNTH_TOOLTIP}%{BKY_HELP_HINT}",
+    "mutator": "additive_mutator",
+    "helpUrl": "custom_synth"
+  },
   {
     "type": "sb_audio_is_playing",
     "message0": "%{BKY_AUDIO_IS_PLAYING}",
@@ -725,12 +700,12 @@ Blockly.defineBlocksWithJsonArray([
       {
         "type": "field_dropdown",
         "name": "WAVE",
-        "options": [ ["Sine", "SINE"], ["Square", "SQUARE"], ["Triangle", "TRIANGLE"], ["Saw", "SAW"] ]
+        "options": [["Sine", "SINE"], ["Square", "SQUARE"], ["Triangle", "TRIANGLE"], ["Saw", "SAW"]]
       },
       {
         "type": "field_dropdown",
         "name": "NOISE",
-        "options": [ ["White", "WHITE"], ["Pink", "PINK"], ["Brown", "BROWN"] ]
+        "options": [["White", "WHITE"], ["Pink", "PINK"], ["Brown", "BROWN"]]
       },
       { "type": "input_value", "name": "LEVEL", "check": "Number" }
     ],
@@ -745,7 +720,7 @@ Blockly.defineBlocksWithJsonArray([
 // --- MANUAL BLOCK EXTENSIONS ---
 
 Blockly.Blocks['sb_drum_sampler'] = {
-  init: function() {
+  init: function () {
     this.jsonInit({
       "type": "sb_drum_sampler",
       "message0": "%{BKY_AUDIO_CREATE_DRUM_SAMPLER}",
@@ -781,7 +756,7 @@ Blockly.Blocks['sb_drum_sampler'] = {
 Object.assign(Blockly.Blocks['sb_drum_sampler'], SAMPLER_HELPER);
 
 Blockly.Blocks['sb_melodic_sampler'] = {
-  init: function() {
+  init: function () {
     this.jsonInit({
       "type": "sb_melodic_sampler",
       "message0": "%{BKY_AUDIO_CREATE_MELODIC_SAMPLER}",
@@ -809,7 +784,7 @@ Blockly.Blocks['sb_melodic_sampler'] = {
 Object.assign(Blockly.Blocks['sb_melodic_sampler'], SAMPLER_HELPER);
 
 Blockly.Blocks['sb_setup_effect'] = {
-  init: function() {
+  init: function () {
     this.jsonInit({
       "type": "sb_setup_effect",
       "message0": Blockly.Msg['SB_SETUP_EFFECT_MESSAGE'].replace('%1', '%1').trim(),
@@ -818,18 +793,18 @@ Blockly.Blocks['sb_setup_effect'] = {
           "type": "field_dropdown",
           "name": "EFFECT_TYPE",
           "options": [
-                      [Blockly.Msg['SB_EFFECT_FILTER_TYPE_FIELD'], "filter"],
-                      [Blockly.Msg['SB_EFFECT_DELAY_TYPE_FIELD'], "delay"],
-                                              [Blockly.Msg['SB_EFFECT_BITCRUSH_TYPE_FIELD'], "bitcrush"],
-                                              [Blockly.Msg['SB_EFFECT_WAVESHAPER_TYPE_FIELD'], "waveshaper"],
-                                              [Blockly.Msg['SB_EFFECT_REVERB_TYPE_FIELD'], "reverb"],
-                                                          [Blockly.Msg['SB_EFFECT_FLANGER_TYPE_FIELD'], "flanger"],
-                                                          [Blockly.Msg['SB_EFFECT_AUTOFILTER_TYPE_FIELD'], "autofilter"],
-                                                          [Blockly.Msg['SB_EFFECT_PITCHMOD_TYPE_FIELD'], "pitchmod"],
-                                                          [Blockly.Msg['SB_EFFECT_COMPRESSOR_TYPE_FIELD'], "compressor"],
-                                              
-                                                        [Blockly.Msg['SB_EFFECT_LIMITER_TYPE_FIELD'], "limiter"]
-            
+            [Blockly.Msg['SB_EFFECT_FILTER_TYPE_FIELD'], "filter"],
+            [Blockly.Msg['SB_EFFECT_DELAY_TYPE_FIELD'], "delay"],
+            [Blockly.Msg['SB_EFFECT_BITCRUSH_TYPE_FIELD'], "bitcrush"],
+            [Blockly.Msg['SB_EFFECT_WAVESHAPER_TYPE_FIELD'], "waveshaper"],
+            [Blockly.Msg['SB_EFFECT_REVERB_TYPE_FIELD'], "reverb"],
+            [Blockly.Msg['SB_EFFECT_FLANGER_TYPE_FIELD'], "flanger"],
+            [Blockly.Msg['SB_EFFECT_AUTOFILTER_TYPE_FIELD'], "autofilter"],
+            [Blockly.Msg['SB_EFFECT_PITCHMOD_TYPE_FIELD'], "pitchmod"],
+            [Blockly.Msg['SB_EFFECT_COMPRESSOR_TYPE_FIELD'], "compressor"],
+
+            [Blockly.Msg['SB_EFFECT_LIMITER_TYPE_FIELD'], "limiter"]
+
           ]
         }
       ],
@@ -855,7 +830,7 @@ Blockly.Extensions.registerMutator('rhythm_v2_mutator', RHYTHM_V2_MUTATOR, undef
 Blockly.Extensions.registerMutator('setup_effect_mutator', SETUP_EFFECT_MUTATOR, undefined);
 
 Blockly.Blocks['sb_rhythm_sequencer_v2'] = {
-  init: function() {
+  init: function () {
     this.jsonInit({
       "type": "sb_rhythm_sequencer_v2",
       "message0": "%{BKY_AUDIO_RHYTHM_V2_HEADER}",
@@ -877,27 +852,27 @@ Blockly.Blocks['sb_rhythm_sequencer_v2'] = {
 // --- INSTRUMENT CONTAINER SYSTEM ---
 
 Blockly.Blocks['sb_instrument_container'] = {
-  init: function() {
+  init: function () {
     this.appendDummyInput()
-        .appendField(Blockly.Msg['SB_INSTRUMENT_CONTAINER_MESSAGE'].replace('%1', '').replace('%2', '').trim())
-        .appendField(new Blockly.FieldTextInput("MySynth"), "NAME");
+      .appendField(Blockly.Msg['SB_INSTRUMENT_CONTAINER_MESSAGE'].replace('%1', '').replace('%2', '').trim())
+      .appendField(new Blockly.FieldTextInput("MySynth"), "NAME");
     this.appendStatementInput("STACK")
-        .setCheck(null);
+      .setCheck(null);
     this.setColour(Blockly.Msg['SOUND_SOURCES_HUE'] || "#E74C3C"); // Audio color
     this.setTooltip(Blockly.Msg['SB_INSTRUMENT_CONTAINER_TOOLTIP']);
     this.setHelpUrl("");
   },
-  onchange: function() {
+  onchange: function () {
     if (!this.workspace || this.isInFlyout) return;
-    
+
     // 定義所有被視為「音源」的積木類型
     const sourceTypes = [
-      'sb_set_wave', 
+      'sb_set_wave',
       'sb_set_noise',
       'sb_mixed_source',
-      'sb_melodic_sampler', 
-      'sb_drum_sampler', 
-      'sb_create_harmonic_synth', 
+      'sb_melodic_sampler',
+      'sb_drum_sampler',
+      'sb_create_harmonic_synth',
       'sb_create_additive_synth'
     ];
 
@@ -921,29 +896,29 @@ Blockly.Blocks['sb_instrument_container'] = {
 };
 
 Blockly.Blocks['sb_set_adsr'] = {
-  init: function() {
+  init: function () {
     this.appendDummyInput()
-        .appendField(Blockly.Msg['SB_SET_ADSR_MESSAGE']);
+      .appendField(Blockly.Msg['SB_SET_ADSR_MESSAGE']);
     this.appendValueInput("A")
-        .setCheck("Number")
-        .appendField("A (Attack)");
+      .setCheck("Number")
+      .appendField("A (Attack)");
     this.appendValueInput("D")
-        .setCheck("Number")
-        .appendField("D (Decay)");
+      .setCheck("Number")
+      .appendField("D (Decay)");
     this.appendValueInput("S")
-        .setCheck("Number")
-        .appendField("S (Sustain)");
+      .setCheck("Number")
+      .appendField("S (Sustain)");
     this.appendValueInput("R")
-        .setCheck("Number")
-        .appendField("R (Release)");
+      .setCheck("Number")
+      .appendField("R (Release)");
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
     this.setColour(Blockly.Msg['INSTRUMENT_CONTROL_HUE'] || "#E74C3C");
     this.setTooltip(Blockly.Msg['SB_SET_ADSR_TOOLTIP']);
   },
-  onchange: function() {
+  onchange: function () {
     if (!this.workspace || this.isInFlyout) return;
-    
+
     // 尋找所屬的容器
     let parent = this.getParent();
     while (parent && parent.type !== 'sb_instrument_container') {
@@ -952,7 +927,7 @@ Blockly.Blocks['sb_set_adsr'] = {
 
     if (parent) {
       // 檢查容器內是否有「啟用中」的旋律取樣器
-      const hasEnabledSampler = parent.getDescendants(false).some(b => 
+      const hasEnabledSampler = parent.getDescendants(false).some(b =>
         b.type === 'sb_melodic_sampler' && b.isEnabled()
       );
       if (hasEnabledSampler) {
@@ -967,15 +942,15 @@ Blockly.Blocks['sb_set_adsr'] = {
 };
 
 Blockly.Blocks['sb_set_wave'] = {
-  init: function() {
+  init: function () {
     this.appendDummyInput()
-        .appendField(Blockly.Msg['SB_SET_WAVE_MESSAGE'])
-        .appendField(new Blockly.FieldDropdown([
-          ["Sine", "SINE"], 
-          ["Square", "SQUARE"],
-          ["Triangle", "TRIANGLE"],
-          ["Sawtooth", "SAW"]
-        ]), "TYPE");
+      .appendField(Blockly.Msg['SB_SET_WAVE_MESSAGE'])
+      .appendField(new Blockly.FieldDropdown([
+        ["Sine", "SINE"],
+        ["Square", "SQUARE"],
+        ["Triangle", "TRIANGLE"],
+        ["Sawtooth", "SAW"]
+      ]), "TYPE");
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
     this.setColour(Blockly.Msg['SOUND_SOURCES_HUE'] || "#E74C3C");
@@ -984,7 +959,7 @@ Blockly.Blocks['sb_set_wave'] = {
 };
 
 // --- DYNAMIC DROPDOWN FOR INSTRUMENTS (Hybrid Helper) ---
-const getInstrumentOptions = function() {
+const getInstrumentOptions = function () {
   const options = [];
   const workspace = Blockly.getMainWorkspace();
   if (workspace) {
@@ -1003,11 +978,11 @@ const getInstrumentOptions = function() {
 /**
  * 輔助函式：將文字輸入框轉化為具備下拉選單功能的組件
  */
-const createInstrumentField = function(defaultVal, fieldName) {
+const createInstrumentField = function (defaultVal, fieldName) {
   const field = new Blockly.FieldTextInput(defaultVal || 'MySynth');
   fieldName = fieldName || "NAME";
-  
-  field.showEditor_ = function(opt_e) {
+
+  field.showEditor_ = function (opt_e) {
     setTimeout(() => {
       const options = getInstrumentOptions();
       const menu = options.map(opt => ({
@@ -1028,57 +1003,105 @@ const createInstrumentField = function(defaultVal, fieldName) {
 
 // --- HAND-DEFINED HYBRID BLOCKS ---
 
-Blockly.Blocks['sb_select_current_instrument'] = {
-  init: function() {
+Blockly.Blocks['sb_play_note'] = {
+  init: function () {
     this.appendDummyInput()
-        .appendField(Blockly.Msg['AUDIO_SELECT_INSTRUMENT'].replace('%1', '').trim())
-        .appendField(createInstrumentField(Blockly.Msg['SB_SELECT_INSTRUMENT_PROMPT']), "NAME");
+      .appendField(Blockly.Msg['AUDIO_PLAY_NOTE'])
+      .appendField(createInstrumentField(Blockly.Msg['SB_SELECT_INSTRUMENT_PROMPT']), "NAME");
+    
+    this.appendValueInput("PITCH")
+      .setCheck(["Number", "String"])
+      .appendField(Blockly.Msg['AUDIO_PLAY_NOTE_PITCH']);
+    
+    this.appendValueInput("VELOCITY")
+      .setCheck("Number")
+      .appendField(Blockly.Msg['AUDIO_PLAY_NOTE_VEL']);
+
+    this.setPreviousStatement(true, null); 
+    this.setNextStatement(true, null);
+    this.setInputsInline(true);
+    this.setColour("#D35400");
+    this.setTooltip(Blockly.Msg['AUDIO_PLAY_NOTE_TOOLTIP']);
+  }
+};
+
+Blockly.Blocks['sb_stop_note'] = {
+  init: function () {
+    this.appendDummyInput()
+      .appendField(Blockly.Msg['AUDIO_STOP_NOTE'])
+      .appendField(createInstrumentField(Blockly.Msg['SB_SELECT_INSTRUMENT_PROMPT']), "NAME");
+    
+    this.appendValueInput("PITCH")
+      .setCheck(["Number", "String"])
+      .appendField(Blockly.Msg['AUDIO_STOP_NOTE_PITCH']);
+
+    this.setPreviousStatement(true, null); 
+    this.setNextStatement(true, null);
+    this.setInputsInline(true);
+    this.setColour("#D35400");
+    this.setTooltip(Blockly.Msg['AUDIO_STOP_NOTE_TOOLTIP']);
+  }
+};
+
+Blockly.Blocks['sb_select_current_instrument'] = {
+  init: function () {
+    this.appendDummyInput()
+      .appendField(Blockly.Msg['AUDIO_SELECT_INSTRUMENT'].replace('%1', '').trim())
+      .appendField(createInstrumentField(Blockly.Msg['SB_SELECT_INSTRUMENT_PROMPT']), "NAME");
     this.setPreviousStatement(true, null); this.setNextStatement(true, null);
-    this.setColour(Blockly.Msg['INSTRUMENT_CONTROL_HUE'] || "#D22F73");
+    this.setColour(Blockly.Msg['PERFORMANCE_HUE'] || "#D22F73");
     this.setTooltip(Blockly.Msg['AUDIO_SELECT_INSTRUMENT_TOOLTIP']);
   }
 };
 
 Blockly.Blocks['sb_set_instrument_volume'] = {
-  init: function() {
+  init: function () {
     this.appendDummyInput()
-        .appendField(Blockly.Msg['AUDIO_SET_INSTRUMENT_VOLUME'].split('%1')[0].trim())
-        .appendField(createInstrumentField(Blockly.Msg['SB_SELECT_INSTRUMENT_PROMPT']), "NAME")
-        .appendField(Blockly.Msg['AUDIO_SET_INSTRUMENT_VOLUME'].split('%1')[1].replace('%2', '').trim());
-    this.appendValueInput("VOLUME").setCheck("Number");
+      .appendField(Blockly.Msg['AUDIO_SET_INSTRUMENT_VOLUME'])
+      .appendField(createInstrumentField(Blockly.Msg['SB_SELECT_INSTRUMENT_PROMPT']), "NAME");
+    this.appendValueInput("VOLUME")
+      .setCheck("Number")
+      .appendField(Blockly.Msg['AUDIO_SET_INSTRUMENT_VOLUME_VAL'].split('%')[0].trim());
     this.setPreviousStatement(true, null); this.setNextStatement(true, null);
+    this.setInputsInline(true);
     this.setColour(Blockly.Msg['INSTRUMENT_CONTROL_HUE'] || "#D22F73");
     this.setTooltip(Blockly.Msg['AUDIO_SET_INSTRUMENT_VOLUME_TOOLTIP']);
   }
 };
 
 Blockly.Blocks['sb_trigger_sample'] = {
-  init: function() {
+  init: function () {
     this.appendDummyInput()
-        .appendField(Blockly.Msg['AUDIO_TRIGGER_SAMPLE'].split('%1')[0].trim())
-        .appendField(createInstrumentField(Blockly.Msg['SB_SELECT_INSTRUMENT_PROMPT']), "NAME")
-        .appendField(Blockly.Msg['AUDIO_TRIGGER_SAMPLE'].split('%1')[1].split('%2')[0].trim())
-        .appendField(new Blockly.FieldTextInput("C4Q"), "NOTE")
-        .appendField(Blockly.Msg['AUDIO_TRIGGER_SAMPLE'].split('%2')[1].replace('%3', '').trim());
-    this.appendValueInput("VELOCITY").setCheck("Number");
+      .appendField(Blockly.Msg['AUDIO_TRIGGER_SAMPLE'])
+      .appendField(createInstrumentField(Blockly.Msg['SB_SELECT_INSTRUMENT_PROMPT']), "NAME");
+    this.appendDummyInput()
+      .appendField(Blockly.Msg['AUDIO_TRIGGER_SAMPLE_NOTE'])
+      .appendField(new Blockly.FieldTextInput("C4Q"), "NOTE");
+    this.appendValueInput("VELOCITY")
+      .setCheck("Number")
+      .appendField(Blockly.Msg['AUDIO_TRIGGER_SAMPLE_VEL']);
     this.setPreviousStatement(true, null); this.setNextStatement(true, null);
+    this.setInputsInline(true);
     this.setColour(Blockly.Msg['PERFORMANCE_HUE'] || "#E67E22");
     this.setTooltip(Blockly.Msg['AUDIO_TRIGGER_SAMPLE_TOOLTIP']);
   }
 };
 
 Blockly.Blocks['sb_play_chord_by_name'] = {
-  init: function() {
+  init: function () {
     this.appendDummyInput()
-        .appendField(Blockly.Msg['AUDIO_PLAY_CHORD_BY_NAME'].split('%1')[0].trim())
-        .appendField(createInstrumentField(Blockly.Msg['SB_SELECT_INSTRUMENT_PROMPT']), "INST_NAME")
-        .appendField(Blockly.Msg['AUDIO_PLAY_CHORD_BY_NAME'].split('%2')[0].split('%1')[1] || "和弦")
-        .appendField(new Blockly.FieldTextInput("CM7"), "NAME")
-        .appendField(Blockly.Msg['AUDIO_PLAY_CHORD_BY_NAME'].split('%3')[0].split('%2')[1] || "時值")
-        .appendField(new Blockly.FieldTextInput("4n"), "DUR")
-        .appendField(Blockly.Msg['AUDIO_PLAY_CHORD_BY_NAME'].split('%3')[1] || "力度");
-    this.appendValueInput("VELOCITY").setCheck("Number");
+      .appendField(Blockly.Msg['AUDIO_PLAY_CHORD_BY_NAME'])
+      .appendField(createInstrumentField(Blockly.Msg['SB_SELECT_INSTRUMENT_PROMPT']), "INST_NAME")
+      .appendField(new Blockly.FieldTextInput("CM7"), "NAME");
     
+    this.appendValueInput("DUR")
+      .setCheck(["Number", "String"])
+      .appendField(Blockly.Msg['AUDIO_PLAY_CHORD_BY_NAME_DUR']);
+    
+    this.appendValueInput("VELOCITY")
+      .setCheck("Number")
+      .appendField(Blockly.Msg['AUDIO_PLAY_CHORD_BY_NAME_VEL']);
+
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
     this.setInputsInline(true);
@@ -1088,37 +1111,45 @@ Blockly.Blocks['sb_play_chord_by_name'] = {
 };
 
 Blockly.Blocks['sb_play_melody'] = {
-  init: function() {
+  init: function () {
     this.appendDummyInput()
-        .appendField(Blockly.Msg['AUDIO_PLAY_MELODY'].split('%1')[0].trim())
-        .appendField(createInstrumentField(Blockly.Msg['SB_SELECT_INSTRUMENT_PROMPT'], 'INSTRUMENT'), "INSTRUMENT");
+      .appendField(Blockly.Msg['AUDIO_PLAY_MELODY'])
+      .appendField(createInstrumentField(Blockly.Msg['SB_SELECT_INSTRUMENT_PROMPT'], 'INSTRUMENT'), "INSTRUMENT");
+    
     this.appendDummyInput()
-        .appendField(new FieldMultilineInput("C4Q, E4Q, G4H"), "MELODY");
-    this.setPreviousStatement(true, null); this.setNextStatement(true, null);
+      .appendField(Blockly.Msg['AUDIO_PLAY_MELODY_SCORE'])
+      .appendField(new FieldMultilineInput("C4Q, E4Q, G4H"), "MELODY");
+
+    this.setPreviousStatement(true, null); 
+    this.setNextStatement(true, null);
     this.setColour(Blockly.Msg['PERFORMANCE_HUE'] || "#E67E22");
     this.setTooltip(Blockly.Msg['AUDIO_PLAY_MELODY_TOOLTIP']);
   }
 };
 
 Blockly.Blocks['sb_rhythm_sequence'] = {
-  init: function() {
+  init: function () {
     this.appendDummyInput()
-        .appendField(Blockly.Msg['AUDIO_RHYTHM_SEQUENCE'].split('%1')[0].trim())
-        .appendField(createInstrumentField(Blockly.Msg['SB_SELECT_INSTRUMENT_PROMPT'], 'SOURCE'), "SOURCE")
-        .appendField(Blockly.Msg['AUDIO_RHYTHM_SEQUENCE'].split('%2')[0].split('%1')[1] || "模式")
-        .appendField(new Blockly.FieldDropdown([
-          [Blockly.Msg['AUDIO_RHYTHM_MODE_MONO'], "FALSE"],
-          [Blockly.Msg['AUDIO_RHYTHM_MODE_CHORD'], "TRUE"]
-        ]), "CHORD_MODE")
-        .appendField(Blockly.Msg['AUDIO_RHYTHM_SEQUENCE'].split('%3')[0].split('%2')[1] || "小節");
-    this.appendValueInput("MEASURE").setCheck("Number");
-    this.appendDummyInput()
-        .appendField(Blockly.Msg['AUDIO_RHYTHM_SEQUENCE'].split('%4')[0].split('%3')[1] || "節奏")
-        .appendField(new Blockly.FieldTextInput("x--- x--- x--- x---"), "PATTERN");
-    this.appendDummyInput()
-        .appendField(Blockly.Msg['AUDIO_RHYTHM_SEQUENCE'].split('%5')[1] || "力度");
-    this.appendValueInput("VELOCITY").setCheck("Number");
+      .appendField(Blockly.Msg['AUDIO_RHYTHM_SEQUENCE'])
+      .appendField(createInstrumentField(Blockly.Msg['SB_SELECT_INSTRUMENT_PROMPT'], 'SOURCE'), "SOURCE")
+      .appendField(Blockly.Msg['AUDIO_RHYTHM_SEQUENCE_MODE'] || "Mode")
+      .appendField(new Blockly.FieldDropdown([
+        [Blockly.Msg['AUDIO_RHYTHM_MODE_MONO'], "FALSE"],
+        [Blockly.Msg['AUDIO_RHYTHM_MODE_CHORD'], "TRUE"]
+      ]), "CHORD_MODE");
     
+    this.appendValueInput("MEASURE")
+      .setCheck("Number")
+      .appendField(Blockly.Msg['AUDIO_RHYTHM_SEQUENCE_MEASURE']);
+    
+    this.appendDummyInput()
+      .appendField(Blockly.Msg['AUDIO_RHYTHM_SEQUENCE_PATTERN'])
+      .appendField(new Blockly.FieldTextInput("x--- x--- x--- x---"), "PATTERN");
+      
+    this.appendValueInput("VELOCITY")
+      .setCheck("Number")
+      .appendField(Blockly.Msg['AUDIO_RHYTHM_SEQUENCE_VELOCITY']);
+
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
     this.setInputsInline(true);
@@ -1128,34 +1159,36 @@ Blockly.Blocks['sb_rhythm_sequence'] = {
 };
 
 Blockly.Blocks['sb_set_panning'] = {
-  init: function() {
+  init: function () {
     this.appendDummyInput()
-        .appendField(Blockly.Msg['SB_SET_PANNING_MESSAGE'].split('%1')[0].trim())
-        .appendField(createInstrumentField(Blockly.Msg['SB_SELECT_INSTRUMENT_PROMPT']), "NAME")
-        .appendField(Blockly.Msg['SB_SET_PANNING_MESSAGE'].split('%1')[1].replace('%2', '').trim());
-    this.appendValueInput("VALUE").setCheck("Number");
+      .appendField(Blockly.Msg['SB_SET_PANNING_MESSAGE'])
+      .appendField(createInstrumentField(Blockly.Msg['SB_SELECT_INSTRUMENT_PROMPT']), "NAME");
+    this.appendValueInput("VALUE")
+      .setCheck("Number")
+      .appendField(Blockly.Msg['SB_SET_PANNING_VAL']);
     this.setPreviousStatement(true, null); this.setNextStatement(true, null);
+    this.setInputsInline(true);
     this.setColour(Blockly.Msg['INSTRUMENT_CONTROL_HUE'] || "#D22F73");
     this.setTooltip(Blockly.Msg['SB_SET_PANNING_TOOLTIP']);
   }
 };
 
 Blockly.Blocks['sb_set_effect_param'] = {
-  init: function() {
+  init: function () {
     var instance = this;
-    
+
     // 動態獲獲取效果器清單
-    var getEffectOptions = function() {
+    var getEffectOptions = function () {
       var options = [];
       var target = instance.getFieldValue('TARGET');
       if (!target || target === Blockly.Msg['SB_SELECT_INSTRUMENT_PROMPT']) {
         return [[Blockly.Msg['SB_NO_INSTRUMENT_SELECTED'] || "(尚未選取樂器)", "none"]];
       }
-      
+
       var workspace = instance.workspace;
       var blocks = workspace.getAllBlocks(false);
       var container = blocks.find(b => b.type === 'sb_instrument_container' && b.getFieldValue('NAME') === target);
-      
+
       if (container) {
         var child = container.getInputTargetBlock('STACK');
         while (child) {
@@ -1169,7 +1202,7 @@ Blockly.Blocks['sb_set_effect_param'] = {
           child = child.getNextBlock();
         }
       }
-      
+
       if (options.length === 0) {
         options.push([Blockly.Msg['SB_NO_EFFECTS_AVAILABLE'] || "(無可用效果器)", "none"]);
       }
@@ -1177,12 +1210,12 @@ Blockly.Blocks['sb_set_effect_param'] = {
     };
 
     this.appendDummyInput()
-        .appendField(Blockly.Msg['SB_SET_EFFECT_PARAM_TITLE'].split('%1')[0])
-        .appendField(createInstrumentField(Blockly.Msg['SB_SELECT_INSTRUMENT_PROMPT']), "TARGET")
-        .appendField(Blockly.Msg['SB_SET_EFFECT_PARAM_TITLE'].split('%2')[0].split('%1')[1] || "類型")
-        .appendField(new Blockly.FieldDropdown(getEffectOptions, function(val) { 
-          this.sourceBlock_.updateShape_(val); 
-        }), "EFFECT_TYPE");
+      .appendField(Blockly.Msg['SB_SET_EFFECT_PARAM_TITLE'].split('%1')[0])
+      .appendField(createInstrumentField(Blockly.Msg['SB_SELECT_INSTRUMENT_PROMPT']), "TARGET")
+      .appendField(Blockly.Msg['SB_SET_EFFECT_PARAM_TITLE'].split('%2')[0].split('%1')[1] || "類型")
+      .appendField(new Blockly.FieldDropdown(getEffectOptions, function (val) {
+        this.sourceBlock_.updateShape_(val);
+      }), "EFFECT_TYPE");
 
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
@@ -1190,110 +1223,110 @@ Blockly.Blocks['sb_set_effect_param'] = {
     this.setTooltip(Blockly.Msg['SB_SET_EFFECT_PARAM_TOOLTIP']);
     this.updateShape_('panning');
   },
-  mutationToDom: function() {
+  mutationToDom: function () {
     var container = Blockly.utils.xml.createElement('mutation');
     container.setAttribute('effect_type', this.getFieldValue('EFFECT_TYPE'));
     return container;
   },
-  domToMutation: function(xmlElement) {
+  domToMutation: function (xmlElement) {
     var type = xmlElement.getAttribute('effect_type');
     this.updateShape_(type);
   },
-  updateShape_: function(type) {
+  updateShape_: function (type) {
     if (this.getInput('PARAMS')) this.removeInput('PARAMS');
     if (this.getInput('VALUE')) this.removeInput('VALUE');
-    
+
     var input = this.appendDummyInput('PARAMS');
-    
+
     if (type === 'filter') {
       input.appendField(Blockly.Msg['SB_SET_EFFECT_PARAM_PARAM'].split('%1')[0])
-           .appendField(new Blockly.FieldDropdown([
-             [Blockly.Msg['SB_EFFECT_FILTER_FREQ_FIELD'], "frequency"], 
-             [Blockly.Msg['SB_EFFECT_FILTER_Q_FIELD'], "resonance"]
-           ]), "PARAM_NAME");
+        .appendField(new Blockly.FieldDropdown([
+          [Blockly.Msg['SB_EFFECT_FILTER_FREQ_FIELD'], "frequency"],
+          [Blockly.Msg['SB_EFFECT_FILTER_Q_FIELD'], "resonance"]
+        ]), "PARAM_NAME");
     } else if (type === 'adsr') {
       input.appendField(Blockly.Msg['SB_SET_EFFECT_PARAM_PARAM'].split('%1')[0])
-           .appendField(new Blockly.FieldDropdown([
-             ["Attack (A)", "adsrA"],
-             ["Decay (D)", "adsrD"], 
-             ["Sustain (S)", "adsrS"],
-             ["Release (R)", "adsrR"]
-           ]), "PARAM_NAME");
+        .appendField(new Blockly.FieldDropdown([
+          ["Attack (A)", "adsrA"],
+          ["Decay (D)", "adsrD"],
+          ["Sustain (S)", "adsrS"],
+          ["Release (R)", "adsrR"]
+        ]), "PARAM_NAME");
     } else if (type === 'reverb') {
       input.appendField(Blockly.Msg['SB_SET_EFFECT_PARAM_PARAM'].split('%1')[0])
-           .appendField(new Blockly.FieldDropdown([
-             [Blockly.Msg['SB_EFFECT_ROOMSIZE_FIELD'], "roomSize"],
-             [Blockly.Msg['SB_EFFECT_DAMPING_FIELD'], "damping"],
-             [Blockly.Msg['SB_EFFECT_WET_FIELD'], "wet"]
-           ]), "PARAM_NAME");
+        .appendField(new Blockly.FieldDropdown([
+          [Blockly.Msg['SB_EFFECT_ROOMSIZE_FIELD'], "roomSize"],
+          [Blockly.Msg['SB_EFFECT_DAMPING_FIELD'], "damping"],
+          [Blockly.Msg['SB_EFFECT_WET_FIELD'], "wet"]
+        ]), "PARAM_NAME");
     } else if (type === 'delay') {
       input.appendField(Blockly.Msg['SB_SET_EFFECT_PARAM_PARAM'].split('%1')[0])
-           .appendField(new Blockly.FieldDropdown([
-             [Blockly.Msg['SB_EFFECT_DELAY_TIME_FIELD'], "delTime"],
-             [Blockly.Msg['SB_EFFECT_FEEDBACK_FIELD'], "delAmp"]
-           ]), "PARAM_NAME");
+        .appendField(new Blockly.FieldDropdown([
+          [Blockly.Msg['SB_EFFECT_DELAY_TIME_FIELD'], "delTime"],
+          [Blockly.Msg['SB_EFFECT_FEEDBACK_FIELD'], "delAmp"]
+        ]), "PARAM_NAME");
     } else if (type === 'bitcrush') {
       input.appendField(Blockly.Msg['SB_SET_EFFECT_PARAM_PARAM'].split('%1')[0])
-           .appendField(new Blockly.FieldDropdown([
-             [Blockly.Msg['SB_EFFECT_BITDEPTH_FIELD'], "bitRes"]
-           ]), "PARAM_NAME");
+        .appendField(new Blockly.FieldDropdown([
+          [Blockly.Msg['SB_EFFECT_BITDEPTH_FIELD'], "bitRes"]
+        ]), "PARAM_NAME");
     } else if (type === 'waveshaper') {
       input.appendField(Blockly.Msg['SB_SET_EFFECT_PARAM_PARAM'].split('%1')[0])
-           .appendField(new Blockly.FieldDropdown([
-             [Blockly.Msg['SB_EFFECT_DISTORTION_AMOUNT_FIELD'], "amount"]
-           ]), "PARAM_NAME");
+        .appendField(new Blockly.FieldDropdown([
+          [Blockly.Msg['SB_EFFECT_DISTORTION_AMOUNT_FIELD'], "amount"]
+        ]), "PARAM_NAME");
     } else if (type === 'compressor') {
       input.appendField(Blockly.Msg['SB_SET_EFFECT_PARAM_PARAM'].split('%1')[0])
-           .appendField(new Blockly.FieldDropdown([
-             [Blockly.Msg['SB_EFFECT_THRESHOLD_FIELD'], "threshold"],
-             [Blockly.Msg['SB_EFFECT_RATIO_FIELD'], "ratio"],
-             [Blockly.Msg['SB_EFFECT_ATTACK_FIELD'], "attack"],
-             [Blockly.Msg['SB_EFFECT_RELEASE_FIELD'], "release"],
-             [Blockly.Msg['SB_EFFECT_MAKEUP_FIELD'], "makeup"]
-           ]), "PARAM_NAME");
+        .appendField(new Blockly.FieldDropdown([
+          [Blockly.Msg['SB_EFFECT_THRESHOLD_FIELD'], "threshold"],
+          [Blockly.Msg['SB_EFFECT_RATIO_FIELD'], "ratio"],
+          [Blockly.Msg['SB_EFFECT_ATTACK_FIELD'], "attack"],
+          [Blockly.Msg['SB_EFFECT_RELEASE_FIELD'], "release"],
+          [Blockly.Msg['SB_EFFECT_MAKEUP_FIELD'], "makeup"]
+        ]), "PARAM_NAME");
     } else if (type === 'limiter') {
       input.appendField(Blockly.Msg['SB_SET_EFFECT_PARAM_PARAM'].split('%1')[0])
-           .appendField(new Blockly.FieldDropdown([
-             [Blockly.Msg['SB_EFFECT_THRESHOLD_FIELD'], "threshold"],
-             [Blockly.Msg['SB_EFFECT_ATTACK_FIELD'], "attack"],
-             [Blockly.Msg['SB_EFFECT_RELEASE_FIELD'], "release"]
-           ]), "PARAM_NAME");
+        .appendField(new Blockly.FieldDropdown([
+          [Blockly.Msg['SB_EFFECT_THRESHOLD_FIELD'], "threshold"],
+          [Blockly.Msg['SB_EFFECT_ATTACK_FIELD'], "attack"],
+          [Blockly.Msg['SB_EFFECT_RELEASE_FIELD'], "release"]
+        ]), "PARAM_NAME");
     } else if (type === 'flanger') {
       input.appendField(Blockly.Msg['SB_SET_EFFECT_PARAM_PARAM'].split('%1')[0])
-           .appendField(new Blockly.FieldDropdown([
-             [Blockly.Msg['SB_EFFECT_DELAY_TIME_FIELD'], "delay"],
-             [Blockly.Msg['SB_EFFECT_RATE_FIELD'], "rate"],
-             [Blockly.Msg['SB_EFFECT_DEPTH_FIELD'], "depth"],
-             [Blockly.Msg['SB_EFFECT_FEEDBACK_FIELD'], "feedback"]
-           ]), "PARAM_NAME");
+        .appendField(new Blockly.FieldDropdown([
+          [Blockly.Msg['SB_EFFECT_DELAY_TIME_FIELD'], "delay"],
+          [Blockly.Msg['SB_EFFECT_RATE_FIELD'], "rate"],
+          [Blockly.Msg['SB_EFFECT_DEPTH_FIELD'], "depth"],
+          [Blockly.Msg['SB_EFFECT_FEEDBACK_FIELD'], "feedback"]
+        ]), "PARAM_NAME");
     } else if (type === 'autofilter') {
       input.appendField(Blockly.Msg['SB_SET_EFFECT_PARAM_PARAM'].split('%1')[0])
-           .appendField(new Blockly.FieldDropdown([
-             [Blockly.Msg['SB_EFFECT_RATE_FIELD'], "rate"],
-             [Blockly.Msg['SB_EFFECT_DEPTH_FIELD'], "depth"],
-             [Blockly.Msg['SB_EFFECT_FILTER_Q_FIELD'], "resonance"]
-           ]), "PARAM_NAME");
+        .appendField(new Blockly.FieldDropdown([
+          [Blockly.Msg['SB_EFFECT_RATE_FIELD'], "rate"],
+          [Blockly.Msg['SB_EFFECT_DEPTH_FIELD'], "depth"],
+          [Blockly.Msg['SB_EFFECT_FILTER_Q_FIELD'], "resonance"]
+        ]), "PARAM_NAME");
     } else if (type === 'pitchmod') {
       input.appendField(Blockly.Msg['SB_SET_EFFECT_PARAM_PARAM'].split('%1')[0])
-           .appendField(new Blockly.FieldDropdown([
-             [Blockly.Msg['SB_EFFECT_RATE_FIELD'], "rate"],
-             [Blockly.Msg['SB_EFFECT_DEPTH_FIELD'], "depth"]
-           ]), "PARAM_NAME");
+        .appendField(new Blockly.FieldDropdown([
+          [Blockly.Msg['SB_EFFECT_RATE_FIELD'], "rate"],
+          [Blockly.Msg['SB_EFFECT_DEPTH_FIELD'], "depth"]
+        ]), "PARAM_NAME");
     } else if (type === 'panning') {
-       input.appendField(Blockly.Msg['SB_SET_EFFECT_PARAM_PAN_LABEL']); 
+      input.appendField(Blockly.Msg['SB_SET_EFFECT_PARAM_PAN_LABEL']);
     }
-    
+
     this.appendValueInput("VALUE")
-        .setCheck("Number")
-        .appendField(Blockly.Msg['SB_SET_EFFECT_PARAM_VALUE']);
+      .setCheck("Number")
+      .appendField(Blockly.Msg['SB_SET_EFFECT_PARAM_VALUE']);
   }
 };
 
 Blockly.Blocks['sb_update_adsr'] = {
-  init: function() {
+  init: function () {
     this.appendDummyInput()
-        .appendField(Blockly.Msg['SB_UPDATE_ADSR_TITLE'].split('%1')[0])
-        .appendField(createInstrumentField(Blockly.Msg['SB_SELECT_INSTRUMENT_PROMPT']), "TARGET");
+      .appendField(Blockly.Msg['SB_UPDATE_ADSR_TITLE'].split('%1')[0])
+      .appendField(createInstrumentField(Blockly.Msg['SB_SELECT_INSTRUMENT_PROMPT']), "TARGET");
     this.appendValueInput("A").setCheck("Number").appendField("A");
     this.appendValueInput("D").setCheck("Number").appendField("D");
     this.appendValueInput("S").setCheck("Number").appendField("S");
