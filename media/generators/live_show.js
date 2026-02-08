@@ -26,7 +26,12 @@ Blockly.Processing.forBlock['live_get_param'] = function(block) {
 
 Blockly.Processing.forBlock['sb_log_to_screen'] = function(block) {
   const msg = Blockly.Processing.valueToCode(block, 'MSG', Blockly.Processing.ORDER_ATOMIC) || '""';
-  const type = block.getFieldValue('TYPE');
-  return "logToScreen(String.valueOf(" + msg + "), " + type + ");\n";
+  const typeStr = block.getFieldValue('TYPE');
+  let typeIdx = "0";
+  if (typeStr === 'MSG') typeIdx = "1";
+  else if (typeStr === 'WARN') typeIdx = "2";
+  else if (typeStr === 'ERR') typeIdx = "3";
+  
+  return "logToScreen(String.valueOf(" + msg + "), " + typeIdx + ");\n";
 };
 

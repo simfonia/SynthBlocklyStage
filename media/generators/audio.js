@@ -8,6 +8,18 @@
  */
 
 /**
+ * 輔助方法：將積木上的樂器文字轉換為 Java 代碼中的變數或字串
+ */
+Blockly.Processing.getInstrumentJavaName = function(name) {
+  const currentLabel = Blockly.Msg['SB_CURRENT_INSTRUMENT_OPTION'] || '當前選用的樂器';
+  const promptLabel = Blockly.Msg['SB_SELECT_INSTRUMENT_PROMPT'] || '(請選擇樂器)';
+  if (!name || name === currentLabel || name === promptLabel) {
+    return 'currentInstrument';
+  }
+  return '"' + name + '"';
+};
+
+/**
  * 內部函式：注入音訊核心支援代碼 (Java)
  */
 Blockly.Processing.injectAudioCore = function() {
@@ -39,6 +51,7 @@ Blockly.Processing.injectAudioCore = function() {
   g['melodyLock'] = "final Object melodyLock = new Object();";
   g['isCountingIn'] = "volatile boolean isCountingIn = false;";
   g['midiKeysHeld'] = "HashMap<Integer, String> midiKeysHeld = new HashMap<Integer, String>();";
+  g['midiBusses'] = "HashMap<String, MidiBus> midiBusses = new HashMap<String, MidiBus>();";
   g['instrumentMixConfigs'] = "HashMap instrumentMixConfigs = new HashMap();";
   
   // Effects Containers (Raw Type for max compatibility)
@@ -715,16 +728,18 @@ registerGenerator('sb_select_current_instrument', function(block) {
 
 registerGenerator('sb_set_instrument_volume', function(block) {
   const name = block.getFieldValue('NAME');
+  const javaName = Blockly.Processing.getInstrumentJavaName(name);
   const volume = Blockly.Processing.valueToCode(block, 'VOLUME', Blockly.Processing.ORDER_ATOMIC) || '100';
-  return `instrumentVolumes.put("${name}", floatVal(${volume}) / 100.0f);\n`;
+  return `instrumentVolumes.put(${javaName}, floatVal(${volume}) / 100.0f);\n`;
 });
 
 registerGenerator('sb_play_note', function(block) {
   Blockly.Processing.injectAudioCore();
   const name = block.getFieldValue('NAME');
+  const javaName = Blockly.Processing.getInstrumentJavaName(name);
   const pitch = Blockly.Processing.valueToCode(block, 'PITCH', Blockly.Processing.ORDER_ATOMIC) || '60';
   const velocity = Blockly.Processing.valueToCode(block, 'VELOCITY', Blockly.Processing.ORDER_ATOMIC) || '100';
-  return `playNoteInternal("${name}", getMidi(${pitch}), floatVal(${velocity}));\n`;
+  return `playNoteInternal(${javaName}, getMidi(${pitch}), floatVal(${velocity}));\n`;
 });
 
 registerGenerator('sb_play_drum', function(block) {
@@ -738,18 +753,20 @@ registerGenerator('sb_play_drum', function(block) {
 registerGenerator('sb_stop_note', function(block) {
   Blockly.Processing.injectAudioCore();
   const name = block.getFieldValue('NAME');
+  const javaName = Blockly.Processing.getInstrumentJavaName(name);
   const pitch = Blockly.Processing.valueToCode(block, 'PITCH', Blockly.Processing.ORDER_ATOMIC) || '60';
-  return `stopNoteInternal("${name}", getMidi(${pitch}));\n`;
+  return `stopNoteInternal(${javaName}, getMidi(${pitch}));\n`;
 });
 
 registerGenerator('sb_play_melody', function(block) {
   Blockly.Processing.injectAudioCore();
   const melody = block.getFieldValue('MELODY') || "";
-  const instrument = block.getFieldValue('INSTRUMENT');
+  const name = block.getFieldValue('INSTRUMENT');
+  const javaName = Blockly.Processing.getInstrumentJavaName(name);
   
   // Replace newlines with spaces to allow Java's splitTokens to handle it
   const cleanMelody = melody.replace(/\n/g, ' ').replace(/"/g, '\\"');
-  return `playMelodyInternal("${cleanMelody}", "${instrument}");\n`;
+  return `playMelodyInternal("${cleanMelody}", ${javaName});\n`;
 });
 
 registerGenerator('sb_rhythm_sequence', function(block) {
@@ -927,15 +944,16 @@ registerGenerator('sb_define_chord', function(block) {
 
 registerGenerator('sb_play_chord_by_name', function(block) {
   Blockly.Processing.injectAudioCore();
-  const inst = block.getFieldValue('INST_NAME');
-  const name = block.getFieldValue('NAME');
+  const name = block.getFieldValue('INST_NAME');
+  const javaName = Blockly.Processing.getInstrumentJavaName(name);
+  const chordName = block.getFieldValue('NAME');
   const dur = Blockly.Processing.valueToCode(block, 'DUR', Blockly.Processing.ORDER_ATOMIC) || '"4n"';
   const velocity = Blockly.Processing.valueToCode(block, 'VELOCITY', Blockly.Processing.ORDER_ATOMIC) || '100';
   
   return `{ 
   Object dVal = ${dur};
   float ms = (dVal instanceof Number) ? ((Number)dVal).floatValue() : durationToMs(dVal.toString());
-  playChordByNameInternal("${inst}", "${name}", ms, floatVal(${velocity}));
+  playChordByNameInternal(${javaName}, "${chordName}", ms, floatVal(${velocity}));
 }
 `;
 });

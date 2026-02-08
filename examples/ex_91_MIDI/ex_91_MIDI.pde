@@ -41,6 +41,7 @@ HashMap<String, Float> instrumentVolumes = new HashMap<String, Float>();
 HashMap<String, Gain> samplerGainMap = new HashMap<String, Gain>();
 HashMap<String, List<SynthComponent>> additiveConfigs = new HashMap<String, List<SynthComponent>>();
 HashMap<String, MelodicSampler> melodicSamplers = new HashMap<String, MelodicSampler>();
+HashMap<String, MidiBus> midiBusses = new HashMap<String, MidiBus>();
 HashMap<String, Sampler> samplerMap = new HashMap<String, Sampler>();
 HashMap<String, String[]> chords = new HashMap<String, String[]>();
 HashMap<String, float[]> harmonicPartials = new HashMap<String, float[]>();
@@ -90,6 +91,11 @@ float floatVal(Object o) {
   if (o instanceof Number) return ((Number)o).floatValue();
   try { return Float.parseFloat(o.toString()); }
   catch (Exception e) { return 0.0f; }
+}
+int getMidi(Object o) {
+  if (o == null) return -1;
+  if (o instanceof Number) return ((Number)o).intValue();
+  return noteToMidi(o.toString());
 }
 
 class SBWaveshaper extends ddf.minim.ugens.Summer {
@@ -757,28 +763,58 @@ void logToScreen(String msg, int type) {
     
   }
 
+// Fallback for default device or library version compatibility
 void noteOn(int channel, int pitch, int velocity) {
-  logToScreen("Note ON - Pitch: " + pitch + " Vel: " + velocity, 0);
-  midiKeysHeld.put(pitch, currentInstrument);
-    playNoteInternal(currentInstrument, (int)floatVal(pitch), floatVal(velocity));
-
+  if (midiBusses.size() == 1) {
+    for (String name : midiBusses.keySet()) { noteOn(channel, pitch, velocity, name); }
+  } else {
+    noteOn(channel, pitch, velocity, "MIDI_1");
+  }
+}
+void noteOff(int channel, int pitch, int velocity) {
+  if (midiBusses.size() == 1) {
+    for (String name : midiBusses.keySet()) { noteOff(channel, pitch, velocity, name); }
+  } else {
+    noteOff(channel, pitch, velocity, "MIDI_1");
+  }
+}
+void controllerChange(int channel, int number, int value) {
+  if (midiBusses.size() == 1) {
+    for (String name : midiBusses.keySet()) { controllerChange(channel, number, value, name); }
+  } else {
+    controllerChange(channel, number, value, "MIDI_1");
+  }
 }
 
-void noteOff(int channel, int pitch, int velocity) {
-  logToScreen("Note OFF - Pitch: " + pitch, 0);
-  String memorizedInst = midiKeysHeld.get(pitch);
-  if (memorizedInst != null) {
-    // We modify the internal execution context by temporarily overriding currentInstrument
-    String backup = currentInstrument;
-    currentInstrument = memorizedInst;
-      stopNoteInternal(currentInstrument, (int)floatVal(pitch));
-
-    currentInstrument = backup;
-    midiKeysHeld.remove(pitch);
-  } else {
-      stopNoteInternal(currentInstrument, (int)floatVal(pitch));
+void noteOn(int channel, int pitch, int velocity, String bus_name) {
+  logToScreen("[" + bus_name + "] Note ON - P: " + pitch + " V: " + velocity, 0);
+  midiKeysHeld.put(pitch, currentInstrument);
+  if (bus_name.equals("Keyboard")) {
+  playNoteInternal(currentInstrument, getMidi(pitch), floatVal(velocity));
 
   }
+}
+
+void noteOff(int channel, int pitch, int velocity, String bus_name) {
+  logToScreen("[" + bus_name + "] Note OFF - P: " + pitch, 0);
+  String memorizedInst = midiKeysHeld.get(pitch);
+  if (memorizedInst != null) {
+    String backup = currentInstrument; currentInstrument = memorizedInst;
+  if (bus_name.equals("Keyboard")) {
+  stopNoteInternal(currentInstrument, getMidi(pitch));
+
+  }
+    currentInstrument = backup; midiKeysHeld.remove(pitch);
+  } else {
+  if (bus_name.equals("Keyboard")) {
+  stopNoteInternal(currentInstrument, getMidi(pitch));
+
+  }
+  }
+}
+
+void controllerChange(int channel, int number, int value, String bus_name) {
+
 }
 
 void setup() {
@@ -802,10 +838,8 @@ void setup() {
   fft = new FFT(out.bufferSize(), out.sampleRate());
   cp5 = new ControlP5(this);
   cp5.setFont(createFont("Arial", 16));
-  MidiBus.list();
-  myBus = new MidiBus(this, 0, -1);
   
-    // --- Log Textareas ---
+    // --- Log Textareas --- 
   cp5.addTextarea("alertsArea").setPosition(1200, 35).setSize(400, 265)
      .setFont(createFont("Arial", 18)).setLineHeight(22).setColor(color(255, 100, 100))
      .setColorBackground(color(40, 0, 0));
@@ -841,6 +875,11 @@ void setup() {
   cp5.addButton("copyLogs").setPosition(1405, 5).setSize(90, 25).setCaptionLabel("COPY LOG");
   cp5.addButton("clearLogs").setPosition(1500, 5).setSize(90, 25).setCaptionLabel("CLEAR LOG");
   logToScreen("System Initialized.", 0);
+  surface.setTitle("Super Stage");
+  surface.setVisible(true);
+  if (surface.getNative() instanceof java.awt.Canvas) { ((java.awt.Canvas)surface.getNative()).requestFocus(); }
+    MidiBus.list();
+    midiBusses.put("Keyboard", new MidiBus(this, 0, -1, "Keyboard"));
     currentInstrument = "Organ";
 }
 

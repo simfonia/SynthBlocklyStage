@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>MIDI and Launchpad Control Guide</title>
+    <style>
+        :root { --theme-color: #5B67E7; }
+        body { font-family: sans-serif; line-height: 1.6; padding: 20px; color: #333; max-width: 800px; margin: 0 auto; }
+        h1 { color: var(--theme-color); border-left: 10px solid var(--theme-color); padding-left: 15px; }
+        h2 { color: #2c3e50; border-bottom: 1px solid #eee; padding-bottom: 10px; margin-top: 30px; }
+        code { background: #f4f4f4; padding: 2px 5px; border-radius: 3px; font-family: monospace; }
+        .block-ref { font-weight: bold; color: var(--theme-color); }
+        .note { background: #fff3cd; border-left: 5px solid #ffc107; padding: 15px; margin: 20px 0; }
+        table { border-collapse: collapse; width: 100%; margin: 20px 0; }
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+        th { background: #f8f9fa; }
+    </style>
+</head>
+<body>
+    <h1>MIDI and Launchpad Control</h1>
+    <p>This system supports standard MIDI communication and is optimized for the Novation Launchpad series, enabling real-time interaction between hardware and software.</p>
+
+    <h2>1. Setup</h2>
+    <p class="block-ref">Init MIDI</p>
+    <ul>
+        <li><strong>Input</strong>: Set the index of the MIDI input device (Launchpad is usually 0).</li>
+        <li><strong>Output</strong>: Set the index of the MIDI output device. This must be set correctly to control Launchpad LEDs.</li>
+    </ul>
+    <div class="note">Tip: Check the device list printed in the Processing Console after running to find the correct indices.</div>
+
+    <h2>2. Handling Input</h2>
+    <p class="block-ref">When MIDI Note ON / OFF received</p>
+    <p>Triggered when a key on the hardware is pressed or released. Variables <code>channel</code>, <code>pitch</code>, and <code>velocity</code> are automatically updated.</p>
+
+    <p class="block-ref">When MIDI CC signal received</p>
+    <p>Used to listen for knobs or top-row function buttons. Useful for switching modes or controlling parameters.</p>
+
+    <h2>3. Controlling LEDs (Output)</h2>
+    <p>Send MIDI Note messages to the Launchpad to control its LED colors.</p>
+    
+    <p class="block-ref">Send MIDI Note</p>
+    <ul>
+        <li><strong>ON</strong>: Light up the specified pad.</li>
+        <li><strong>OFF</strong>: Turn off the light.</li>
+        <li><strong>Velocity</strong>: On Launchpad S, the velocity value determines the color (e.g., 15=Red, 60=Green, 62=Yellow).</li>
+    </ul>
+
+    <h2>4. Launchpad Helpers</h2>
+    <p class="block-ref">Launchpad XY to Note</p>
+    <p>The 8x8 grid coordinates range from (0,0) to (7,7), where <strong>(0,0) is the top-left button</strong>. This block uses the formula <code>Note = Y * 16 + X</code> to calculate the correct MIDI note number for any pad.</p>
+
+    <h2>Common Colors for Launchpad S</h2>
+    <table>
+        <tr><th>Color</th><th>Full Brightness</th><th>Medium Brightness</th></tr>
+        <tr><td>Red</td><td>15</td><td>13</td></tr>
+        <tr><td>Amber</td><td>63</td><td>29</td></tr>
+        <tr><td>Green</td><td>60</td><td>28</td></tr>
+        <tr><td>Yellow</td><td>62</td><td>-</td></tr>
+        <tr><td>Off</td><td>0</td><td>-</td></tr>
+    </table>
+</body>
+</html>

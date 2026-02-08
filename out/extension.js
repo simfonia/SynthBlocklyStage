@@ -89,7 +89,7 @@ class SynthBlocklyPanel {
             <next>
               <block type="serial_init" id="init_ser">
                 <field name="INDEX">0</field>
-                <field name="BAUD">9600</field>
+                <field name="BAUD">115200</field>
                 <next>
                   <block type="sb_select_current_instrument" id="Ewrs?L@}424Xd-6Pi.9%">
                     <field name="NAME">MySynth</field>

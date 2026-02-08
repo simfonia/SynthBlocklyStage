@@ -151,6 +151,66 @@ Blockly.Processing.finish = function(code) {
     .sort()
     .join('\n');
   
+  // --- 關鍵：處理 MIDI 事件佔位符 (必須在處理 definitions 之前) ---
+  const noteOnEvents = (Blockly.Processing.definitions_['midi_events_note_on'] || []).join('\n');
+  const noteOffEvents = (Blockly.Processing.definitions_['midi_events_note_off'] || []).join('\n');
+  const ccEvents = (Blockly.Processing.definitions_['midi_events_cc'] || []).join('\n');
+
+  if (noteOnEvents || noteOffEvents || ccEvents) {
+    let midiFuncs = `
+// Fallback for default device or library version compatibility
+void noteOn(int channel, int pitch, int velocity) {
+  if (midiBusses.size() == 1) {
+    for (String name : midiBusses.keySet()) { noteOn(channel, pitch, velocity, name); }
+  } else {
+    noteOn(channel, pitch, velocity, "MIDI_1");
+  }
+}
+void noteOff(int channel, int pitch, int velocity) {
+  if (midiBusses.size() == 1) {
+    for (String name : midiBusses.keySet()) { noteOff(channel, pitch, velocity, name); }
+  } else {
+    noteOff(channel, pitch, velocity, "MIDI_1");
+  }
+}
+void controllerChange(int channel, int number, int value) {
+  if (midiBusses.size() == 1) {
+    for (String name : midiBusses.keySet()) { controllerChange(channel, number, value, name); }
+  } else {
+    controllerChange(channel, number, value, "MIDI_1");
+  }
+}
+
+void noteOn(int channel, int pitch, int velocity, String bus_name) {
+  logToScreen("[" + bus_name + "] Note ON - P: " + pitch + " V: " + velocity, 0);
+  midiKeysHeld.put(pitch, currentInstrument);
+${noteOnEvents}
+}
+
+void noteOff(int channel, int pitch, int velocity, String bus_name) {
+  logToScreen("[" + bus_name + "] Note OFF - P: " + pitch, 0);
+  String memorizedInst = midiKeysHeld.get(pitch);
+  if (memorizedInst != null) {
+    String backup = currentInstrument; currentInstrument = memorizedInst;
+${noteOffEvents}
+    currentInstrument = backup; midiKeysHeld.remove(pitch);
+  } else {
+${noteOffEvents}
+  }
+}
+
+void controllerChange(int channel, int number, int value, String bus_name) {
+${ccEvents}
+}
+    `;
+    Blockly.Processing.definitions_['midi_callbacks'] = midiFuncs;
+  }
+  
+  // 移除原始 Array 定義避免後續 trim() 錯誤
+  delete Blockly.Processing.definitions_['midi_events_note_on'];
+  delete Blockly.Processing.definitions_['midi_events_note_off'];
+  delete Blockly.Processing.definitions_['midi_events_cc'];
+
   // 3. 處理定義 (含佔位符替換)
   let definitionsStr = Object.values(Blockly.Processing.definitions_ || {})
     .map(d => d.trim())

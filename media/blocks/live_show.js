@@ -63,10 +63,10 @@ Blockly.defineBlocksWithJsonArray([
         "type": "field_dropdown",
         "name": "TYPE",
         "options": [
-          ["%{BKY_SB_LOG_TYPE_INFO}", "0"],
-          ["%{BKY_SB_LOG_TYPE_MSG}", "1"],
-          ["%{BKY_SB_LOG_TYPE_WARN}", "2"],
-          ["%{BKY_SB_LOG_TYPE_ERR}", "3"]
+          ["%{BKY_SB_LOG_TYPE_INFO}", "INFO"],
+          ["%{BKY_SB_LOG_TYPE_MSG}", "MSG"],
+          ["%{BKY_SB_LOG_TYPE_WARN}", "WARN"],
+          ["%{BKY_SB_LOG_TYPE_ERR}", "ERR"]
         ]
       }
     ],

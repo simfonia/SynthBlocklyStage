@@ -8,7 +8,7 @@
     - `module_loader.js`: 動態載入積木。
     - `style.css`: 介面樣式與光暈效果。
     - `toolbox.xml`: 工具箱積木配置。
-    - `zh-hant.js`, `en.js`: 多語系定義。
+    - `zh-hant.js`, \`en.js\`: 多語系定義。
     - `blockly/`: Blockly 核心庫與插件 (field-colour, field-multilineinput)。
     - `blocks/`: 積木定義
         - `audio.js`: 音源、演奏、取樣器、音量、ADSR。
@@ -22,14 +22,16 @@
         - `live_show.js`: 動態參數更新與日誌寫入產生器。
         - `visual.js`, `serial.js`, `midi.js`, `functions.js`, `variables.js`.
     - `docs/`: 積木說明文件 (HTML)
+        - `launchpad_zh-hant.html`, `launchpad_en.html`: MIDI 與 Launchpad 說明文件。
+        - `launchpad/開發手冊.html`: Launchpad S 技術規格開發手冊。
 - `examples/`: XML 範例庫
     - `ex_00_play/`, `ex_01_Melody_and_Chord/`, `ex_02_instrument/`, `ex_03_Rock/`, `ex_04_sampler/`.
     - `ex_05_Step_Sequencer/`, `ex_06_Function/`, `ex_07_Function2/`, `ex_08_Step_Sequencer_V2/`.
     - `ex_09_effect/`, `ex_10_LoFi/`.
     - `ex_11_Serial_KICK/`, `ex_12_wah_wah/`, `ex_13_Chord_Pad/`, `ex_14_Drum_Pad/`.
-    - `ex_91_MIDI/`.
+    - `ex_91_MIDI/`, `ex_92_LaunchPad/`.
 - `log/`: 紀錄檔
-    - `work/`: 每日開發日誌 (如 2026-02-07.md)。
+    - `work/`: 每日開發日誌 (如 2026-02-08.md)。
     - `handover.md`: 任務交接。
     - `details.md`: 技術踩坑紀錄。
     - `todo.md`: 任務清單。

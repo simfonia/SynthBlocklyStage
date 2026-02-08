@@ -961,6 +961,10 @@ Blockly.Blocks['sb_set_wave'] = {
 // --- DYNAMIC DROPDOWN FOR INSTRUMENTS (Hybrid Helper) ---
 const getInstrumentOptions = function () {
   const options = [];
+  // 1. Always add "Current Selected Instrument" as the first option
+  const currentLabel = Blockly.Msg['SB_CURRENT_INSTRUMENT_OPTION'] || '當前選用的樂器';
+  options.push([currentLabel, currentLabel]);
+
   const workspace = Blockly.getMainWorkspace();
   if (workspace) {
     const blocks = workspace.getBlocksByType('sb_instrument_container');
@@ -969,9 +973,6 @@ const getInstrumentOptions = function () {
       if (name) options.push([name, name]);
     }
   }
-  if (options.length === 0) {
-    options.push([Blockly.Msg['AUDIO_SELECT_INSTRUMENT_DROPDOWN'] || '(選取樂器)', 'none']);
-  }
   return options;
 };
 
@@ -979,7 +980,8 @@ const getInstrumentOptions = function () {
  * 輔助函式：將文字輸入框轉化為具備下拉選單功能的組件
  */
 const createInstrumentField = function (defaultVal, fieldName) {
-  const field = new Blockly.FieldTextInput(defaultVal || 'MySynth');
+  // Use "Current Selected Instrument" as default if no default provided
+  const field = new Blockly.FieldTextInput(defaultVal || (Blockly.Msg['SB_CURRENT_INSTRUMENT_OPTION'] || ''));
   fieldName = fieldName || "NAME";
 
   field.showEditor_ = function (opt_e) {

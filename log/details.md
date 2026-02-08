@@ -166,3 +166,24 @@
 ### 5. 手勢競爭保護 (Gesture Race Condition Fix)
 - **問題**：視窗失去焦點 (blur) 時立即清除手勢，可能與當前正在進行的微任務衝突，報 `Tried to start the same gesture twice`。
 - **修正**：將 `clearForced()` 包裹在 10 毫秒的 `setTimeout` 中，並配合 `try-catch`。這給予了事件迴圈足夠的緩衝時間來完成當前手勢的銷毀流程。
+
+## 2026-02-08: MIDI 多裝置架構與排版細節
+
+### 1. MidiBus 具名回呼 (Named Callback) 機制
+- **技術細節**：Processing 的 `MidiBus` 支援 `void noteOn(int, int, int, String bus_name)`。為了讓命名裝置與標準裝置共存，產生器必須同時輸出標準版（轉發給預設名稱）與具名版。
+- **Fallback 邏輯**：在 `_core.js` 的 `finish()` 中注入轉發器。若 `midiBusses.size() == 1`，則將所有標準回呼自動轉發給唯一存在的 Bus Name，確保了即便使用者未指定名稱也能正常發聲。
+
+### 2. Blockly 代碼產生順序 (Reordering Array Definitions)
+- **坑點**：原本將 MIDI 事件代碼以 Array 形式存入 `Blockly.Processing.definitions_`。若在 `finish()` 中直接對其進行 `.trim()` 運算，會因為 Array 沒有該方法而拋出 `TypeError`。
+- **解決方案**：在 `finish()` 頂端預先處理 MIDI 事件 Array，將其組合成字串 Function 後寫回 `definitions_` 並刪除原始 Array 項，確保後續字串處理流程安全。
+
+### 3. 三行排版積木佈局 (Vertical Label Stacking)
+- **技術細節**：為了避免 MIDI 事件積木過長，採用了「三行佈局」。
+    - 行 1：標題與 Bus Name。
+    - 行 2：Channel, Pitch, Velocity 參數。
+    - 行 3：空的 `input_dummy` + `input_statement`。
+- **關鍵**：必須在語系檔中補齊對應數量的 `%n` 佔位符，否則 Blockly 載入 XML 時會報參數數量不符錯誤。
+
+### 4. 混合欄位 (Hybrid Field) 的標籤映射
+- **細節**：為了讓樂器選單顯示「當前選用的樂器」而非空字串，將 Label 與 Value 設為相同文字。
+- **產生器轉換**：實作 `getInstrumentJavaName(name)` 輔助函式。在產生 Java 代碼前，判斷名稱是否匹配翻譯標籤，若是則輸出無引號的 `currentInstrument` 變數名稱，否則輸出帶引號的字串。

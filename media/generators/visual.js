@@ -328,10 +328,8 @@ Blockly.Processing.forBlock['visual_stage_setup'] = function (block) {
     "adsrState = 0;\n" +
     "fft = new FFT(out.bufferSize(), out.sampleRate());\n" +
     "cp5 = new ControlP5(this);\n" +
-    "cp5.setFont(createFont(\"Arial\", 16));\n" +
-    "MidiBus.list();\n" +
-    "myBus = new MidiBus(this, 0, -1);\n";
-  setupCode += "\n  // --- Log Textareas ---\n" +
+    "cp5.setFont(createFont(\"Arial\", 16));\n";
+  setupCode += "\n  // --- Log Textareas --- \n" +
     "cp5.addTextarea(\"alertsArea\").setPosition(" + w + ", 35).setSize(" + logW + ", " + (totalH / 2 - 35) + ")\n"
     + "   .setFont(createFont(\"Arial\", 18)).setLineHeight(22).setColor(color(255, 100, 100))\n"
     + "   .setColorBackground(color(40, 0, 0));\n"
@@ -380,6 +378,9 @@ Blockly.Processing.forBlock['visual_stage_setup'] = function (block) {
   setupCode += "cp5.addButton(\"copyLogs\").setPosition(" + (totalW - 195) + ", 5).setSize(90, 25).setCaptionLabel(\"COPY LOG\");\n";
   setupCode += "cp5.addButton(\"clearLogs\").setPosition(" + (totalW - 100) + ", 5).setSize(90, 25).setCaptionLabel(\"CLEAR LOG\");\n";
   setupCode += "logToScreen(\"System Initialized.\", 0);\n";
+  setupCode += "surface.setTitle(\"Super Stage\");\n";
+  setupCode += "surface.setVisible(true);\n";
+  setupCode += "if (surface.getNative() instanceof java.awt.Canvas) { ((java.awt.Canvas)surface.getNative()).requestFocus(); }\n";
 
   Blockly.Processing.provideSetup(setupCode);
 

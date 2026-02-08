@@ -422,7 +422,7 @@
         <block type="visual_pixel_density"></block>
         <block type="visual_constant"></block>
 
-        <sep></sep>
+        <sep gap="32"></sep>
 
         <block type="visual_background">
             <value name="COLOR">
@@ -449,7 +449,7 @@
         </block>
         <block type="visual_no_stroke"></block>
 
-        <sep></sep>
+        <sep gap="32"></sep>
 
         <block type="visual_rect">
             <value name="X">
@@ -550,7 +550,7 @@
             </value>
         </block>
 
-        <sep></sep>
+        <sep gap="32"></sep>
 
         <block type="visual_translate">
             <value name="X">
@@ -619,6 +619,38 @@
         <block type="midi_init"></block>
         <block type="midi_on_note"></block>
         <block type="midi_off_note"></block>
+        <block type="midi_on_controller_change"></block>
+        <sep gap="32"></sep>
+        <block type="midi_send_note">
+            <value name="CHANNEL">
+                <shadow type="math_number"><field name="NUM">0</field></shadow>
+            </value>
+            <value name="PITCH">
+                <shadow type="math_number"><field name="NUM">60</field></shadow>
+            </value>
+            <value name="VELOCITY">
+                <shadow type="math_number"><field name="NUM">100</field></shadow>
+            </value>
+        </block>
+        <block type="midi_send_cc">
+            <value name="CHANNEL">
+                <shadow type="math_number"><field name="NUM">0</field></shadow>
+            </value>
+            <value name="NUMBER">
+                <shadow type="math_number"><field name="NUM">0</field></shadow>
+            </value>
+            <value name="VALUE">
+                <shadow type="math_number"><field name="NUM">127</field></shadow>
+            </value>
+        </block>
+        <block type="midi_lp_xy_to_note">
+            <value name="X">
+                <shadow type="math_number"><field name="NUM">0</field></shadow>
+            </value>
+            <value name="Y">
+                <shadow type="math_number"><field name="NUM">0</field></shadow>
+            </value>
+        </block>
     </category>
 
     <!-- 15. UI Control -->

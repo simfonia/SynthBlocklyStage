@@ -1,0 +1,542 @@
+<xml xmlns="https://developers.google.com/blockly/xml">
+  <variables>
+    <variable id="E=mzf@D?z/WQM@0mehXU">channel</variable>
+    <variable id="Zk=xeNwCzE{tu(j2*m1!">pitch</variable>
+    <variable id="ffV/C}vmgi@Z39;_D{zX">velocity</variable>
+  </variables>
+  <block type="sb_comment" id="guide" x="10" y="10">
+    <field name="TEXT">【Launchpad S Drum &amp; Chord Pad】&amp;#10;1. 裝置名稱設定為 LaunchPad。&amp;#10;2. 底層 112-115：電子鼓 (Kick, Snare, Hi-hat, Open Hat)。&amp;#10;3. 底層 116-119：Bossa Nova 和弦 (Dm7, G7, CM7, A7)。&amp;#10;4. 燈光回饋：包含按下亮燈與放開熄燈。</field>
+  </block>
+  <block type="sb_instrument_container" id="piano_inst" x="10" y="150">
+    <field name="NAME">Piano</field>
+    <statement name="STACK">
+      <block type="sb_melodic_sampler" id="piano_sampler">
+        <mutation type="PIANO"></mutation>
+        <field name="TYPE">PIANO</field>
+        <next>
+          <block type="sb_set_adsr" id="piano_adsr">
+            <value name="A">
+              <shadow type="math_number" id="-$tH0VI+zF3G`iH6Pc;*">
+                <field name="NUM">0.01</field>
+              </shadow>
+            </value>
+            <value name="D">
+              <shadow type="math_number" id="l0GLw_NAz?icBKv5!*WM">
+                <field name="NUM">0.1</field>
+              </shadow>
+            </value>
+            <value name="S">
+              <shadow type="math_number" id="cu}M)Tr;x^`|[zRgX1qF">
+                <field name="NUM">0.5</field>
+              </shadow>
+            </value>
+            <value name="R">
+              <shadow type="math_number" id=":w{*J}!ozo?^.XZ6z%!M">
+                <field name="NUM">0.5</field>
+              </shadow>
+            </value>
+          </block>
+        </next>
+      </block>
+    </statement>
+  </block>
+  <block type="processing_setup" id="setup" x="10" y="370">
+    <statement name="DO">
+      <block type="sb_minim_init" id="init_minim">
+        <next>
+          <block type="sb_comment" id="u75#%waD?#!lQGe[UVmm">
+            <field name="TEXT">MIDI 裝置的 I/O Index 要先執行程式，&amp;#10;再從下方輸出面板查看後回填。</field>
+            <next>
+              <block type="midi_init" id="midi_init">
+                <field name="NAME">LaunchPad</field>
+                <field name="INPUT">0</field>
+                <field name="OUTPUT">3</field>
+                <next>
+                  <block type="visual_stage_setup" id="super_stage">
+                    <field name="W">1200</field>
+                    <field name="H">400</field>
+                    <field name="BG_COLOR">#000000</field>
+                    <field name="FG_COLOR">#3498db</field>
+                    <next>
+                      <block type="sb_transport_set_bpm" id="set_bpm">
+                        <value name="BPM">
+                          <shadow type="math_number" id="c*~IsLT}!M_#2wg+aUwT">
+                            <field name="NUM">105</field>
+                          </shadow>
+                        </value>
+                        <next>
+                          <block type="sb_define_chord" id="c1">
+                            <field name="NAME">Dm7</field>
+                            <field name="NOTES">D4,F4,A4,C5</field>
+                            <next>
+                              <block type="sb_define_chord" id="c2">
+                                <field name="NAME">G7</field>
+                                <field name="NOTES">G3,B3,D4,F4</field>
+                                <next>
+                                  <block type="sb_define_chord" id="c3">
+                                    <field name="NAME">CM7</field>
+                                    <field name="NOTES">C4,E4,G4,B4</field>
+                                    <next>
+                                      <block type="sb_define_chord" id="c4">
+                                        <field name="NAME">A7</field>
+                                        <field name="NOTES">A3,C#4,E4,G4</field>
+                                        <next>
+                                          <block type="sb_log_to_screen" id="log_ready">
+                                            <field name="TYPE">INFO</field>
+                                            <value name="MSG">
+                                              <shadow type="text" id="_aV,Md@24]Dh4pEs5CJ.">
+                                                <field name="TEXT">LaunchPad Drum &amp; Chord Ready!</field>
+                                              </shadow>
+                                            </value>
+                                          </block>
+                                        </next>
+                                      </block>
+                                    </next>
+                                  </block>
+                                </next>
+                              </block>
+                            </next>
+                          </block>
+                        </next>
+                      </block>
+                    </next>
+                  </block>
+                </next>
+              </block>
+            </next>
+          </block>
+        </next>
+      </block>
+    </statement>
+  </block>
+  <block type="midi_on_note" id="midi_on" x="10" y="790">
+    <field name="BUS_NAME">LaunchPad</field>
+    <field name="CHANNEL" id="E=mzf@D?z/WQM@0mehXU">channel</field>
+    <field name="PITCH" id="Zk=xeNwCzE{tu(j2*m1!">pitch</field>
+    <field name="VELOCITY" id="ffV/C}vmgi@Z39;_D{zX">velocity</field>
+    <statement name="DO">
+      <block type="controls_if" id="check_pitch_on">
+        <mutation elseif="7"></mutation>
+        <value name="IF0">
+          <block type="logic_compare" id="tQ5nYcFw}C[v33d36s?{">
+            <field name="OP">EQ</field>
+            <value name="A">
+              <block type="variables_get" id="a~e?z]/b9B|x2y(TpQ~7">
+                <field name="VAR" id="Zk=xeNwCzE{tu(j2*m1!">pitch</field>
+              </block>
+            </value>
+            <value name="B">
+              <block type="math_number" id="fzBC@SUu(d1vBS6aS0l9">
+                <field name="NUM">112</field>
+              </block>
+            </value>
+          </block>
+        </value>
+        <statement name="DO0">
+          <block type="sb_play_drum" id="xQ:)tpK_g*0DwQMdJz-Y">
+            <field name="TYPE">KICK</field>
+            <value name="VELOCITY">
+              <block type="variables_get" id="f8ZCLYeU~w.Lp{Mfc~$:">
+                <field name="VAR" id="ffV/C}vmgi@Z39;_D{zX">velocity</field>
+              </block>
+            </value>
+            <next>
+              <block type="midi_send_note" id="EeW8pTdumJ$a}Fm9-4NN">
+                <field name="BUS_NAME">LaunchPad</field>
+                <field name="TYPE">ON</field>
+                <value name="CHANNEL">
+                  <shadow type="math_number" id="$.*VyA0+[kUQu:s83k:S">
+                    <field name="NUM">0</field>
+                  </shadow>
+                </value>
+                <value name="PITCH">
+                  <block type="math_number" id="B.-1w!?)MhFW$6I?^X[@">
+                    <field name="NUM">112</field>
+                  </block>
+                </value>
+                <value name="VELOCITY">
+                  <block type="math_number" id="CTj/_45MHtcEA_*mA;rJ">
+                    <field name="NUM">15</field>
+                  </block>
+                </value>
+              </block>
+            </next>
+          </block>
+        </statement>
+        <value name="IF1">
+          <block type="logic_compare" id="SLU;YI`-o#w2S@D25AzT">
+            <field name="OP">EQ</field>
+            <value name="A">
+              <block type="variables_get" id="#I5oPo+Gj4H5xVWA:WE3">
+                <field name="VAR" id="Zk=xeNwCzE{tu(j2*m1!">pitch</field>
+              </block>
+            </value>
+            <value name="B">
+              <block type="math_number" id="9:?`=p%%EXCTX7bfl~mq">
+                <field name="NUM">113</field>
+              </block>
+            </value>
+          </block>
+        </value>
+        <statement name="DO1">
+          <block type="sb_play_drum" id="m/T#h?,lE~Y-h`{wGf=s">
+            <field name="TYPE">SNARE</field>
+            <value name="VELOCITY">
+              <block type="variables_get" id=".YEJkNbS~*z}2eBpQZ2`">
+                <field name="VAR" id="ffV/C}vmgi@Z39;_D{zX">velocity</field>
+              </block>
+            </value>
+            <next>
+              <block type="midi_send_note" id="(aQ;8cWLRs{V/9vv~UK-">
+                <field name="BUS_NAME">LaunchPad</field>
+                <field name="TYPE">ON</field>
+                <value name="CHANNEL">
+                  <shadow type="math_number" id="330cWdDZ]w`)V@aLp31q">
+                    <field name="NUM">0</field>
+                  </shadow>
+                </value>
+                <value name="PITCH">
+                  <block type="math_number" id=";8RbpSYT5.uw^5_m,Cv8">
+                    <field name="NUM">113</field>
+                  </block>
+                </value>
+                <value name="VELOCITY">
+                  <block type="math_number" id="(,G;D=d{zvD8?+gU=y(b">
+                    <field name="NUM">63</field>
+                  </block>
+                </value>
+              </block>
+            </next>
+          </block>
+        </statement>
+        <value name="IF2">
+          <block type="logic_compare" id="%3Svga6[O;*s75|-bo(n">
+            <field name="OP">EQ</field>
+            <value name="A">
+              <block type="variables_get" id="BNi-z2-o_12*c@ssvkfA">
+                <field name="VAR" id="Zk=xeNwCzE{tu(j2*m1!">pitch</field>
+              </block>
+            </value>
+            <value name="B">
+              <block type="math_number" id="EsJP=qL[QGM;JS`oou,n">
+                <field name="NUM">114</field>
+              </block>
+            </value>
+          </block>
+        </value>
+        <statement name="DO2">
+          <block type="sb_play_drum" id="@ptjt!MY5Og9D:`,cGW|">
+            <field name="TYPE">CH</field>
+            <value name="VELOCITY">
+              <block type="variables_get" id="h|h.v]?1EMF|j,OlNVE8">
+                <field name="VAR" id="ffV/C}vmgi@Z39;_D{zX">velocity</field>
+              </block>
+            </value>
+            <next>
+              <block type="midi_send_note" id="v@,:Yk-T]was3(V#%8e2">
+                <field name="BUS_NAME">LaunchPad</field>
+                <field name="TYPE">ON</field>
+                <value name="CHANNEL">
+                  <shadow type="math_number" id="5E(NlSSM_cP+bd=UFNw;">
+                    <field name="NUM">0</field>
+                  </shadow>
+                </value>
+                <value name="PITCH">
+                  <block type="math_number" id="jL%D1c{[bs}rZ.ogUlN@">
+                    <field name="NUM">114</field>
+                  </block>
+                </value>
+                <value name="VELOCITY">
+                  <block type="math_number" id="em3D6m!v8btRVY:;HIY)">
+                    <field name="NUM">60</field>
+                  </block>
+                </value>
+              </block>
+            </next>
+          </block>
+        </statement>
+        <value name="IF3">
+          <block type="logic_compare" id="}fm2_L4~#(?:Ir|O#3R*">
+            <field name="OP">EQ</field>
+            <value name="A">
+              <block type="variables_get" id="CX(*[g8WR#Z#BgX9JUH`">
+                <field name="VAR" id="Zk=xeNwCzE{tu(j2*m1!">pitch</field>
+              </block>
+            </value>
+            <value name="B">
+              <block type="math_number" id="T~VtISx*m4eXCe4TzN*c">
+                <field name="NUM">115</field>
+              </block>
+            </value>
+          </block>
+        </value>
+        <statement name="DO3">
+          <block type="sb_play_drum" id="={b3_A=}m|N:s}]lhB`G">
+            <field name="TYPE">OH</field>
+            <value name="VELOCITY">
+              <block type="variables_get" id="1agbzeTiOU24oris1%zO">
+                <field name="VAR" id="ffV/C}vmgi@Z39;_D{zX">velocity</field>
+              </block>
+            </value>
+            <next>
+              <block type="midi_send_note" id="xU5T:%G{;/$Xaw~H.g$W">
+                <field name="BUS_NAME">LaunchPad</field>
+                <field name="TYPE">ON</field>
+                <value name="CHANNEL">
+                  <shadow type="math_number" id="ivjAO6Rzp3gdUL|csk4h">
+                    <field name="NUM">0</field>
+                  </shadow>
+                </value>
+                <value name="PITCH">
+                  <block type="math_number" id="KLn,CWNt3|i]^N4+_Z5a">
+                    <field name="NUM">115</field>
+                  </block>
+                </value>
+                <value name="VELOCITY">
+                  <block type="math_number" id="FC5ZtH^.8SV+3%F}7V3o">
+                    <field name="NUM">62</field>
+                  </block>
+                </value>
+              </block>
+            </next>
+          </block>
+        </statement>
+        <value name="IF4">
+          <block type="logic_compare" id="iuHpF9j=akohonRnWS/F">
+            <field name="OP">EQ</field>
+            <value name="A">
+              <block type="variables_get" id="iLD1G)=f4J+Ui`%`))!c">
+                <field name="VAR" id="Zk=xeNwCzE{tu(j2*m1!">pitch</field>
+              </block>
+            </value>
+            <value name="B">
+              <block type="math_number" id="w{9h-bty0i3_J`H;Q3V4">
+                <field name="NUM">116</field>
+              </block>
+            </value>
+          </block>
+        </value>
+        <statement name="DO4">
+          <block type="sb_play_chord_by_name" id="p|4/GZ$xzRzEUe[*-v,T">
+            <field name="INST_NAME">Piano</field>
+            <field name="NAME">Dm7</field>
+            <value name="DUR">
+              <shadow type="text" id="-Oi#YS??Q-kDTt9p!(WO">
+                <field name="TEXT">4n</field>
+              </shadow>
+            </value>
+            <value name="VELOCITY">
+              <block type="variables_get" id="DNPqy5M4y.N*lrpvYL?a">
+                <field name="VAR" id="ffV/C}vmgi@Z39;_D{zX">velocity</field>
+              </block>
+            </value>
+            <next>
+              <block type="midi_send_note" id="4ZKKP9e,77e`9ufSF#+[">
+                <field name="BUS_NAME">LaunchPad</field>
+                <field name="TYPE">ON</field>
+                <value name="CHANNEL">
+                  <shadow type="math_number" id="f8e3OO(S]~QUotO?=V9H">
+                    <field name="NUM">0</field>
+                  </shadow>
+                </value>
+                <value name="PITCH">
+                  <block type="math_number" id="~^^BNs?gblZyeD|)8Ag}">
+                    <field name="NUM">116</field>
+                  </block>
+                </value>
+                <value name="VELOCITY">
+                  <block type="math_number" id="/s[,j$GC!xs:B9[,0lwu">
+                    <field name="NUM">45</field>
+                  </block>
+                </value>
+              </block>
+            </next>
+          </block>
+        </statement>
+        <value name="IF5">
+          <block type="logic_compare" id="z8-^wCi-F.V}fEBOywz`">
+            <field name="OP">EQ</field>
+            <value name="A">
+              <block type="variables_get" id="20*sA)gJg.6npu${6f[y">
+                <field name="VAR" id="Zk=xeNwCzE{tu(j2*m1!">pitch</field>
+              </block>
+            </value>
+            <value name="B">
+              <block type="math_number" id="T$DtG[=~igIO0sBd`inN">
+                <field name="NUM">117</field>
+              </block>
+            </value>
+          </block>
+        </value>
+        <statement name="DO5">
+          <block type="sb_play_chord_by_name" id="P3g{O{]yvj#(ri%#3U7)">
+            <field name="INST_NAME">Piano</field>
+            <field name="NAME">G7</field>
+            <value name="DUR">
+              <shadow type="text" id="R|(0!i##V!1O#NdS-vHX">
+                <field name="TEXT">4n</field>
+              </shadow>
+            </value>
+            <value name="VELOCITY">
+              <block type="variables_get" id="Ss{fUldTdZ|cf{qXhO-v">
+                <field name="VAR" id="ffV/C}vmgi@Z39;_D{zX">velocity</field>
+              </block>
+            </value>
+            <next>
+              <block type="midi_send_note" id="jS~kBaBJOY,IQP-;@q3=">
+                <field name="BUS_NAME">LaunchPad</field>
+                <field name="TYPE">ON</field>
+                <value name="CHANNEL">
+                  <shadow type="math_number" id="}9gwA!~;k;ie62hIfzT0">
+                    <field name="NUM">0</field>
+                  </shadow>
+                </value>
+                <value name="PITCH">
+                  <block type="math_number" id="_N)7uCvn;+9]vspC@Bz}">
+                    <field name="NUM">117</field>
+                  </block>
+                </value>
+                <value name="VELOCITY">
+                  <block type="math_number" id="`PoqPj+F$z41wmhuif:}">
+                    <field name="NUM">46</field>
+                  </block>
+                </value>
+              </block>
+            </next>
+          </block>
+        </statement>
+        <value name="IF6">
+          <block type="logic_compare" id="(mJxzF6FHO=G-Ie7+i:e">
+            <field name="OP">EQ</field>
+            <value name="A">
+              <block type="variables_get" id=")X05Ehp.gmR,)@l}1c`@">
+                <field name="VAR" id="Zk=xeNwCzE{tu(j2*m1!">pitch</field>
+              </block>
+            </value>
+            <value name="B">
+              <block type="math_number" id="T{A~C~}HQ[bBG~1pis1M">
+                <field name="NUM">118</field>
+              </block>
+            </value>
+          </block>
+        </value>
+        <statement name="DO6">
+          <block type="sb_play_chord_by_name" id="k[mx1,40Q%F7]ncz6^@6">
+            <field name="INST_NAME">Piano</field>
+            <field name="NAME">CM7</field>
+            <value name="DUR">
+              <shadow type="text" id="+Z_*tq+|L|DEpO1|Tx0F">
+                <field name="TEXT">4n</field>
+              </shadow>
+            </value>
+            <value name="VELOCITY">
+              <block type="variables_get" id="PvQe:z[Z9}{F,j,dG4Ah">
+                <field name="VAR" id="ffV/C}vmgi@Z39;_D{zX">velocity</field>
+              </block>
+            </value>
+            <next>
+              <block type="midi_send_note" id="*fvV+dj9]M;Pc^)~zC$^">
+                <field name="BUS_NAME">LaunchPad</field>
+                <field name="TYPE">ON</field>
+                <value name="CHANNEL">
+                  <shadow type="math_number" id="K`n0ZceDI@p-#@pG9%!C">
+                    <field name="NUM">0</field>
+                  </shadow>
+                </value>
+                <value name="PITCH">
+                  <block type="math_number" id="wAqQ+yM/8K{?]@xC/,zM">
+                    <field name="NUM">118</field>
+                  </block>
+                </value>
+                <value name="VELOCITY">
+                  <block type="math_number" id="$Z~:Y1OI_{0+d5mcClI(">
+                    <field name="NUM">47</field>
+                  </block>
+                </value>
+              </block>
+            </next>
+          </block>
+        </statement>
+        <value name="IF7">
+          <block type="logic_compare" id="c!(2Zy5-P//hY3ynYxfl">
+            <field name="OP">EQ</field>
+            <value name="A">
+              <block type="variables_get" id="p[P=~uB/YGyRUYp|mI*J">
+                <field name="VAR" id="Zk=xeNwCzE{tu(j2*m1!">pitch</field>
+              </block>
+            </value>
+            <value name="B">
+              <block type="math_number" id="-VwH:^).dJwW)Evq~:%G">
+                <field name="NUM">119</field>
+              </block>
+            </value>
+          </block>
+        </value>
+        <statement name="DO7">
+          <block type="sb_play_chord_by_name" id="ctKL;1ic~}PsZCL+6AI~">
+            <field name="INST_NAME">Piano</field>
+            <field name="NAME">A7</field>
+            <value name="DUR">
+              <shadow type="text" id="|po:zPw:_?TbJpViils#">
+                <field name="TEXT">4n</field>
+              </shadow>
+            </value>
+            <value name="VELOCITY">
+              <block type="variables_get" id="2w?]PZtF6_i.YIxu2GQr">
+                <field name="VAR" id="ffV/C}vmgi@Z39;_D{zX">velocity</field>
+              </block>
+            </value>
+            <next>
+              <block type="midi_send_note" id="3RDU!8guZ63K0a5$ie;*">
+                <field name="BUS_NAME">LaunchPad</field>
+                <field name="TYPE">ON</field>
+                <value name="CHANNEL">
+                  <shadow type="math_number" id="Vit[_x8Bnb?cJ,DVYC$4">
+                    <field name="NUM">0</field>
+                  </shadow>
+                </value>
+                <value name="PITCH">
+                  <block type="math_number" id="6NIZ;;x1j#H8AU@S74sx">
+                    <field name="NUM">119</field>
+                  </block>
+                </value>
+                <value name="VELOCITY">
+                  <block type="math_number" id="^_otc`JD=#eo%o@ES[W1">
+                    <field name="NUM">44</field>
+                  </block>
+                </value>
+              </block>
+            </next>
+          </block>
+        </statement>
+      </block>
+    </statement>
+  </block>
+  <block type="midi_off_note" id="midi_off" x="10" y="1830">
+    <field name="BUS_NAME">LaunchPad</field>
+    <field name="CHANNEL" id="E=mzf@D?z/WQM@0mehXU">channel</field>
+    <field name="PITCH" id="Zk=xeNwCzE{tu(j2*m1!">pitch</field>
+    <field name="VELOCITY" id="ffV/C}vmgi@Z39;_D{zX">velocity</field>
+    <statement name="DO">
+      <block type="midi_send_note" id="light_off">
+        <field name="BUS_NAME">LaunchPad</field>
+        <field name="TYPE">OFF</field>
+        <value name="CHANNEL">
+          <shadow type="math_number" id="YN.j!Z6l~fE/8+/[=!,z">
+            <field name="NUM">0</field>
+          </shadow>
+        </value>
+        <value name="PITCH">
+          <block type="variables_get" id="~y:ye@F/tg(n:!o0sO;^">
+            <field name="VAR" id="Zk=xeNwCzE{tu(j2*m1!">pitch</field>
+          </block>
+        </value>
+        <value name="VELOCITY">
+          <shadow type="math_number" id="TQXa9+-ui|neM3|Iz`JE">
+            <field name="NUM">0</field>
+          </shadow>
+        </value>
+      </block>
+    </statement>
+  </block>
+</xml>

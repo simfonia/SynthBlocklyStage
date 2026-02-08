@@ -67,9 +67,21 @@
     - [x] 定義 `ex_00_play.xml` 為預設啟動樣板。
     - [x] 修正新專案「Saved」狀態誤報問題。
 
+### 階段六：硬體整合 (Launchpad S)
+- [x] **6-1. 規劃與文件**
+    - [x] 閱讀 Programmers Reference Manual 並建立開發手冊 (`media/docs/launchpad/開發手冊.html`)。
+    - [x] 規劃 MIDI 傳送積木 (`midi_send_note`, \`midi_send_cc\`)。
+- [x] **6-2. 積木實作**
+    - [x] 實作 MIDI Send 相關積木與產生器。
+    - [x] 將 \`midi_on_controller_change\` 加入工具箱。
+    - [x] 更新多語系定義。
+- [x] **6-3. 範例製作**
+    - [x] 製作 Launchpad 互動範例 (\`ex_92_LaunchPad.xml\`)。
+
 ### 待辦與優化
 - [ ] **持續優化**：針對複雜樂句的執行緒同步安全強化。
 - [ ] **大師級功能**：實作 Master Limiter 防破音保護。
+- [ ] **UI 精進**：持續優化 Toolbox 佈局與積木間距。
 
 ---
 
