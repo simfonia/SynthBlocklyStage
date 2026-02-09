@@ -206,7 +206,7 @@
                     </value>
                     <next>
                       <block type="sb_log_to_screen" id="o#I0cPS:IIxH~qkO_zi4">
-                        <field name="TYPE">0</field>
+                        <field name="TYPE">INFO</field>
                         <value name="MSG">
                           <shadow type="text" id="0DPM[bIWie]vY;x-9nIx">
                             <field name="TEXT">Hello</field>

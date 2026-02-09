@@ -75,6 +75,8 @@
     "SB_CURRENT_INSTRUMENT_OPTION": "Current Selected Instrument",
     "SB_NO_EFFECTS_AVAILABLE": "(No effects available)",
     "SB_NO_INSTRUMENT_SELECTED": "(No instrument selected)",
+    "SB_ERROR_INSTRUMENT_NOT_FOUND": "Instrument container not found: %1",
+    "SB_ERROR_EFFECT_NOT_FOUND": "Effect not found in instrument's current setup: %1",
 
     // Live Show Blocks
     "LIVE_SET_PARAM": "Set stage param %1 to %2",

@@ -66,7 +66,11 @@ Blockly.defineBlocksWithJsonArray([
           ["%{BKY_SB_LOG_TYPE_INFO}", "INFO"],
           ["%{BKY_SB_LOG_TYPE_MSG}", "MSG"],
           ["%{BKY_SB_LOG_TYPE_WARN}", "WARN"],
-          ["%{BKY_SB_LOG_TYPE_ERR}", "ERR"]
+          ["%{BKY_SB_LOG_TYPE_ERR}", "ERR"],
+          ["INFO", "0"],
+          ["MSG", "1"],
+          ["WARN", "2"],
+          ["ERR", "3"]
         ]
       }
     ],

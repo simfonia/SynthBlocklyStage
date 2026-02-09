@@ -109,10 +109,12 @@ Blockly.Processing.addImport = function(importStr) {
 
 /**
  * 輔助函數：注入程式碼到 setup()
+ * @param {string} code 程式碼
+ * @param {string} opt_key 可選的唯一 Key，用於防止重複注入
  */
-Blockly.Processing.provideSetup = function(code) {
+Blockly.Processing.provideSetup = function(code, opt_key) {
   if (Blockly.Processing.setups_) {
-    var id = 'setup_' + Object.keys(Blockly.Processing.setups_).length;
+    var id = opt_key || 'setup_' + Object.keys(Blockly.Processing.setups_).length;
     Blockly.Processing.setups_[id] = code;
   }
 };
@@ -120,9 +122,9 @@ Blockly.Processing.provideSetup = function(code) {
 /**
  * 輔助函數：注入程式碼到 draw() 的開頭
  */
-Blockly.Processing.provideDraw = function(code) {
+Blockly.Processing.provideDraw = function(code, opt_key) {
   if (Blockly.Processing.draws_) {
-    var id = 'draw_' + Object.keys(Blockly.Processing.draws_).length;
+    var id = opt_key || 'draw_' + Object.keys(Blockly.Processing.draws_).length;
     Blockly.Processing.draws_[id] = code;
   }
 };
@@ -131,7 +133,7 @@ Blockly.Processing.provideDraw = function(code) {
  * Finish the code generation.
  */
 Blockly.Processing.finish = function(code) {
-  // 1. 處理 Imports (確保唯一、修剪空白、補齊分號)
+  // 1. 處理 Imports
   const uniqueImports = new Set();
   if (Blockly.Processing.imports_) {
     Object.values(Blockly.Processing.imports_).forEach(imp => {
@@ -151,42 +153,30 @@ Blockly.Processing.finish = function(code) {
     .sort()
     .join('\n');
   
-  // --- 關鍵：處理 MIDI 事件佔位符 (必須在處理 definitions 之前) ---
+  // --- 處理 MIDI 事件 ---
   const noteOnEvents = (Blockly.Processing.definitions_['midi_events_note_on'] || []).join('\n');
   const noteOffEvents = (Blockly.Processing.definitions_['midi_events_note_off'] || []).join('\n');
   const ccEvents = (Blockly.Processing.definitions_['midi_events_cc'] || []).join('\n');
 
   if (noteOnEvents || noteOffEvents || ccEvents) {
     let midiFuncs = `
-// Fallback for default device or library version compatibility
 void noteOn(int channel, int pitch, int velocity) {
-  if (midiBusses.size() == 1) {
-    for (String name : midiBusses.keySet()) { noteOn(channel, pitch, velocity, name); }
-  } else {
-    noteOn(channel, pitch, velocity, "MIDI_1");
-  }
+  if (midiBusses.size() == 1) { for (String name : midiBusses.keySet()) { noteOn(channel, pitch, velocity, name); } }
+  else { noteOn(channel, pitch, velocity, "MIDI_1"); }
 }
 void noteOff(int channel, int pitch, int velocity) {
-  if (midiBusses.size() == 1) {
-    for (String name : midiBusses.keySet()) { noteOff(channel, pitch, velocity, name); }
-  } else {
-    noteOff(channel, pitch, velocity, "MIDI_1");
-  }
+  if (midiBusses.size() == 1) { for (String name : midiBusses.keySet()) { noteOff(channel, pitch, velocity, name); } }
+  else { noteOff(channel, pitch, velocity, "MIDI_1"); }
 }
 void controllerChange(int channel, int number, int value) {
-  if (midiBusses.size() == 1) {
-    for (String name : midiBusses.keySet()) { controllerChange(channel, number, value, name); }
-  } else {
-    controllerChange(channel, number, value, "MIDI_1");
-  }
+  if (midiBusses.size() == 1) { for (String name : midiBusses.keySet()) { controllerChange(channel, number, value, name); } }
+  else { controllerChange(channel, number, value, "MIDI_1"); }
 }
-
 void noteOn(int channel, int pitch, int velocity, String bus_name) {
   logToScreen("[" + bus_name + "] Note ON - P: " + pitch + " V: " + velocity, 0);
   midiKeysHeld.put(pitch, currentInstrument);
 ${noteOnEvents}
 }
-
 void noteOff(int channel, int pitch, int velocity, String bus_name) {
   logToScreen("[" + bus_name + "] Note OFF - P: " + pitch, 0);
   String memorizedInst = midiKeysHeld.get(pitch);
@@ -194,62 +184,69 @@ void noteOff(int channel, int pitch, int velocity, String bus_name) {
     String backup = currentInstrument; currentInstrument = memorizedInst;
 ${noteOffEvents}
     currentInstrument = backup; midiKeysHeld.remove(pitch);
-  } else {
-${noteOffEvents}
-  }
+  } else { ${noteOffEvents} }
 }
-
-void controllerChange(int channel, int number, int value, String bus_name) {
-${ccEvents}
-}
+void controllerChange(int channel, int number, int value, String bus_name) { ${ccEvents} }
     `;
     Blockly.Processing.definitions_['midi_callbacks'] = midiFuncs;
   }
-  
-  // 移除原始 Array 定義避免後續 trim() 錯誤
   delete Blockly.Processing.definitions_['midi_events_note_on'];
   delete Blockly.Processing.definitions_['midi_events_note_off'];
   delete Blockly.Processing.definitions_['midi_events_cc'];
 
-  // 3. 處理定義 (含佔位符替換)
+  // 3. 處理定義 (含佔位符)
   let definitionsStr = Object.values(Blockly.Processing.definitions_ || {})
-    .map(d => d.trim())
-    .filter(d => d !== "")
-    .join('\n\n');
+    .map(d => d.trim()).filter(d => d !== "").join('\n\n');
 
-  // --- 關鍵：處理鍵盤事件佔位符 ---
   let pressedEventsCode = "";
   let releasedEventsCode = "";
   if (Blockly.Processing.keyEvents_) {
     Blockly.Processing.keyEvents_.forEach(ev => {
       let eventCode = `if (k == '${ev.key}') {\n      ${ev.code.replace(/\n/g, '\n      ')}\n    }\n    `;
-      if (ev.mode === 'RELEASED') {
-        releasedEventsCode += eventCode;
-      } else {
-        pressedEventsCode += eventCode;
-      }
+      if (ev.mode === 'RELEASED') releasedEventsCode += eventCode;
+      else pressedEventsCode += eventCode;
     });
   }
-  
-  // 先定義暫時的變數處理替換，確保 definitionsStr 被更新
   let finalDefinitions = definitionsStr
     .replace('{{KEY_PRESSED_EVENT_PLACEHOLDER}}', pressedEventsCode)
     .replace('{{KEY_RELEASED_EVENT_PLACEHOLDER}}', releasedEventsCode);
 
-  // 4. Setup 函式
-  const setups = Object.values(Blockly.Processing.setups_ || [])
-    .map(s => s.trim())
-    .filter(s => s !== "");
-  const setup = 'void setup() {\n  ' + setups.join('\n  ').replace(/\n/g, '\n  ') + '\n}\n';
+  // 4. Setup 函式 (核心優化：排序與去重)
+  const setupParts = Blockly.Processing.setups_ || {};
+  let sortedSetup = [];
+  
+  // 絕對優先：size() 與 pixelDensity()
+  // 注意：這些 Key 需要在各個產生器中配合使用
+  if (setupParts['stage_init_size']) {
+    sortedSetup.push(setupParts['stage_init_size']);
+    delete setupParts['stage_init_size'];
+  }
+  if (setupParts['stage_init_density']) {
+    sortedSetup.push(setupParts['stage_init_density']);
+    delete setupParts['stage_init_density'];
+  }
+  
+  // 其次：音訊引擎初始化
+  if (setupParts['sb_audio_init']) {
+    sortedSetup.push(setupParts['sb_audio_init']);
+    delete setupParts['sb_audio_init'];
+  }
+
+  // 其餘按順序加入
+  Object.values(setupParts).forEach(s => {
+    let clean = s.trim();
+    if (clean) sortedSetup.push(clean);
+  });
+
+  const setup = 'void setup() {\n  ' + sortedSetup.join('\n  ').replace(/\n/g, '\n  ') + '\n}\n';
   
   // 5. Draw 函式
   const drawParts = Object.values(Blockly.Processing.draws_ || [])
-    .map(d => d.trim())
-    .filter(d => d !== "");
+    .map(d => d.trim()).filter(d => d !== "");
   const fullDrawCode = (drawParts.join('\n') + '\n' + code).trim();
   const draw = 'void draw() {\n  ' + (fullDrawCode ? fullDrawCode.replace(/\n/g, '\n  ') : '') + '\n}\n';
 
-  // 6. 最終組合 (嚴格控制換行)
+  // 6. 最終組合
   let segments = [];
   if (importsStr) segments.push(importsStr);
   if (globalVars) segments.push(globalVars);
@@ -259,7 +256,6 @@ ${ccEvents}
 
   const finalCode = segments.join('\n\n').trim();
   
-  // 清理
   delete Blockly.Processing.imports_;
   delete Blockly.Processing.global_vars_;
   delete Blockly.Processing.definitions_;

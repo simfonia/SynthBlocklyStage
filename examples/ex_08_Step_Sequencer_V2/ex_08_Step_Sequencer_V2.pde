@@ -16,6 +16,7 @@ import processing.serial.*;
 import themidibus.*;
 
 AudioOutput out;
+ConcurrentHashMap<Integer, String> midiKeysHeld = new ConcurrentHashMap<Integer, String>();
 ControlP5 cp5;
 FFT fft;
 Gain masterGainUGen;
@@ -35,12 +36,11 @@ HashMap instrumentPitchModLFOs = new HashMap();
 HashMap instrumentPitchMods = new HashMap();
 HashMap instrumentReverbs = new HashMap();
 HashMap instrumentWaveshapers = new HashMap();
-HashMap<Integer, String> midiKeysHeld = new HashMap<Integer, String>();
-HashMap<Integer, String> pcKeysHeld = new HashMap<Integer, String>();
 HashMap<String, Float> instrumentVolumes = new HashMap<String, Float>();
 HashMap<String, Gain> samplerGainMap = new HashMap<String, Gain>();
 HashMap<String, List<SynthComponent>> additiveConfigs = new HashMap<String, List<SynthComponent>>();
 HashMap<String, MelodicSampler> melodicSamplers = new HashMap<String, MelodicSampler>();
+HashMap<String, MidiBus> midiBusses = new HashMap<String, MidiBus>();
 HashMap<String, Sampler> samplerMap = new HashMap<String, Sampler>();
 HashMap<String, String[]> chords = new HashMap<String, String[]>();
 HashMap<String, float[]> harmonicPartials = new HashMap<String, float[]>();
@@ -48,13 +48,13 @@ LinkedHashMap<String, String> instrumentMap = new LinkedHashMap<String, String>(
 LinkedHashMap<String, float[]> instrumentADSR = new LinkedHashMap<String, float[]>();
 MidiBus myBus;
 Minim minim;
+SBSummer mainMixer;
 Sampler currentSample;
 Sampler kick;
 Sampler snare;
 Serial myPort;
 String currentInstrument = "default";
 String lastInstrument = "";
-Summer mainMixer;
 UGen masterEffectEnd;
 boolean isMidiMode = false;
 boolean showADSR = true;
@@ -81,7 +81,10 @@ int adsrTimer = 0;
 int serialBaud = 115200;
 int stageBgColor;
 int stageFgColor;
+java.util.concurrent.ConcurrentHashMap<Integer, String> pcKeysHeld = new java.util.concurrent.ConcurrentHashMap<Integer, String>();
+long clippingTimer = 0;
 volatile boolean isCountingIn = false;
+volatile boolean isMasterClipping = false;
 
 float floatVal(Object o) {
   if (o == null) return 0.0f;
@@ -95,7 +98,27 @@ int getMidi(Object o) {
   return noteToMidi(o.toString());
 }
 
-class SBWaveshaper extends ddf.minim.ugens.Summer {
+class SBSummer extends ddf.minim.ugens.Summer {
+    protected void uGenerate(float[] channels) {
+      super.uGenerate(channels);
+    }
+  }
+
+  class SBPan extends ddf.minim.ugens.Summer {
+    float panPos = 0; // -1.0 to 1.0
+    SBPan(float p) { super(); panPos = p; }
+    void setLastValue(float val) { panPos = val; }
+    protected void uGenerate(float[] channels) {
+      super.uGenerate(channels);
+      if (channels.length == 2) {
+        float v = (channels[0] + channels[1]) * 0.5f; 
+        channels[0] = v * Math.max(0, Math.min(1, 1.0f - panPos));
+        channels[1] = v * Math.max(0, Math.min(1, 1.0f + panPos));
+      }
+    }
+  }
+
+  class SBWaveshaper extends SBSummer {
     float amount = 1.0f;
     SBWaveshaper() { super(); }
     void setAmount(float a) { amount = a; }
@@ -107,7 +130,7 @@ class SBWaveshaper extends ddf.minim.ugens.Summer {
     }
   }
 
-  class SBReverb extends ddf.minim.ugens.Summer {
+  class SBReverb extends SBSummer {
     float roomSize = 0.5f; float damping = 0.5f; float wet = 0.3f;
     float[] c1, c2, c3, c4; int p1, p2, p3, p4;
     float[] a1, a2; int ap1, ap2;
@@ -135,20 +158,25 @@ class SBWaveshaper extends ddf.minim.ugens.Summer {
     }
   }
 
-  class SBCompressor extends ddf.minim.ugens.Summer {
+  class SBCompressor extends SBSummer {
     float threshold = 1.0f; float ratio = 1.0f; float attack = 0.01f; float release = 0.1f; float makeup = 1.0f; float env = 0.0f;
-    SBCompressor() { super(); }
+    private float attackCoef, releaseCoef;
+
+    SBCompressor() { super(); setParams(-20, 1, 0.01f, 0.1f, 0); }
     void setParams(float tDB, float r, float a, float re, float mDB) {
       threshold = (float)Math.pow(10, tDB/20.0f); ratio = r; attack = a; release = re; makeup = (float)Math.pow(10, mDB/20.0f);
+      attackCoef = (float)Math.exp(-1.0/(44100.0*attack));
+      releaseCoef = (float)Math.exp(-1.0/(44100.0*release));
     }
     protected void uGenerate(float[] channels) {
-      super.uGenerate(channels); // 重要：拉取輸入音訊
-      float attackCoef = (float)Math.exp(-1.0/(44100.0*attack)); float releaseCoef = (float)Math.exp(-1.0/(44100.0*release));
+      super.uGenerate(channels); 
       for(int i=0; i<channels.length; i++) {
         float absIn = Math.abs(channels[i]);
         env = (absIn > env) ? attackCoef * env + (1.0f - attackCoef) * absIn : releaseCoef * env + (1.0f - releaseCoef) * absIn;
         float gain = 1.0f;
-        if (env > threshold) { gain = (threshold + (env - threshold) / ratio) / (env + 0.00001f); }
+        if (env > threshold) { 
+          gain = (threshold + (env - threshold) / ratio) / (env + 0.00001f); 
+        }
         channels[i] *= gain * makeup;
       }
     }
@@ -160,7 +188,7 @@ class SBWaveshaper extends ddf.minim.ugens.Summer {
     TreeMap<Integer, Sampler> samples = new TreeMap<Integer, Sampler>();
     TreeMap<Integer, TickRate> rates = new TreeMap<Integer, TickRate>();
     TreeMap<Integer, ADSR> adsrs = new TreeMap<Integer, ADSR>();
-    Summer localMixer = new Summer();
+    SBSummer localMixer = new SBSummer();
     Minim m;
     String instName;
     
@@ -185,7 +213,7 @@ class SBWaveshaper extends ddf.minim.ugens.Summer {
           if (midi >= 0) {
             Sampler s = new Sampler(folder + "/" + fullName, 4, m);
             TickRate tr = new TickRate(1.f);
-            ADSR a = new ADSR(1.0, 0.001f, 0.001f, 1.0f, 0.5f); // 預設 R=0.5
+            ADSR a = new ADSR(1.0, 0.001f, 0.001f, 1.0f, 0.5f); // Default R=0.5
             tr.setInterpolation(true);
             s.patch(tr).patch(a).patch(localMixer);
             samples.put(midi, s);
@@ -209,7 +237,7 @@ class SBWaveshaper extends ddf.minim.ugens.Summer {
         float rate = (float)Math.pow(2.0, (midi - closest) / 12.0);
         tr.value.setLastValue(rate);
         
-        // 使用傳入的 amp 設定最大振幅
+        // Use amp to set max amplitude
         a.setParameters(amp, 0.001f, 0.001f, 1.0f, r, 0, 0);
         a.noteOn();
         src.trigger();
@@ -221,17 +249,14 @@ class SBWaveshaper extends ddf.minim.ugens.Summer {
 
     void checkMainMixer() {
       if (minim == null) minim = new Minim(this);
-      if (out == null) out = minim.getLineOut(); 
+      if (out == null) out = minim.getLineOut(Minim.STEREO); 
       if (mainMixer == null) {
-        mainMixer = new Summer();
+        mainMixer = new SBSummer();
         masterEffectEnd = mainMixer;
         masterGainUGen = new Gain(0.f);
-        masterEffectEnd.patch(masterGainUGen).patch(out);
         
-        // FORCE STEREO: Patch a silent stereo Pan to mainMixer
-        Oscil silent = new Oscil(0, 0, Waves.SINE);
-        Pan p = new Pan(0);
-        silent.patch(p).patch(mainMixer);
+        // Signal Chain: Mixer -> Effects -> Master Gain -> Out
+        masterEffectEnd.patch(masterGainUGen).patch(out);
         
         // PRE-INIT DEFAULT INSTRUMENT
         getInstrumentMixer("default");
@@ -242,13 +267,11 @@ class SBWaveshaper extends ddf.minim.ugens.Summer {
       checkMainMixer();
       if (instrumentMixers.containsKey(name)) return (ddf.minim.ugens.Summer)instrumentMixers.get(name);
       
-      ddf.minim.ugens.Summer s = new ddf.minim.ugens.Summer();
-      ddf.minim.ugens.Pan p = new ddf.minim.ugens.Pan(0.f);
+      SBSummer s = new SBSummer();
+      SBPan p = new SBPan(0.f);
       
-      synchronized(mainMixer) {
-        s.patch(p);
-        p.patch(mainMixer);
-      }
+      s.patch(p);
+      p.patch(mainMixer);
       
       instrumentMixers.put(name, s);
       instrumentPans.put(name, p);
@@ -401,7 +424,7 @@ class SBWaveshaper extends ddf.minim.ugens.Summer {
     float baseFreq = mtof((float)p);
     ADSR env = new ADSR(1.0, adsr[0], adsr[1], adsr[2], adsr[3]);
     
-    Summer noteMixer = new Summer(); 
+    SBSummer noteMixer = new SBSummer(); 
     
     if (type.equals("HARMONIC")) {
       float[] partials = harmonicPartials.get(instName);
@@ -434,7 +457,7 @@ class SBWaveshaper extends ddf.minim.ugens.Summer {
         Oscil wave = new Oscil(0, masterAmp * (1.0f - nRatio), getWaveform(wType));
         
         // 建立頻率加總器，確保音高 + 抖動能同時生效
-        Summer freqSum = new Summer();
+        Summer freqSum = new SBSummer();
         new Constant(baseFreq).patch(freqSum);
         if (jitter > 0) {
           // Jitter 縮小影響範圍，避免過度跑調
@@ -451,7 +474,7 @@ class SBWaveshaper extends ddf.minim.ugens.Summer {
         if (sDepth > 0) {
           // 掃頻：使用 Summer 確保 Filter 頻率 = Offset + LFO
           MoogFilter sweepF = new MoogFilter(0, 0.3f);
-          Summer sweepSum = new Summer();
+          Summer sweepSum = new SBSummer();
           // 基礎偏移量：設在基礎音高的 4 倍處
           new Constant(baseFreq * 4.0f).patch(sweepSum);
           // LFO 調變量
@@ -648,6 +671,7 @@ void logToScreen(String msg, int type) {
   }
 
   void midiInputDevice(int n) {
+    if (myBus == null) return;
     String[] inputs = MidiBus.availableInputs();
     if (n >= 0 && n < inputs.length) {
       myBus.clearInputs();
@@ -1567,13 +1591,17 @@ void B() {
 }
 
 void setup() {
-  if (!instrumentMap.containsKey("Sax")) instrumentMap.put("Sax", "TRIANGLE");
+  size(1600, 600);
+    pixelDensity(displayDensity());
+    
+    checkMainMixer();
+    
+    if (!instrumentMap.containsKey("Sax")) instrumentMap.put("Sax", "TRIANGLE");
   if (!instrumentADSR.containsKey("Sax")) instrumentADSR.put("Sax", new float[]{defAdsrA, defAdsrD, defAdsrS, defAdsrR});
     instrumentMap.put("Sax", "SAW");
     instrumentADSR.put("Sax", new float[]{(float)0.2, (float)0.1, (float)0.8, (float)0.1});
     if (!instrumentMap.containsKey("Piano")) instrumentMap.put("Piano", "TRIANGLE");
   if (!instrumentADSR.containsKey("Piano")) instrumentADSR.put("Piano", new float[]{defAdsrA, defAdsrD, defAdsrS, defAdsrR});
-    checkMainMixer();
     if (!melodicSamplers.containsKey("Piano")) melodicSamplers.put("Piano", new MelodicSampler(minim, "Piano"));
     melodicSamplers.get("Piano").loadSamples("piano");
     instrumentMap.put("Piano", "MELODIC_SAMPLER");
@@ -1586,7 +1614,6 @@ void setup() {
     instrumentADSR.put("Bass", new float[]{(float)0.01, (float)0.5, (float)0, (float)0.5});
     if (!instrumentMap.containsKey("Clap")) instrumentMap.put("Clap", "TRIANGLE");
   if (!instrumentADSR.containsKey("Clap")) instrumentADSR.put("Clap", new float[]{defAdsrA, defAdsrD, defAdsrS, defAdsrR});
-    checkMainMixer();
     samplerMap.put("Clap", new ddf.minim.ugens.Sampler("drum/clap.wav", 4, minim));
     samplerGainMap.put("Clap", new Gain(0.f));
     ((ddf.minim.ugens.Sampler)samplerMap.get("Clap")).patch((Gain)samplerGainMap.get("Clap")).patch(getInstrumentMixer("Clap"));
@@ -1594,7 +1621,6 @@ void setup() {
     instrumentADSR.put("Clap", new float[]{defAdsrA, defAdsrD, defAdsrS, defAdsrR});
     if (!instrumentMap.containsKey("Kick")) instrumentMap.put("Kick", "TRIANGLE");
   if (!instrumentADSR.containsKey("Kick")) instrumentADSR.put("Kick", new float[]{defAdsrA, defAdsrD, defAdsrS, defAdsrR});
-    checkMainMixer();
     samplerMap.put("Kick", new ddf.minim.ugens.Sampler("drum/kick.wav", 4, minim));
     samplerGainMap.put("Kick", new Gain(0.f));
     ((ddf.minim.ugens.Sampler)samplerMap.get("Kick")).patch((Gain)samplerGainMap.get("Kick")).patch(getInstrumentMixer("Kick"));
@@ -1602,26 +1628,19 @@ void setup() {
     instrumentADSR.put("Kick", new float[]{defAdsrA, defAdsrD, defAdsrS, defAdsrR});
     if (!instrumentMap.containsKey("CHiHat")) instrumentMap.put("CHiHat", "TRIANGLE");
   if (!instrumentADSR.containsKey("CHiHat")) instrumentADSR.put("CHiHat", new float[]{defAdsrA, defAdsrD, defAdsrS, defAdsrR});
-    checkMainMixer();
     samplerMap.put("CHiHat", new ddf.minim.ugens.Sampler("drum/ch.wav", 4, minim));
     samplerGainMap.put("CHiHat", new Gain(0.f));
     ((ddf.minim.ugens.Sampler)samplerMap.get("CHiHat")).patch((Gain)samplerGainMap.get("CHiHat")).patch(getInstrumentMixer("CHiHat"));
     instrumentMap.put("CHiHat", "DRUM");
     instrumentADSR.put("CHiHat", new float[]{defAdsrA, defAdsrD, defAdsrS, defAdsrR});
-    checkMainMixer();
-    size(1600, 600);
-  pixelDensity(displayDensity());
-  stageBgColor = color(0, 0, 0);
+    stageBgColor = color(0, 0, 0);
   stageFgColor = color(255, 0, 150);
-  checkMainMixer();
   adsrState = 0;
   fft = new FFT(out.bufferSize(), out.sampleRate());
   cp5 = new ControlP5(this);
   cp5.setFont(createFont("Arial", 16));
-  MidiBus.list();
-  myBus = new MidiBus(this, 0, -1);
   
-    // --- Log Textareas ---
+    // --- Log Textareas --- 
   cp5.addTextarea("alertsArea").setPosition(1200, 35).setSize(400, 265)
      .setFont(createFont("Arial", 18)).setLineHeight(22).setColor(color(255, 100, 100))
      .setColorBackground(color(40, 0, 0));
@@ -1657,6 +1676,9 @@ void setup() {
   cp5.addButton("copyLogs").setPosition(1405, 5).setSize(90, 25).setCaptionLabel("COPY LOG");
   cp5.addButton("clearLogs").setPosition(1500, 5).setSize(90, 25).setCaptionLabel("CLEAR LOG");
   logToScreen("System Initialized.", 0);
+  surface.setTitle("Super Stage");
+  surface.setVisible(true);
+  if (surface.getNative() instanceof java.awt.Canvas) { ((java.awt.Canvas)surface.getNative()).requestFocus(); }
     isCountingIn = true;
     new Thread(new Runnable() {
       public void run() {
@@ -1706,6 +1728,13 @@ void setup() {
 void draw() {
   pushStyle(); colorMode(HSB, 255); stageFgColor = color(fgHue, 255, 255); popStyle();
   masterGainUGen.setValue(masterGain); noStroke(); fill(30); rect(0, 400, width, 200);
+  // Peak detection sync with CLIP flag from audio thread
+  if (out != null) {
+    for(int i = 0; i < out.bufferSize(); i++) {
+      if (Math.abs(out.mix.get(i)) > 0.99f) { isMasterClipping = true; clippingTimer = millis(); break; }
+    }
+  }
+  if (isMasterClipping && millis() - clippingTimer > 500) { isMasterClipping = false; }
   // Draw rainbow bar behind fgHue slider
   pushStyle(); for (int i = 0; i < 150; i++) { colorMode(HSB, 150); stroke(i, 150, 150); line(20 + i, 572, 20 + i, 575); } popStyle();
   colorMode(RGB, 255); float currentVisualW = showLog ? 1200.0 : width;
@@ -1766,6 +1795,13 @@ void draw() {
     } else {
       cp5.get(Textarea.class, "alertsArea").hide(); cp5.get(Textarea.class, "consoleArea").hide();
     }
+  }
+  if (isMasterClipping) {
+    pushStyle(); fill(255, 0, 0, (sin(millis()*0.02)+1)*127); noStroke();
+    rect(currentVisualW/2 - 40, 10, 80, 25, 5);
+    fill(255); textSize(16); textAlign(CENTER, CENTER);
+    text("CLIP", currentVisualW/2, 22);
+    popStyle();
   }
   updateInstrumentUISync();
 }

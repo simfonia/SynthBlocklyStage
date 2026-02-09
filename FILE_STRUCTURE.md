@@ -29,7 +29,7 @@
     - `ex_05_Step_Sequencer/`, `ex_06_Function/`, `ex_07_Function2/`, `ex_08_Step_Sequencer_V2/`.
     - `ex_09_effect/`, `ex_10_LoFi/`.
     - `ex_11_Serial_KICK/`, `ex_12_wah_wah/`, `ex_13_Chord_Pad/`, `ex_14_Drum_Pad/`.
-    - `ex_91_MIDI/`, `ex_92_LaunchPad/`.
+    - `ex_91_MIDI/`, `ex_92_LaunchPad/`, `ex_99_Stress_Test/`.
 - `log/`: 紀錄檔
     - `work/`: 每日開發日誌 (如 2026-02-08.md)。
     - `handover.md`: 任務交接。

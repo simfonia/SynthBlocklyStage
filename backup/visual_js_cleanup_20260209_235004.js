@@ -163,7 +163,7 @@ Blockly.Processing.forBlock['visual_stage_setup'] = function (block) {
   g['myBus'] = "MidiBus myBus;";
   g['serialBaud'] = "int serialBaud = 115200;";
   g['serialPortVar'] = "Serial myPort;";
-  g['pcKeysHeld'] = "java.util.concurrent.ConcurrentHashMap<Integer, String> pcKeysHeld = new java.util.concurrent.ConcurrentHashMap<Integer, String>();";
+  g['pcKeysHeld'] = "ConcurrentHashMap<Integer, String> pcKeysHeld = new ConcurrentHashMap<Integer, String>();";
 
   g['stageBgColor'] = "int stageBgColor;";
   g['stageFgColor'] = "int stageFgColor;";
@@ -201,7 +201,6 @@ Blockly.Processing.forBlock['visual_stage_setup'] = function (block) {
   }
 
   void midiInputDevice(int n) {
-    if (myBus == null) return;
     String[] inputs = MidiBus.availableInputs();
     if (n >= 0 && n < inputs.length) {
       myBus.clearInputs();
@@ -387,11 +386,9 @@ Blockly.Processing.forBlock['visual_stage_setup'] = function (block) {
 
   var drawCode = "pushStyle(); colorMode(HSB, 255); stageFgColor = color(fgHue, 255, 255); popStyle();\n"
     + "masterGainUGen.setValue(masterGain); noStroke(); fill(30); rect(0, " + h + ", width, " + panelH + ");\n"
-    + "// Peak detection sync with CLIP flag from audio thread\n"
-    + "if (out != null) {\n"
-    + "  for(int i = 0; i < out.bufferSize(); i++) {\n"
-    + "    if (Math.abs(out.mix.get(i)) > 0.99f) { isMasterClipping = true; clippingTimer = millis(); break; }\n"
-    + "  }\n"
+    + "// Peak detection for CLIP indicator\n"
+    + "for (int i = 0; i < out.bufferSize(); i++) {\n"
+    + "  if (Math.abs(out.mix.get(i)) > 0.99f) { isMasterClipping = true; clippingTimer = millis(); break; }\n"
     + "}\n"
     + "if (isMasterClipping && millis() - clippingTimer > 500) { isMasterClipping = false; }\n"
     + "// Draw rainbow bar behind fgHue slider\n"

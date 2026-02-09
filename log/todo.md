@@ -63,6 +63,7 @@
     - [x] 完成 `ex_12_wah_wah` (光控濾波)。
     - [x] 完成 `ex_13_Chord_Pad` (字串解析版)。
     - [x] 完成 `ex_14_Drum_Pad`。
+    - [x] 舊範例 XML ID 全面更新為 `sb_` 結構。
 - [x] **5-4. 起始樣板系統**
     - [x] 定義 `ex_00_play.xml` 為預設啟動樣板。
     - [x] 修正新專案「Saved」狀態誤報問題。
@@ -70,18 +71,32 @@
 ### 階段六：硬體整合 (Launchpad S)
 - [x] **6-1. 規劃與文件**
     - [x] 閱讀 Programmers Reference Manual 並建立開發手冊 (`media/docs/launchpad/開發手冊.html`)。
-    - [x] 規劃 MIDI 傳送積木 (`midi_send_note`, \`midi_send_cc\`)。
+    - [x] 規劃 MIDI 傳送積木 (`midi_send_note`, `midi_send_cc`)。
 - [x] **6-2. 積木實作**
     - [x] 實作 MIDI Send 相關積木與產生器。
-    - [x] 將 \`midi_on_controller_change\` 加入工具箱。
+    - [x] 將 `midi_on_controller_change` 加入工具箱。
     - [x] 更新多語系定義。
 - [x] **6-3. 範例製作**
-    - [x] 製作 Launchpad 互動範例 (\`ex_92_LaunchPad.xml\`)。
+    - [x] 製作 Launchpad 互動範例 (`ex_92_LaunchPad.xml`)。
+
+### 階段七：效能極限優化與穩定性
+- [x] **7-1. 音訊迴圈物件分配優化**：重構 `SBSummer` 與 `SBPan` 移除 `uGenerate` 內的暫存陣列，解決高發聲數下的 GC 卡頓。
+- [x] **7-2. 破音監控同步化**：修正 Limiter 誤導性 CLIP 警告，實現視覺指示與聽覺失真的 1:1 對齊。
+- [x] **7-3. 執行緒安全強化**：引入 `ConcurrentHashMap` 與全路徑類別宣告，消除多音軌彈奏時的死結風險。
+
+### 階段八：程式碼清理
+- [ ] **8-1. 自動測試工具**
+    - [ ] 8-1-1. 建立 Node.js Headless Blockly 產碼環境。
+    - [ ] 8-1-2. 實作批次產碼與 PDE 比對腳本。
+- [ ] **8-2. 模組重構與分割**
+    - [ ] 8-2-1. 建立 `media/utils.js` 收納通用輔助函式 (Helper Functions)。
+    - [ ] 8-2-2. 拆分 `blocks/audio.js` 為 core, performance, effects。
+    - [ ] 8-2-3. 拆分 `generators/audio.js` 為對應模組。
+    - [ ] 8-2-4. 優化 `module_loader.js` 載入邏輯。
 
 ### 待辦與優化
 - [ ] **持續優化**：針對複雜樂句的執行緒同步安全強化。
-- [ ] **大師級功能**：實作 Master Limiter 防破音保護。
-- [ ] **UI 精進**：持續優化 Toolbox 佈局與積木間距。
+
 
 ---
 

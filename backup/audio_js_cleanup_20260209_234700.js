@@ -40,6 +40,7 @@ Blockly.Processing.injectAudioCore = function() {
   g['currentInstrument'] = 'String currentInstrument = "default";';
   g['lastInstrument'] = 'String lastInstrument = "";';
   g['mainMixer'] = "SBSummer mainMixer;";
+  g['masterMonitor'] = "SBSummer masterMonitor;";
   g['masterEffectEnd'] = "UGen masterEffectEnd;";
   g['masterGainUGen'] = "Gain masterGainUGen;";
   g['harmonicPartials'] = "HashMap<String, float[]> harmonicPartials = new HashMap<String, float[]>();";
@@ -50,11 +51,11 @@ Blockly.Processing.injectAudioCore = function() {
   g['activeMelodyCount'] = "int activeMelodyCount = 0;";
   g['melodyLock'] = "final Object melodyLock = new Object();";
   g['isCountingIn'] = "volatile boolean isCountingIn = false;";
-  g['midiKeysHeld'] = "ConcurrentHashMap<Integer, String> midiKeysHeld = new ConcurrentHashMap<Integer, String>();";
+  g['midiKeysHeld'] = "HashMap<Integer, String> midiKeysHeld = new HashMap<Integer, String>();";
   g['midiBusses'] = "HashMap<String, MidiBus> midiBusses = new HashMap<String, MidiBus>();";
   g['instrumentMixConfigs'] = "HashMap instrumentMixConfigs = new HashMap();";
-  g['isMasterClipping'] = "volatile boolean isMasterClipping = false;";
-  g['clippingTimer'] = "long clippingTimer = 0;";
+  g['isMasterClipping'] = "boolean isMasterClipping = false;";
+  g['clippingTimer'] = "int clippingTimer = 0;";
   
   // Effects Containers (Raw Type for max compatibility)
   g['instrumentMixers'] = "HashMap instrumentMixers = new HashMap();";
@@ -84,21 +85,30 @@ Blockly.Processing.injectAudioCore = function() {
   // Core Classes and Methods
   Blockly.Processing.definitions_['AudioCore'] = `
   class SBSummer extends ddf.minim.ugens.Summer {
+    protected float[] _stereoBuffer = new float[2];
     protected void uGenerate(float[] channels) {
-      super.uGenerate(channels);
+      if (channels.length == 1) {
+        super.uGenerate(_stereoBuffer);
+        channels[0] = (_stereoBuffer[0] + _stereoBuffer[1]) * 0.5f;
+      } else {
+        super.uGenerate(channels);
+      }
     }
   }
 
-  class SBPan extends ddf.minim.ugens.Summer {
+  class SBPan extends SBSummer {
     float panPos = 0; // -1.0 to 1.0
+    private float[] _monoBuffer = new float[1];
     SBPan(float p) { super(); panPos = p; }
     void setLastValue(float val) { panPos = val; }
     protected void uGenerate(float[] channels) {
-      super.uGenerate(channels);
       if (channels.length == 2) {
-        float v = (channels[0] + channels[1]) * 0.5f; 
-        channels[0] = v * Math.max(0, Math.min(1, 1.0f - panPos));
-        channels[1] = v * Math.max(0, Math.min(1, 1.0f + panPos));
+        super.uGenerate(_monoBuffer); 
+        float val = _monoBuffer[0];
+        channels[0] = val * constrain(1.0f - panPos, 0, 1); // Left
+        channels[1] = val * constrain(1.0f + panPos, 0, 1); // Right
+      } else {
+        super.uGenerate(channels);
       }
     }
   }
@@ -239,9 +249,10 @@ Blockly.Processing.injectAudioCore = function() {
         mainMixer = new SBSummer();
         masterEffectEnd = mainMixer;
         masterGainUGen = new Gain(0.f);
+        masterMonitor = new SBSummer();
         
-        // Signal Chain: Mixer -> Effects -> Master Gain -> Out
-        masterEffectEnd.patch(masterGainUGen).patch(out);
+        // Signal Chain: Mixer -> Effects -> Master Gain -> Final Monitor -> Out
+        masterEffectEnd.patch(masterGainUGen).patch(masterMonitor).patch(out);
         
         // PRE-INIT DEFAULT INSTRUMENT
         getInstrumentMixer("default");

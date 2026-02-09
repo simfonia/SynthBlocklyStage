@@ -76,6 +76,8 @@
     "SB_CURRENT_INSTRUMENT_OPTION": "當前選用的樂器",
     "SB_NO_EFFECTS_AVAILABLE": "(無可用效果器)",
     "SB_NO_INSTRUMENT_SELECTED": "(尚未選取樂器)",
+    "SB_ERROR_INSTRUMENT_NOT_FOUND": "找不到指定的樂器容器：%1",
+    "SB_ERROR_EFFECT_NOT_FOUND": "該樂器目前的設定中沒有此效果器：%1",
 
     // Tools Blocks
     "LIVE_SET_PARAM": "設定舞台參數 %1 為 %2",

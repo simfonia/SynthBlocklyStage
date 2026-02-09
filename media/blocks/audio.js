@@ -288,7 +288,8 @@ const SETUP_EFFECT_MUTATOR = {
       'BITDEPTH',
       'THRESHOLD', 'RATIO', 'ATTACK', 'RELEASE', 'MAKEUP',
       'WET', 'DISTORTION_AMOUNT', 'DECAY', 'PREDELAY',
-      'RATE', 'DEPTH', 'MOD_TYPE', 'SWEEP_INPUT', 'SWEEP_DEPTH_INPUT', 'JITTER_INPUT'
+      'RATE', 'DEPTH', 'MOD_TYPE', 'SWEEP_INPUT', 'SWEEP_DEPTH_INPUT', 'JITTER_INPUT',
+      'ROOMSIZE', 'DAMPING'
     ];
     params.forEach(p => { if (this.getInput(p)) this.removeInput(p); });
 
@@ -1131,6 +1132,9 @@ Blockly.Blocks['sb_play_melody'] = {
 
 Blockly.Blocks['sb_rhythm_sequence'] = {
   init: function () {
+    var measureLabel = Blockly.Msg['AUDIO_RHYTHM_SEQUENCE_MEASURE'] || "第 %1 小節";
+    var measureParts = measureLabel.split('%1');
+
     this.appendDummyInput()
       .appendField(Blockly.Msg['AUDIO_RHYTHM_SEQUENCE'])
       .appendField(createInstrumentField(Blockly.Msg['SB_SELECT_INSTRUMENT_PROMPT'], 'SOURCE'), "SOURCE")
@@ -1142,9 +1146,10 @@ Blockly.Blocks['sb_rhythm_sequence'] = {
     
     this.appendValueInput("MEASURE")
       .setCheck("Number")
-      .appendField(Blockly.Msg['AUDIO_RHYTHM_SEQUENCE_MEASURE']);
+      .appendField(measureParts[0] || "");
     
     this.appendDummyInput()
+      .appendField(measureParts[1] || "")
       .appendField(Blockly.Msg['AUDIO_RHYTHM_SEQUENCE_PATTERN'])
       .appendField(new Blockly.FieldTextInput("x--- x--- x--- x---"), "PATTERN");
       
@@ -1186,6 +1191,10 @@ Blockly.Blocks['sb_set_effect_param'] = {
       if (!target || target === Blockly.Msg['SB_SELECT_INSTRUMENT_PROMPT']) {
         return [[Blockly.Msg['SB_NO_INSTRUMENT_SELECTED'] || "(尚未選取樂器)", "none"]];
       }
+
+      // 所有樂器都有 ADSR 與相位
+      options.push(["ADSR", "adsr"]);
+      options.push([Blockly.Msg['SB_SET_PANNING_MESSAGE'] || "相位 (Panning)", "panning"]);
 
       var workspace = instance.workspace;
       var blocks = workspace.getAllBlocks(false);
