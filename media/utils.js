@@ -275,6 +275,39 @@ window.SB_Utils.getChordDropdown = function () {
     return options;
 };
 
+/**
+ * --- Visual Color Helpers ---
+ */
+
+// 將 #RRGGBB 轉為 Processing color (int) 代碼字串
+window.SB_Utils.hexToJavaColor = function (hex) {
+    if (!hex || hex.charAt(0) !== '#') return "color(0)";
+    var r = parseInt(hex.substring(1, 3), 16);
+    var g = parseInt(hex.substring(3, 5), 16);
+    var b = parseInt(hex.substring(5, 7), 16);
+    return "color(" + r + ", " + g + ", " + b + ")";
+};
+
+// 計算 Hex 顏色的 Hue (0-255)
+window.SB_Utils.hexToHue = function (hex) {
+    if (!hex || hex.charAt(0) !== '#') return 0;
+    var r = parseInt(hex.substring(1, 3), 16) / 255;
+    var g = parseInt(hex.substring(3, 5), 16) / 255;
+    var b = parseInt(hex.substring(5, 7), 16) / 255;
+    var max = Math.max(r, g, b), min = Math.min(r, g, b);
+    var h, d = max - min;
+    if (max === min) h = 0; // achromatic
+    else {
+        switch (max) {
+            case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+            case g: h = (b - r) / d + 2; break;
+            case b: h = (r - g) / d + 4; break;
+        }
+        h /= 6;
+    }
+    return (h * 255).toFixed(1);
+};
+
 // Global Aliases for compatibility
 window.SB_KEYS = window.SB_Utils.KEYS;
 window.getAvailableKeys = window.SB_Utils.getAvailableKeys;
