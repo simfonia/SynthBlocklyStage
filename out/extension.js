@@ -513,6 +513,7 @@ class SynthBlocklyPanel {
     <script nonce="${nonce}" src="${blocklyUri}/field-colour.js"></script>
     <script nonce="${nonce}" src="${langUri}"></script>
     <script nonce="${nonce}" src="${mediaUri}/utils.js"></script>
+    <script nonce="${nonce}" src="${mediaUri}/generators/java_libs.js"></script>
     <script nonce="${nonce}" src="${mediaUri}/generators/_core.js"></script>
     <script nonce="${nonce}">
         window.coreExtensionManifestUri = "${coreManifestUri}";
