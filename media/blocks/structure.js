@@ -37,7 +37,7 @@ Blockly.Blocks['processing_on_key_pressed'] = {
         .appendField("當鍵盤按下時 (keyPressed)");
     this.appendStatementInput('DO')
         .appendField(Blockly.Msg['BKY_CONTROLS_DO']);
-    this.setColour("#16A085");
+    this.setColour(Blockly.Msg['STRUCTURE_HUE'] || '#16A085');
     this.setTooltip("當使用者按下鍵盤時執行。可用 key 變數判斷按鍵。");
     this.setHelpUrl('');
   }

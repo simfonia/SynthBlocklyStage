@@ -6,12 +6,17 @@ out/test/**
 src/**
 node_modules/**
 processing-3.5.4/**
+backup/**
+log/**
+temp_scripts/**
+test/**
 tsconfig.json
 package-lock.json
 *.vsix
 vsc-extension-quickstart.md
+**/data/**
 
-# 務必保留 (不要寫在下面):
+# 務必保留:
 # media/**
 # examples/**
-# out/extension.js (這是執行檔)
+# out/extension.js
