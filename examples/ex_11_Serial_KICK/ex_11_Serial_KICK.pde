@@ -50,8 +50,6 @@ MidiBus myBus;
 Minim minim;
 SBSummer mainMixer;
 Sampler currentSample;
-Sampler kick;
-Sampler snare;
 Serial myPort;
 String currentInstrument = "default";
 String lastInstrument = "";
@@ -145,13 +143,11 @@ class SBSummer extends ddf.minim.ugens.Summer {
       super.uGenerate(channels);
       for(int i=0; i<channels.length; i++) {
         float in = channels[i]; float out = 0;
-        // Parallel Combs
         float o1 = c1[p1]; c1[p1] = in + o1 * roomSize; p1 = (p1+1)%c1.length;
         float o2 = c2[p2]; c2[p2] = in + o2 * roomSize; p2 = (p2+1)%c2.length;
         float o3 = c3[p3]; c3[p3] = in + o3 * roomSize; p3 = (p3+1)%c3.length;
         float o4 = c4[p4]; c4[p4] = in + o4 * roomSize; p4 = (p4+1)%c4.length;
         out = (o1 + o2 + o3 + o4) * 0.25f;
-        // Series All-passes
         float v1 = a1[ap1]; float tr1 = -0.5f * out + v1; a1[ap1] = out + 0.5f * v1; ap1 = (ap1+1)%a1.length; out = tr1;
         float v2 = a2[ap2]; float tr2 = -0.5f * out + v2; a2[ap2] = out + 0.5f * v2; ap2 = (ap2+1)%a2.length; out = tr2;
         channels[i] = channels[i] * (1.0f - wet) + out * wet;
@@ -214,7 +210,7 @@ class SBSummer extends ddf.minim.ugens.Summer {
           if (midi >= 0) {
             Sampler s = new Sampler(folder + "/" + fullName, 4, m);
             TickRate tr = new TickRate(1.f);
-            ADSR a = new ADSR(1.0, 0.001f, 0.001f, 1.0f, 0.5f); // Default R=0.5
+            ADSR a = new ADSR(1.0, 0.001f, 0.001f, 1.0f, 0.5f);
             tr.setInterpolation(true);
             s.patch(tr).patch(a).patch(localMixer);
             samples.put(midi, s);
@@ -237,8 +233,6 @@ class SBSummer extends ddf.minim.ugens.Summer {
       if (src != null && tr != null && a != null) {
         float rate = (float)Math.pow(2.0, (midi - closest) / 12.0);
         tr.value.setLastValue(rate);
-        
-        // Use amp to set max amplitude
         a.setParameters(amp, 0.001f, 0.001f, 1.0f, r, 0, 0);
         a.noteOn();
         src.trigger();
@@ -248,84 +242,70 @@ class SBSummer extends ddf.minim.ugens.Summer {
     }
   }
 
-    void checkMainMixer() {
-      if (minim == null) minim = new Minim(this);
-      if (out == null) out = minim.getLineOut(Minim.STEREO); 
-      if (mainMixer == null) {
-        mainMixer = new SBSummer();
-        masterEffectEnd = mainMixer;
-        masterGainUGen = new Gain(0.f);
-        
-        // Signal Chain: Mixer -> Effects -> Master Gain -> Out
-        masterEffectEnd.patch(masterGainUGen).patch(out);
-        
-        // PRE-INIT DEFAULT INSTRUMENT
-        getInstrumentMixer("default");
-      }
+  void checkMainMixer() {
+    if (minim == null) minim = new Minim(this);
+    if (out == null) out = minim.getLineOut(Minim.STEREO); 
+    if (mainMixer == null) {
+      mainMixer = new SBSummer();
+      masterEffectEnd = mainMixer;
+      masterGainUGen = new Gain(0.f);
+      masterEffectEnd.patch(masterGainUGen).patch(out);
+      getInstrumentMixer("default");
     }
-  
-    ddf.minim.ugens.Summer getInstrumentMixer(String name) {
-      checkMainMixer();
-      if (instrumentMixers.containsKey(name)) return (ddf.minim.ugens.Summer)instrumentMixers.get(name);
-      
-      SBSummer s = new SBSummer();
-      SBPan p = new SBPan(0.f);
-      
-      s.patch(p);
-      p.patch(mainMixer);
-      
-      instrumentMixers.put(name, s);
-      instrumentPans.put(name, p);
-      instrumentEffectEnds.put(name, s);
-      return s;
-    }
+  }
 
-    void playBuiltinDrum(String type, float vel) {
-      checkMainMixer();
-      String instName = "_builtin_" + type;
-      if (!samplerMap.containsKey(instName)) {
-        String path = "drum/";
-        if (type.equals("KICK")) path += "kick.wav";
-        else if (type.equals("SNARE")) path += "snare.wav";
-        else if (type.equals("CH")) path += "ch.wav";
-        else if (type.equals("OH")) path += "oh.wav";
-        else if (type.equals("CLAP")) path += "clap.wav";
-        else return;
-        
-        Sampler s = new Sampler(path, 4, minim);
-        Gain g = new Gain(0.f);
-        
-        // Fix: Use getInstrumentMixer to support panning for drums
-        s.patch(g).patch(getInstrumentMixer(instName));
-        
-        samplerMap.put(instName, s);
-        samplerGainMap.put(instName, g);
-        instrumentMap.put(instName, "DRUM");
-      }
-      
-      Sampler s = samplerMap.get(instName);
-      Gain g = samplerGainMap.get(instName);
-      if (s != null && g != null) {
-        g.setValue(map(vel, 0, 127, -40, 0));
-        s.trigger();
-      }
+  ddf.minim.ugens.Summer getInstrumentMixer(String name) {
+    checkMainMixer();
+    if (instrumentMixers.containsKey(name)) return (ddf.minim.ugens.Summer)instrumentMixers.get(name);
+    SBSummer s = new SBSummer();
+    SBPan p = new SBPan(0.f);
+    s.patch(p);
+    p.patch(mainMixer);
+    instrumentMixers.put(name, s);
+    instrumentPans.put(name, p);
+    instrumentEffectEnds.put(name, s);
+    return s;
+  }
+
+  void playBuiltinDrum(String type, float vel) {
+    checkMainMixer();
+    String instName = "_builtin_" + type;
+    if (!samplerMap.containsKey(instName)) {
+      String path = "drum/";
+      if (type.equals("KICK")) path += "kick.wav";
+      else if (type.equals("SNARE")) path += "snare.wav";
+      else if (type.equals("CH")) path += "ch.wav";
+      else if (type.equals("OH")) path += "oh.wav";
+      else if (type.equals("CLAP")) path += "clap.wav";
+      else return;
+      Sampler s = new Sampler(path, 4, minim);
+      Gain g = new Gain(0.f);
+      s.patch(g).patch(getInstrumentMixer(instName));
+      samplerMap.put(instName, s);
+      samplerGainMap.put(instName, g);
+      instrumentMap.put(instName, "DRUM");
     }
-    void updateFilter(String name, float freq, float q) {
+    Sampler s = samplerMap.get(instName);
+    Gain g = samplerGainMap.get(instName);
+    if (s != null && g != null) {
+      g.setValue(map(vel, 0, 127, -40, 0));
+      s.trigger();
+    }
+  }
+
+  void updateFilter(String name, float freq, float q) {
     Object obj = instrumentFilters.get(name);
     if (obj != null) {
       try {
-        // MoogFilter uses .frequency.setLastValue()
         java.lang.reflect.Field fField = obj.getClass().getField("frequency");
         Object freqControl = fField.get(obj);
         java.lang.reflect.Field valField = freqControl.getClass().getField("value");
         valField.setFloat(freqControl, freq);
-        
         java.lang.reflect.Field rField = obj.getClass().getField("resonance");
         Object resControl = rField.get(obj);
         java.lang.reflect.Field rValField = resControl.getClass().getField("value");
         rValField.setFloat(resControl, constrain(q, 0.0f, 0.9f));
       } catch (Exception e) {
-        // Fallback for other filter types if they have setFreq
         try { obj.getClass().getMethod("setFreq", float.class).invoke(obj, freq); } catch(Exception ex) {}
       }
     }
@@ -355,7 +335,7 @@ class SBSummer extends ddf.minim.ugens.Summer {
   int noteToMidi(String note) {
     String n = note.toUpperCase();
     if (n.equals("R")) return -1;
-    if (n.equals("X")) return 69; // Support 'X' as a general trigger
+    if (n.equals("X")) return 69;
     int octave = 4;
     if (n.length() > 1 && Character.isDigit(n.charAt(n.length()-1))) {
       octave = Character.getNumericValue(n.charAt(n.length()-1));
@@ -381,20 +361,15 @@ class SBSummer extends ddf.minim.ugens.Summer {
     return Waves.TRIANGLE;
   }
 
-  // Global ConcurrentHashMap for thread safety and composite keys
   ConcurrentHashMap<String, ADSR> activeNotes = new ConcurrentHashMap<String, ADSR>();
 
   void playNoteInternal(String instName, int p, float vel) {
     if (instName == null || instName.length() == 0) instName = currentInstrument;
     if (p < 0) return;
     String key = instName + "_" + p;
-    
-    // Stop existing note of SAME instrument and SAME pitch
     if (activeNotes.containsKey(key)) stopNoteInternal(instName, p);
-    
     float masterAmp = map(vel, 0, 127, 0, 0.5f);
     masterAmp *= instrumentVolumes.getOrDefault(instName, 1.0f);
-    
     float[] adsr = instrumentADSR.get(instName);
     if (adsr == null) adsr = new float[]{defAdsrA, defAdsrD, defAdsrS, defAdsrR};
 
@@ -405,14 +380,11 @@ class SBSummer extends ddf.minim.ugens.Summer {
         ADSR env = ms.trigger(p, masterAmp, adsr[3]);
         if (env != null) {
           activeNotes.put(key, env);
-          if (instName.equals(currentInstrument) && !instName.equals("")) {
-            adsrTimer = millis(); adsrState = 1;
-          }
+          if (instName.equals(currentInstrument) && !instName.equals("")) { adsrTimer = millis(); adsrState = 1; }
         }
       }
       return;
     }
-
     if (type.equals("DRUM")) {
       if (samplerMap.containsKey(instName)) {
         float volScale = instrumentVolumes.getOrDefault(instName, 1.0f);
@@ -424,7 +396,6 @@ class SBSummer extends ddf.minim.ugens.Summer {
     
     float baseFreq = mtof((float)p);
     ADSR env = new ADSR(1.0, adsr[0], adsr[1], adsr[2], adsr[3]);
-    
     SBSummer noteMixer = new SBSummer(); 
     
     if (type.equals("HARMONIC")) {
@@ -454,54 +425,32 @@ class SBSummer extends ddf.minim.ugens.Summer {
         String wType = parts[0]; String nType = parts[1]; 
         float nRatio = float(parts[2]) / 100.0f; float jitter = float(parts[3]);
         float sRate = float(parts[4]); float sDepth = float(parts[5]) / 100.0f;
-        
         Oscil wave = new Oscil(0, masterAmp * (1.0f - nRatio), getWaveform(wType));
-        
-        // 建立頻率加總器，確保音高 + 抖動能同時生效
         Summer freqSum = new SBSummer();
         new Constant(baseFreq).patch(freqSum);
-        if (jitter > 0) {
-          // Jitter 縮小影響範圍，避免過度跑調
-          new Noise(jitter * 2.0f, Noise.Tint.WHITE).patch(freqSum);
-        }
+        if (jitter > 0) { new Noise(jitter * 2.0f, Noise.Tint.WHITE).patch(freqSum); }
         freqSum.patch(wave.frequency);
-        
         Noise.Tint tint = Noise.Tint.WHITE;
         if (nType.equals("PINK")) tint = Noise.Tint.PINK; else if (nType.equals("BROWN")) tint = Noise.Tint.BROWN;
         Noise n = new Noise(masterAmp * nRatio, tint);
-        
         wave.patch(noteMixer); n.patch(noteMixer);
-        
         if (sDepth > 0) {
-          // 掃頻：使用 Summer 確保 Filter 頻率 = Offset + LFO
           MoogFilter sweepF = new MoogFilter(0, 0.3f);
           Summer sweepSum = new SBSummer();
-          // 基礎偏移量：設在基礎音高的 4 倍處
           new Constant(baseFreq * 4.0f).patch(sweepSum);
-          // LFO 調變量
           Oscil lfo = new Oscil(sRate, baseFreq * sDepth * 3.0f, Waves.SINE);
-          lfo.patch(sweepSum);
-          // 最終將加總後的頻率 patch 到 Filter
-          sweepSum.patch(sweepF.frequency);
-          
+          lfo.patch(sweepSum).patch(sweepF.frequency);
           noteMixer.patch(sweepF).patch(env);
-        } else {
-          noteMixer.patch(env);
-        }
-      } else {
-        noteMixer.patch(env);
-      }
+        } else noteMixer.patch(env);
+      } else noteMixer.patch(env);
     } else {
       Oscil wave = new Oscil(baseFreq, masterAmp, getWaveform(type));
       wave.patch(env);
     }
-    
     env.patch(getInstrumentMixer(instName));
     env.noteOn();
     activeNotes.put(key, env);
-    if (instName.equals(currentInstrument) && !instName.equals("")) {
-      adsrTimer = millis(); adsrState = 1;
-    }
+    if (instName.equals(currentInstrument) && !instName.equals("")) { adsrTimer = millis(); adsrState = 1; }
   }
 
   void stopNoteInternal(String instName, int p) {
@@ -512,35 +461,23 @@ class SBSummer extends ddf.minim.ugens.Summer {
       adsr.unpatchAfterRelease(getInstrumentMixer(instName));
       adsr.noteOff();
       activeNotes.remove(key);
-      if (instName.equals(currentInstrument) && !instName.equals("")) {
-        adsrTimer = millis(); adsrState = 2;
-      }
+      if (instName.equals(currentInstrument) && !instName.equals("")) { adsrTimer = millis(); adsrState = 2; }
     }
   }
 
   void updateInstrumentUISync() {
     if (!currentInstrument.equals(lastInstrument)) {
-      // 1. Save manual adjustments of the OLD instrument before switching
-      if (!lastInstrument.equals("")) {
-        instrumentADSR.put(lastInstrument, new float[]{adsrA, adsrD, adsrS, adsrR});
-      }
-
-      // 2. Load settings for the NEW instrument
+      if (!lastInstrument.equals("")) instrumentADSR.put(lastInstrument, new float[]{adsrA, adsrD, adsrS, adsrR});
       float[] params = instrumentADSR.get(currentInstrument);
-      if (params == null) {
-        params = new float[]{defAdsrA, defAdsrD, defAdsrS, defAdsrR};
-      }
-      
+      if (params == null) params = new float[]{defAdsrA, defAdsrD, defAdsrS, defAdsrR};
       adsrA = params[0]; adsrD = params[1]; adsrS = params[2]; adsrR = params[3];
-      
       if (cp5 != null) {
         if (cp5.getController("adsrA") != null) cp5.getController("adsrA").setValue(adsrA);
         if (cp5.getController("adsrD") != null) cp5.getController("adsrD").setValue(adsrD);
         if (cp5.getController("adsrS") != null) cp5.getController("adsrS").setValue(adsrS);
         if (cp5.getController("adsrR") != null) cp5.getController("adsrR").setValue(adsrR);
       }
-      adsrState = 0; // Reset light dot on instrument switch
-      logToScreen("Instrument Switched: " + currentInstrument, 1);
+      adsrState = 0; logToScreen("Instrument Switched: " + currentInstrument, 1);
       lastInstrument = currentInstrument;
     }
   }
@@ -558,50 +495,30 @@ class SBSummer extends ddf.minim.ugens.Summer {
   }
 
   void playChordByNameInternal(String instName, String name, float durationMs, float vel) {
-    if (instName == null || instName.length() == 0 || instName.equals("(請選擇樂器)")) {
-      instName = currentInstrument;
-    }
+    if (instName == null || instName.length() == 0 || instName.equals("(請選擇樂器)")) instName = currentInstrument;
     String[] notes = chords.get(name);
     if (notes != null) {
-      for (String n : notes) {
-        int midi = noteToMidi(n);
-        if (midi >= 0) playNoteForDuration(instName, midi, vel, durationMs);
-      }
-    } else {
-      logToScreen("Chord not found: " + name, 2);
-    }
+      for (String n : notes) { int midi = noteToMidi(n); if (midi >= 0) playNoteForDuration(instName, midi, vel, durationMs); }
+    } else logToScreen("Chord not found: " + name, 2);
   }
 
   void playMelodyInternal(String m, String i) {
     String[] tokens = splitTokens(m, ", \t\n\r");
-    for (String t : tokens) {
-      parseAndPlayNote(i, t, 100);
-    }
+    for (String t : tokens) parseAndPlayNote(i, t, 100);
   }
 
   void parseAndPlayNote(String name, String token, float vel) {
     token = token.trim(); if (token.length() < 1) return;
-    activeMelodyCount++;
-    float totalMs = 0;
-    String noteName = "";
+    activeMelodyCount++; float totalMs = 0; String noteName = "";
     String[] parts = token.split("\\+");
     for (int j = 0; j < parts.length; j++) {
-      String p = parts[j].trim();
-      if (p.length() == 0) continue;
+      String p = parts[j].trim(); if (p.length() == 0) continue;
       float multiplier = 1.0f;
       if (p.endsWith(".")) { multiplier = 1.5f; p = p.substring(0, p.length() - 1); }
       else if (p.endsWith("_T")) { multiplier = 2.0f / 3.0f; p = p.substring(0, p.length() - 2); }
-      
       if (p.length() == 0) continue;
-      char durChar = p.charAt(p.length() - 1);
-      String prefix = p.substring(0, p.length() - 1);
-      
-      // If the last character is NOT a duration identifier, default to 'Q'
-      if (durChar != 'W' && durChar != 'H' && durChar != 'Q' && durChar != 'E' && durChar != 'S') {
-        prefix = p;
-        durChar = 'Q';
-      }
-      
+      char durChar = p.charAt(p.length() - 1); String prefix = p.substring(0, p.length() - 1);
+      if (durChar != 'W' && durChar != 'H' && durChar != 'Q' && durChar != 'E' && durChar != 'S') { prefix = p; durChar = 'Q'; }
       if (j == 0) noteName = prefix;
       float baseMs = 0;
       if (durChar == 'W') baseMs = (60000.0f / bpm) * 4.0f;
@@ -611,10 +528,8 @@ class SBSummer extends ddf.minim.ugens.Summer {
       else if (durChar == 'S') baseMs = (60000.0f / bpm) / 4.0f;
       totalMs += (baseMs * multiplier);
     }
-    
     if (noteName.length() > 0) {
-      String type = instrumentMap.getOrDefault(name, "DRUM");
-      float volScale = instrumentVolumes.getOrDefault(name, 1.0f);
+      String type = instrumentMap.getOrDefault(name, "DRUM"); float volScale = instrumentVolumes.getOrDefault(name, 1.0f);
       if (type.equals("DRUM")) {
         if (!noteName.equalsIgnoreCase("R") && samplerMap.containsKey(name)) {
           ((ddf.minim.ugens.Gain)samplerGainMap.get(name)).setValue(map(vel * volScale, 0, 127, -40, 0));
@@ -634,30 +549,20 @@ class SBSummer extends ddf.minim.ugens.Summer {
   float durationToMs(String iv) {
     float ms = 500;
     try {
-      if (iv.endsWith("m")) {
-        float count = iv.length() > 1 ? Float.parseFloat(iv.substring(0, iv.length()-1)) : 1.0f;
-        ms = (60000/bpm) * 4 * count;
-      } else if (iv.endsWith("n")) {
-        float den = Float.parseFloat(iv.substring(0, iv.length()-1));
-        ms = (60000/bpm) * (4.0f / den);
-      }
+      if (iv.endsWith("m")) { float count = iv.length() > 1 ? Float.parseFloat(iv.substring(0, iv.length()-1)) : 1.0f; ms = (60000/bpm) * 4 * count; }
+      else if (iv.endsWith("n")) { float den = Float.parseFloat(iv.substring(0, iv.length()-1)); ms = (60000/bpm) * (4.0f / den); }
     } catch(Exception e) {}
     return ms;
   }
 
   void playClick(float freq, float v) {
-    checkMainMixer();
-    if (out == null) return;
+    checkMainMixer(); if (out == null) return;
     float amp = map(v, 0, 127, 0, 1.0f);
-    // Use TRIANGLE wave for better visibility on oscilloscope
     Oscil wave = new Oscil(freq, amp, Waves.TRIANGLE);
-    // Increase duration to ~100ms to ensure frame capture
     ADSR adsr = new ADSR(1.0, 0.01f, 0.05f, 0.0f, 0.05f);
-    wave.patch(adsr).patch(mainMixer);
-    adsr.noteOn();
+    wave.patch(adsr).patch(mainMixer); adsr.noteOn();
     try { Thread.sleep(80); } catch(Exception e) {} 
-    adsr.noteOff();
-    adsr.unpatchAfterRelease(mainMixer);
+    adsr.noteOff(); adsr.unpatchAfterRelease(mainMixer);
   }
 
 void logToScreen(String msg, int type) {

@@ -132,7 +132,7 @@
     "SB_SET_ADSR_MESSAGE": "設定 ADSR",
     "SB_SET_ADSR_TOOLTIP": "設定此樂器的 ADSR 包絡線 (0.0 ~ 1.0+)。",
     "SB_SET_ADSR_SAMPLER_WARN": "提示：旋律取樣器目前僅支援 Release (R) 餘韻設定，A/D/S 將被忽略以維持原音品質。",
-    "SB_SET_WAVE_MESSAGE": "設定波形",
+    "SB_SET_WAVE_MESSAGE": "設定波形 %1",
     "SB_SET_WAVE_TOOLTIP": "設定此樂器的基本波形。",
     "SB_SET_NOISE_MESSAGE": "設定噪聲 類型 %1",
     "SB_SET_NOISE_TOOLTIP": "設定此樂器為噪聲產生器（常用於製作擊奏音效或背景氛圍）。",

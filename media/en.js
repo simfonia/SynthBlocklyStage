@@ -130,7 +130,7 @@
     "SB_INSTRUMENT_CONTAINER_MULTI_SOURCE_WARN": "Warning: An instrument container can only have one sound source block (Waveform, Noise, Sampler, or Synth). Subsequent blocks will overwrite the previous type.",
     "SB_SET_ADSR_MESSAGE": "Set ADSR",
     "SB_SET_ADSR_TOOLTIP": "Set the ADSR envelope for this instrument (0.0 ~ 1.0+).",
-    "SB_SET_WAVE_MESSAGE": "Set Waveform",
+    "SB_SET_WAVE_MESSAGE": "Set Waveform %1",
     "SB_SET_WAVE_TOOLTIP": "Set the basic waveform for this instrument.",
     "SB_SET_NOISE_MESSAGE": "Set Noise Type %1",
     "SB_SET_NOISE_TOOLTIP": "Set this instrument as a noise generator (useful for percussion effects or atmosphere).",

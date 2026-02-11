@@ -20,163 +20,8 @@ Blockly.dialog.setPrompt(function(message, defaultValue, callback) {
     });
 });
 
-// --- Blockly API Polyfills (v12 to v13 compatibility) ---
-if (Blockly.Workspace.prototype.getAllVariables === undefined) {
-  Blockly.Workspace.prototype.getAllVariables = function() {
-    return this.getVariableMap().getAllVariables();
-  };
-}
-if (Blockly.Workspace.prototype.getVariable === undefined) {
-  Blockly.Workspace.prototype.getVariable = function(name, opt_type) {
-    return this.getVariableMap().getVariable(name, opt_type);
-  };
-}
-if (Blockly.Workspace.prototype.getVariableById === undefined) {
-  Blockly.Workspace.prototype.getVariableById = function(id) {
-    return this.getVariableMap().getVariableById(id);
-  };
-}
-
-// --- Strict Orphan Block Restriction ---
-const VALID_ROOTS = [
-    'processing_setup',
-    'processing_draw',
-    'processing_exit',
-    'ui_key_event',
-    'sb_perform',
-    'sb_tone_loop',
-    'sb_instrument_container',
-    'sb_define_chord',
-    'sb_serial_data_received',
-    'midi_on_note',
-    'midi_off_note',
-    'midi_on_controller_change',
-    'procedures_defnoreturn',
-    'procedures_defreturn',
-    'sb_comment' // Comments are allowed at top level
-];
-
-function updateOrphanBlocks(ws) {
-    if (!ws || ws.isDragging()) return;
-
-    Blockly.Events.setGroup(true);
-    try {
-        const topBlocks = ws.getTopBlocks(false);
-        topBlocks.forEach(topBlock => {
-            // 判斷此頂層積木是否為合法根節點
-            const isOrphan = !VALID_ROOTS.includes(topBlock.type);
-            
-            // 外科手術式更新：遍歷子樹並比對狀態
-            topBlock.getDescendants(false).forEach(block => {
-                const hasOrphanReason = block.hasDisabledReason('orphan');
-                if (hasOrphanReason !== isOrphan) {
-                    block.setDisabledReason(isOrphan, 'orphan');
-                }
-            });
-        });
-    } finally {
-        Blockly.Events.setGroup(false);
-    }
-}
-
-// --- Key Management System ---
-window.SB_KEYS = {
-  // 系統保留：移調與還原，使用者絕對不能自訂
-  SYSTEM: ['up', 'down', 'left', 'right', '+', '-', 'backspace'],
-  // 鋼琴音階：當舞台積木存在時，這些鍵被佔用
-  PIANO: ['q', '2', 'w', '3', 'e', 'r', '5', 't', '6', 'y', '7', 'u', 'i', '9', 'o', '0', 'p'],
-  // 完整可用清單 (排除系統鍵)
-  ALL: 'abcdefghijklmnopqrstuvwxyz1234567890[]\;,./'.split('')
-};
-
-/**
- * 動態計算目前可用的按鍵列表
- * @param {Blockly.Block} currentBlock 當前積木 (用以排除自己佔用的鍵)
- * @returns {Array} [[label, value], ...]
- */
-window.getAvailableKeys = function(currentBlock) {
-  const workspace = currentBlock.workspace;
-  const hasStage = workspace.getAllBlocks(false).some(b => b.type === 'visual_stage_setup');
-  
-  // 找出其他積木已經佔用的鍵
-  const occupiedKeys = new Set();
-  workspace.getAllBlocks(false).forEach(b => {
-    if (b !== currentBlock && (b.type === 'ui_key_event' || b.type === 'ui_key_pressed')) {
-      const val = b.getFieldValue('KEY');
-      if (val) occupiedKeys.add(val.toLowerCase());
-    }
-  });
-
-  const options = [];
-  window.SB_KEYS.ALL.forEach(k => {
-    const isPiano = window.SB_KEYS.PIANO.includes(k);
-    const isOccupied = occupiedKeys.has(k);
-    const isSystem = window.SB_KEYS.SYSTEM.includes(k);
-
-    if (isSystem) return; // 系統鍵永不出現
-
-    let label = k.toUpperCase();
-    if (hasStage && isPiano) return; // 有舞台時，鋼琴鍵不出現
-    if (isOccupied) return; // 已被其他積木佔用，不出現
-
-    options.push([label, k]);
-  });
-
-  return options.length > 0 ? options : [['(無可用按鍵)', 'NONE']];
-};
-
-/**
- * 全域檢查衝突並標記警告
- */
-window.checkKeyConflicts = function(workspace) {
-  const hasStage = workspace.getAllBlocks(false).some(b => b.type === 'visual_stage_setup');
-  const usedKeys = new Map();
-
-  workspace.getAllBlocks(false).forEach(b => {
-    if (b.type === 'ui_key_event' || b.type === 'ui_key_pressed') {
-      const k = b.getFieldValue('KEY');
-      if (!k) return;
-      
-      const isPiano = window.SB_KEYS.PIANO.includes(k.toLowerCase());
-      
-      if (hasStage && isPiano) {
-        b.setWarningText("此按鍵已分配給「舞台鋼琴」功能，此積木將失效。");
-        b.setFieldValue(" [！已被舞台鋼琴佔用]", "CONFLICT_LABEL");
-        const svg = b.getSvgRoot();
-        if (svg) {
-          svg.classList.add('blockly-conflict-glow');
-          // 嘗試找到 Label 並加上紅色 Class
-          const labelField = b.getField("CONFLICT_LABEL");
-          if (labelField && labelField.getSvgRoot()) {
-            labelField.getSvgRoot().classList.add('blockly-conflict-text');
-          }
-        }
-        if (typeof b.setDisabled === 'function') b.setDisabled(true);
-      } else if (usedKeys.has(k.toLowerCase())) {
-        b.setWarningText("此按鍵已被另一個積木重複定義。");
-        b.setFieldValue(" [！按鍵衝突]", "CONFLICT_LABEL");
-        const svg = b.getSvgRoot();
-        if (svg) {
-          svg.classList.add('blockly-conflict-glow');
-          const labelField = b.getField("CONFLICT_LABEL");
-          if (labelField && labelField.getSvgRoot()) {
-            labelField.getSvgRoot().classList.add('blockly-conflict-text');
-          }
-        }
-        if (typeof b.setDisabled === 'function') b.setDisabled(true);
-      } else {
-        b.setWarningText(null);
-        b.setFieldValue("", "CONFLICT_LABEL");
-        const svg = b.getSvgRoot();
-        if (svg) {
-          svg.classList.remove('blockly-conflict-glow');
-        }
-        if (typeof b.setDisabled === 'function') b.setDisabled(false);
-        usedKeys.set(k.toLowerCase(), b);
-      }
-    }
-  });
-};
+// Initialize Polyfills from Utils
+window.SB_Utils.initPolyfills();
 
 const vscode = acquireVsCodeApi();
 
@@ -405,10 +250,8 @@ function triggerAutoSave() {
                     triggerAutoSave();
                     
                     // 靜止後才檢查按鍵衝突與孤兒積木
-                    if (window.checkKeyConflicts) {
-                        window.checkKeyConflicts(workspace);
-                    }
-                    updateOrphanBlocks(workspace);
+                    window.SB_Utils.checkKeyConflicts(workspace);
+                    window.SB_Utils.updateOrphanBlocks(workspace);
                 }
             }, 100); 
         }

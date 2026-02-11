@@ -157,7 +157,11 @@
               <block type="sb_play_chord_by_name" id=")XB+JkLYzaSHkvD7}C6I">
                 <field name="INST_NAME">Piano</field>
                 <field name="NAME">C</field>
-                <field name="DUR">4n</field>
+                <value name="DUR">
+                  <block type="text" id="?IMCGxXB(KVw6#-3#V4{">
+                    <field name="TEXT">4n</field>
+                  </block>
+                </value>
                 <value name="VELOCITY">
                   <shadow type="math_number" id="JKALt@N@OB}NrWe54=?t">
                     <field name="NUM">100</field>
@@ -184,7 +188,11 @@
               <block type="sb_play_chord_by_name" id="345$8(.*_odkC4.OA^,:">
                 <field name="INST_NAME">Piano</field>
                 <field name="NAME">Dm</field>
-                <field name="DUR">4n</field>
+                <value name="DUR">
+                  <block type="text" id="QS4Y1/(`/9nf]yHPrtr@">
+                    <field name="TEXT">4n</field>
+                  </block>
+                </value>
                 <value name="VELOCITY">
                   <shadow type="math_number" id="lKZE./|9CD5y?a)ONxLo">
                     <field name="NUM">100</field>
@@ -211,7 +219,11 @@
               <block type="sb_play_chord_by_name" id="DrMA|%5A55TKHIavtD8F">
                 <field name="INST_NAME">Piano</field>
                 <field name="NAME">Em</field>
-                <field name="DUR">4n</field>
+                <value name="DUR">
+                  <block type="text" id="5/;$tVTM-sHmY(m7xBW3">
+                    <field name="TEXT">4n</field>
+                  </block>
+                </value>
                 <value name="VELOCITY">
                   <shadow type="math_number" id="Du0Kv/[.)-(R4u3m~Ry-">
                     <field name="NUM">100</field>
@@ -238,7 +250,11 @@
               <block type="sb_play_chord_by_name" id="knWoS9;,4JrQXbp7YC(Y">
                 <field name="INST_NAME">(請選擇樂器)</field>
                 <field name="NAME">F</field>
-                <field name="DUR">4n</field>
+                <value name="DUR">
+                  <block type="text" id="BAMB2aNCwpl2b%#y|;DK">
+                    <field name="TEXT">4n</field>
+                  </block>
+                </value>
                 <value name="VELOCITY">
                   <shadow type="math_number" id="q;Zh%?N;Y3}OSh(%PO.)">
                     <field name="NUM">100</field>
@@ -265,7 +281,11 @@
               <block type="sb_play_chord_by_name" id="iWwIVD@Q9X]ZaYaTsp%)">
                 <field name="INST_NAME">Piano</field>
                 <field name="NAME">G</field>
-                <field name="DUR">4n</field>
+                <value name="DUR">
+                  <block type="text" id="Qd7yCp,#zB_S1O*]aEa%">
+                    <field name="TEXT">4n</field>
+                  </block>
+                </value>
                 <value name="VELOCITY">
                   <shadow type="math_number" id="[~471MOc9=9ts(Kyn%K}">
                     <field name="NUM">100</field>
@@ -292,7 +312,11 @@
               <block type="sb_play_chord_by_name" id=";3*Uw7.};SZwXQ:WvN?z">
                 <field name="INST_NAME">Piano</field>
                 <field name="NAME">Am</field>
-                <field name="DUR">4n</field>
+                <value name="DUR">
+                  <block type="text" id="W1;9jx(k;aVi_,.lR4]0">
+                    <field name="TEXT">4n</field>
+                  </block>
+                </value>
                 <value name="VELOCITY">
                   <shadow type="math_number" id="l8B##sTc#$S)zMySejuD">
                     <field name="NUM">100</field>
@@ -319,7 +343,11 @@
               <block type="sb_play_chord_by_name" id="U}PTC|d|dy$BN/x%ztG?">
                 <field name="INST_NAME">Piano</field>
                 <field name="NAME">Bdim</field>
-                <field name="DUR">4n</field>
+                <value name="DUR">
+                  <block type="text" id="8U*^(f6]#99Uxflle4as">
+                    <field name="TEXT">4n</field>
+                  </block>
+                </value>
                 <value name="VELOCITY">
                   <shadow type="math_number" id="r;yTODHHQ*~+ACq5fPV=">
                     <field name="NUM">100</field>

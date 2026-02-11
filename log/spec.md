@@ -59,3 +59,23 @@
 - **頻率倍率 (Frequency Ratio)**: 指諧波或加法合成中的頻率關係。
 - **時值 (Duration)**: 指音符長度。
 - **帽子積木 (Hat Block)**: 指事件觸發積木（MIDI, Serial, Key）。
+
+---
+
+## 6. VS Code 擴充功能開發技術規範 (Modularization)
+
+### 6.1 通用工具別名 (Global Aliases)
+為了確保模組化重構後的向下相容性，\media/utils.js\ 在全域掛載了以下別名：
+
+| 原始函式 (window.SB_Utils) | 全域別名 (window) | 用途 |
+| :--- | :--- | :--- |
+| \KEYS\ | \SB_KEYS\ | 定義系統保留鍵與鋼琴音階鍵。 |
+| \getAvailableKeys\ | \getAvailableKeys\ | 動態計算積木選單中可用的按鍵列表。 |
+| \checkKeyConflicts\ | \checkKeyConflicts\ | 檢查畫布上是否有重複定義或佔用系統鍵的積木。 |
+| \updateOrphanBlocks\ | \updateOrphanBlocks\ | 檢查並將未連接到合法根節點的積木變灰 (Disabled)。 |
+| \createInstrumentField\ | \createInstrumentField\ | 建立具備樂器下拉選單功能的 Hybrid 文字輸入框。 |
+| \getChordDropdown\ | \getChordDropdown\ | 動態獲取當前工作區定義的所有和弦名稱。 |
+
+### 6.2 模組化開發約定
+- **載入順序**：\utils.js\ 必須在 \_core.js\ 與所有 \blocks/\, \generators/\ 之前載入。
+- **產生器註冊**：應使用 \Blockly.Processing.registerGenerator(type, func)\ 進行產生器註冊，以確保 \forBlock\ 與舊版路徑同步。

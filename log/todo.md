@@ -85,14 +85,21 @@
 - [x] **7-3. 執行緒安全強化**：引入 `ConcurrentHashMap` 與全路徑類別宣告，消除多音軌彈奏時的死結風險。
 
 ### 階段八：程式碼清理
-- [ ] **8-1. 自動測試工具**
-    - [ ] 8-1-1. 建立 Node.js Headless Blockly 產碼環境。
-    - [ ] 8-1-2. 實作批次產碼與 PDE 比對腳本。
-- [ ] **8-2. 模組重構與分割**
-    - [ ] 8-2-1. 建立 `media/utils.js` 收納通用輔助函式 (Helper Functions)。
-    - [ ] 8-2-2. 拆分 `blocks/audio.js` 為 core, performance, effects。
-    - [ ] 8-2-3. 拆分 `generators/audio.js` 為對應模組。
-    - [ ] 8-2-4. 優化 `module_loader.js` 載入邏輯。
+- [x] **8-1. 模組重構與分割**
+    - [x] 8-1-1. 建立 `media/utils.js` 收納通用輔助函式 (Helper Functions)。
+    - [x] 8-1-2. 拆分 `blocks/audio.js` 為 core, performance, effects。
+    - [x] 8-1-3. 拆分 `generators/audio.js` 為對應模組。
+    - [x] 8-1-4. 優化 `module_loader.js` 載入邏輯。
+- [ ] **8-2. 視覺模組拆分 (Visual Splitting)**
+    - [ ] 8-2-1. 拆分 `blocks/visual.js` 為 core, geometry, transform。
+    - [ ] 8-2-2. 拆分 `generators/visual.js` 為對應模組。
+- [ ] **8-3. 核心產生器與 Java 庫分離**
+    - [ ] 8-3-1. 建立 `media/generators/java_libs.js` 存放 UGen 與 Sampler 類別定義。
+    - [ ] 8-3-2. 清理 `_core.js` 僅保留產生器框架邏輯。
+- [ ] **8-4. 前端邏輯重構 (Frontend Refactor)**
+    - [ ] 8-4-1. 拆分 `main.js` 為 `blockly_manager.js`, `vscode_bridge.js`, `event_handlers.js`。
+- [ ] **8-5. 功能優化**
+    - [ ] 8-5-1. 實作 `sb_set_effect_param` 的動態監聽 (積木連動)。
 
 ### 待辦與優化
 - [ ] **持續優化**：針對複雜樂句的執行緒同步安全強化。

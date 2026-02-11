@@ -10,14 +10,7 @@
 /**
  * 輔助方法：將積木上的樂器文字轉換為 Java 代碼中的變數或字串
  */
-Blockly.Processing.getInstrumentJavaName = function(name) {
-  const currentLabel = Blockly.Msg['SB_CURRENT_INSTRUMENT_OPTION'] || '當前選用的樂器';
-  const promptLabel = Blockly.Msg['SB_SELECT_INSTRUMENT_PROMPT'] || '(請選擇樂器)';
-  if (!name || name === currentLabel || name === promptLabel) {
-    return 'currentInstrument';
-  }
-  return '"' + name + '"';
-};
+Blockly.Processing.getInstrumentJavaName = window.SB_Utils.getInstrumentJavaName;
 
 /**
  * 內部函式：注入音訊核心支援代碼 (Java)

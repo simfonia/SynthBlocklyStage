@@ -6,19 +6,22 @@
 - `media/`: Webview 前端資源
     - `main.js`: Blockly 初始化、音訊解鎖、按鍵衝突偵測。
     - `module_loader.js`: 動態載入積木。
+    - `utils.js`: 通用輔助函式、Mutators、按鍵管理。
     - `style.css`: 介面樣式與光暈效果。
     - `toolbox.xml`: 工具箱積木配置。
-    - `zh-hant.js`, \`en.js\`: 多語系定義。
+    - `zh-hant.js`, `en.js`: 多語系定義。
     - `blockly/`: Blockly 核心庫與插件 (field-colour, field-multilineinput)。
     - `blocks/`: 積木定義
-        - `audio.js`: 音源、演奏、取樣器、音量、ADSR。
+        - `audio_core.js`: 引擎初始化、樂器容器、波形設定。
+        - `audio_performance.js`: 演奏、節拍器、音序器、循環。
+        - `audio_effects.js`: 效果器配置、參數更新。
         - `live_show.js`: 參數更新、日誌寫入。
         - `structure.js`: 基礎框架、偵測幀數。
         - `visual.js`: 繪圖積木、設定幀率。
         - `serial.js`, `midi.js`, `ui.js`, `math.js`, `text.js`, `lists.js`, `tools.js`.
     - `generators/`: Processing (Java) 產生器
-        - `_core.js`: 核心產碼架構與事件佔位符。
-        - `audio.js`: 演奏引擎與 MelodicSampler 類別。
+        - `_core.js`: 核心產碼架構、事件佔位符、Java 音訊核心注入。
+        - `audio_core.js`, `audio_performance.js`, `audio_effects.js`: 音訊相關產生器。
         - `live_show.js`: 動態參數更新與日誌寫入產生器。
         - `visual.js`, `serial.js`, `midi.js`, `functions.js`, `variables.js`.
     - `docs/`: 積木說明文件 (HTML)
