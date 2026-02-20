@@ -96,7 +96,8 @@ float floatVal(Object o) {
 int getMidi(Object o) {
   if (o == null) return -1;
   if (o instanceof Number) return ((Number)o).intValue();
-  return noteToMidi(o.toString());
+  String s = o.toString().trim();
+  try { return (int)Float.parseFloat(s); } catch (Exception e) { return noteToMidi(s); }
 }
 
 class SBSummer extends ddf.minim.ugens.Summer {
@@ -192,7 +193,7 @@ class SBSummer extends ddf.minim.ugens.Summer {
           String noteName = fullName.substring(0, fullName.lastIndexOf('.'));
           int midi = noteToMidi(noteName);
           if (midi >= 0) {
-            Sampler s = new Sampler(folder + "/" + fullName, 4, m); TickRate tr = new TickRate(1.f);
+            Sampler s = new Sampler(folder + "/" + fullName, 10, m); TickRate tr = new TickRate(1.f);
             ADSR a = new ADSR(1.0, 0.001f, 0.001f, 1.0f, 0.5f); tr.setInterpolation(true);
             s.patch(tr).patch(a).patch(localMixer); samples.put(midi, s); rates.put(midi, tr); adsrs.put(midi, a);
           }
@@ -235,7 +236,7 @@ class SBSummer extends ddf.minim.ugens.Summer {
       if (type.equals("KICK")) path += "kick.wav"; else if (type.equals("SNARE")) path += "snare.wav";
       else if (type.equals("CH")) path += "ch.wav"; else if (type.equals("OH")) path += "oh.wav";
       else if (type.equals("CLAP")) path += "clap.wav"; else return;
-      Sampler s = new Sampler(path, 4, minim); Gain g = new Gain(0.f);
+      Sampler s = new Sampler(path, 20, minim); Gain g = new Gain(0.f);
       s.patch(g).patch(getInstrumentMixer(instName));
       samplerMap.put(instName, s); samplerGainMap.put(instName, g); instrumentMap.put(instName, "DRUM");
     }
@@ -495,20 +496,26 @@ void logToScreen(String msg, int type) {
     if (type.equals("SINE")) return Waves.SINE; if (type.equals("SQUARE")) return Waves.SQUARE; if (type.equals("SAW")) return Waves.SAW; return Waves.TRIANGLE;
   }
 
-boolean checkKeyMask(String data, int key) {
-  if (data == null) return false;
+boolean checkKeyMask(Object dataObj, int key) {
+  if (dataObj == null) return false;
+  String data = String.valueOf(dataObj).trim();
   int splitIdx = data.indexOf(":");
   if (splitIdx == -1) return false;
   
   String prefix = data.substring(0, splitIdx).toUpperCase();
-  if (!prefix.equals("KEYS") && !prefix.equals("KEY")) return false;
+  String valStr = data.substring(splitIdx + 1).trim();
   
   try {
-    int val = Integer.parseInt(data.substring(splitIdx + 1).trim());
-    return (val & (1 << (key - 1))) != 0;
-  } catch(Exception e) {
-    return false;
-  }
+    int val = Integer.parseInt(valStr);
+    if (prefix.equals("KEYS")) {
+      // Bitmask mode: check if Nth bit is set
+      return (val & (1 << (key - 1))) != 0;
+    } else if (prefix.equals("KEY")) {
+      // Single key mode: check if index matches
+      return val == key;
+    }
+  } catch(Exception e) {}
+  return false;
 }
 
 void serialEvent(Serial p) {
@@ -599,7 +606,7 @@ void setup() {
   if (surface.getNative() instanceof java.awt.Canvas) { ((java.awt.Canvas)surface.getNative()).requestFocus(); }
     println("--- Available Serial Ports ---");
     println(Serial.list());
-    serialBaud = 9600;
+    serialBaud = 115200;
     try {
       myPort = new Serial(this, Serial.list()[0], serialBaud);
       myPort.bufferUntil('\n');

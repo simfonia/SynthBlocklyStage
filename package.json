@@ -2,7 +2,7 @@
   "name": "synthblockly-stage",
   "displayName": "SynthBlockly Stage",
   "description": "Visualize your music performance with Blockly and Processing.",
-  "version": "0.9.0",
+  "version": "0.9.1",
   "publisher": "simfonia",
   "icon": "media/icons/icon.png",
   "repository": {

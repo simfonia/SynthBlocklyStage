@@ -1,0 +1,247 @@
+<xml xmlns="https://developers.google.com/blockly/xml">
+  <variables>
+    <variable id="serial_data_id">serial_data</variable>
+    <variable id="last_state_id">last_state</variable>
+    <variable id="i_id">i</variable>
+  </variables>
+  <block type="processing_setup" id="setup_block" x="10" y="10">
+    <statement name="DO">
+      <block type="sb_minim_init" id="minim_init">
+        <next>
+          <block type="variables_set" id="init_last_state">
+            <field name="VAR" id="last_state_id">last_state</field>
+            <value name="VALUE">
+              <block type="text" id="init_text">
+                <field name="TEXT">0000000000000000</field>
+              </block>
+            </value>
+            <next>
+              <block type="serial_init" id="serial_init_block">
+                <field name="INDEX">0</field>
+                <field name="BAUD">115200</field>
+                <next>
+                  <block type="visual_stage_setup" id="stage_setup">
+                    <field name="W">1000</field>
+                    <field name="H">400</field>
+                    <field name="BG_COLOR">#1a1a1a</field>
+                    <field name="FG_COLOR">#00ff00</field>
+                    <next>
+                      <block type="sb_log_to_screen" id="log_init">
+                        <field name="TYPE">INFO</field>
+                        <value name="MSG">
+                          <block type="text" id="log_text">
+                            <field name="TEXT">TTP229 Multi-Touch Drum Pad Ready!</field>
+                          </block>
+                        </value>
+                      </block>
+                    </next>
+                  </block>
+                </next>
+              </block>
+            </next>
+          </block>
+        </next>
+      </block>
+    </statement>
+  </block>
+  <block type="sb_comment" id="DpcaNmN[{pXGztz-~ToQ" x="1290" y="10">
+    <field name="TEXT">/*&amp;#10; * 這是一個 Arduino 程式，以16-bit 字串方式傳送 TTP229 狀態。&amp;#10; * SynthBlockly Stage - Example 15&amp;#10; * TTP229 16-Key Multi-touch Drum Pad (Status String Mode)&amp;#10; * &amp;#10; * 硬體需求 (TTP229 跳線設定)：&amp;#10; * 1. 短接 TP2 -&gt; 開啟 16 鍵模式&amp;#10; * 2. 短接 TP3 + TP4 -&gt; 開啟「全 16 鍵多鍵有效」模式&amp;#10; * 3. 短接 TP5 -&gt; 提高靈敏度 (採樣頻率 64Hz)&amp;#10; * &amp;#10; * 接線：&amp;#10; * - VCC -&gt; 5V&amp;#10; * - GND -&gt; GND&amp;#10; * - SCL -&gt; D2&amp;#10; * - SDO -&gt; D3&amp;#10; */&amp;#10;&amp;#10;#define SCL_PIN 2&amp;#10;#define SDO_PIN 3&amp;#10;&amp;#10;void setup() {&amp;#10;  // 高波特率減少延遲&amp;#10;  Serial.begin(115200); &amp;#10;  &amp;#10;  pinMode(SCL_PIN, OUTPUT);&amp;#10;  pinMode(SDO_PIN, INPUT);&amp;#10;  digitalWrite(SCL_PIN, HIGH);&amp;#10;  &amp;#10;  // 上電穩定時間&amp;#10;  delay(500);&amp;#10;}&amp;#10;&amp;#10;void loop() {&amp;#10;  uint16_t currentKeys = 0;&amp;#10;&amp;#10;  // 1. 讀取 16 個按鍵狀態&amp;#10;  for (int i = 0; i &lt; 16; i++) {&amp;#10;    digitalWrite(SCL_PIN, LOW);&amp;#10;    delayMicroseconds(50); &amp;#10;    &amp;#10;    if (digitalRead(SDO_PIN) == LOW) {&amp;#10;      currentKeys |= (1 &lt;&lt; i); &amp;#10;    }&amp;#10;    &amp;#10;    digitalWrite(SCL_PIN, HIGH);&amp;#10;    delayMicroseconds(50); &amp;#10;  }&amp;#10;&amp;#10;  // 2. 將 16 鍵狀態轉化為字串輸出 (例如 "1000000000000000")&amp;#10;  for (int i = 0; i &lt; 16; i++) {&amp;#10;    if (currentKeys &amp; (1 &lt;&lt; i)) {&amp;#10;      Serial.print("1");&amp;#10;    } else {&amp;#10;      Serial.print("0");&amp;#10;    }&amp;#10;  }&amp;#10;  &amp;#10;  Serial.println(); // 結尾換行&amp;#10;  &amp;#10;  delay(10); // 100Hz 掃描頻率&amp;#10;}&amp;#10;</field>
+  </block>
+  <block type="sb_serial_data_received" id="on_serial" x="10" y="320">
+    <field name="DATA" id="serial_data_id">serial_data</field>
+    <statement name="DO">
+      <block type="controls_if" id="check_len">
+        <value name="IF0">
+          <block type="logic_compare" id="len_compare">
+            <field name="OP">EQ</field>
+            <value name="A">
+              <block type="text_length" id="txt_len">
+                <value name="VALUE">
+                  <block type="variables_get" id="get_data">
+                    <field name="VAR" id="serial_data_id">serial_data</field>
+                  </block>
+                </value>
+              </block>
+            </value>
+            <value name="B">
+              <block type="math_number" id="num_16">
+                <field name="NUM">16</field>
+              </block>
+            </value>
+          </block>
+        </value>
+        <statement name="DO0">
+          <block type="controls_for" id="loop_keys">
+            <field name="VAR" id="i_id">i</field>
+            <value name="FROM">
+              <shadow type="math_number" id="from_1">
+                <field name="NUM">1</field>
+              </shadow>
+            </value>
+            <value name="TO">
+              <shadow type="math_number" id="to_16">
+                <field name="NUM">16</field>
+              </shadow>
+            </value>
+            <value name="BY">
+              <shadow type="math_number" id="by_1">
+                <field name="NUM">1</field>
+              </shadow>
+            </value>
+            <statement name="DO">
+              <block type="controls_if" id="edge_detect">
+                <value name="IF0">
+                  <block type="logic_operation" id="logic_and">
+                    <field name="OP">AND</field>
+                    <value name="A">
+                      <block type="logic_compare" id="cur_is_1">
+                        <field name="OP">EQ</field>
+                        <value name="A">
+                          <block type="text_charAt" id="get_cur">
+                            <mutation at="true"></mutation>
+                            <field name="WHERE">FROM_START</field>
+                            <value name="VALUE">
+                              <block type="variables_get" id="v_cur">
+                                <field name="VAR" id="serial_data_id">serial_data</field>
+                              </block>
+                            </value>
+                            <value name="AT">
+                              <block type="variables_get" id="v_i">
+                                <field name="VAR" id="i_id">i</field>
+                              </block>
+                            </value>
+                          </block>
+                        </value>
+                        <value name="B">
+                          <block type="text" id="txt_1">
+                            <field name="TEXT">1</field>
+                          </block>
+                        </value>
+                      </block>
+                    </value>
+                    <value name="B">
+                      <block type="logic_compare" id="last_is_0">
+                        <field name="OP">EQ</field>
+                        <value name="A">
+                          <block type="text_charAt" id="get_last">
+                            <mutation at="true"></mutation>
+                            <field name="WHERE">FROM_START</field>
+                            <value name="VALUE">
+                              <block type="variables_get" id="v_last">
+                                <field name="VAR" id="last_state_id">last_state</field>
+                              </block>
+                            </value>
+                            <value name="AT">
+                              <block type="variables_get" id="v_i2">
+                                <field name="VAR" id="i_id">i</field>
+                              </block>
+                            </value>
+                          </block>
+                        </value>
+                        <value name="B">
+                          <block type="text" id="txt_0">
+                            <field name="TEXT">0</field>
+                          </block>
+                        </value>
+                      </block>
+                    </value>
+                  </block>
+                </value>
+                <statement name="DO0">
+                  <block type="controls_if" id="drum_map">
+                    <mutation elseif="2"></mutation>
+                    <value name="IF0">
+                      <block type="logic_compare" id="is_k1">
+                        <field name="OP">EQ</field>
+                        <value name="A">
+                          <block type="variables_get" id="v_i3">
+                            <field name="VAR" id="i_id">i</field>
+                          </block>
+                        </value>
+                        <value name="B">
+                          <block type="math_number" id="n1">
+                            <field name="NUM">1</field>
+                          </block>
+                        </value>
+                      </block>
+                    </value>
+                    <statement name="DO0">
+                      <block type="sb_play_drum" id="play_kick">
+                        <field name="TYPE">KICK</field>
+                        <value name="VELOCITY">
+                          <shadow type="math_number" id="vel_100">
+                            <field name="NUM">120</field>
+                          </shadow>
+                        </value>
+                      </block>
+                    </statement>
+                    <value name="IF1">
+                      <block type="logic_compare" id="is_k2">
+                        <field name="OP">EQ</field>
+                        <value name="A">
+                          <block type="variables_get" id="v_i4">
+                            <field name="VAR" id="i_id">i</field>
+                          </block>
+                        </value>
+                        <value name="B">
+                          <block type="math_number" id="n2">
+                            <field name="NUM">6</field>
+                          </block>
+                        </value>
+                      </block>
+                    </value>
+                    <statement name="DO1">
+                      <block type="sb_play_drum" id="play_snare">
+                        <field name="TYPE">SNARE</field>
+                        <value name="VELOCITY">
+                          <shadow type="math_number" id="vel_100_2">
+                            <field name="NUM">100</field>
+                          </shadow>
+                        </value>
+                      </block>
+                    </statement>
+                    <value name="IF2">
+                      <block type="logic_compare" id="is_k3">
+                        <field name="OP">EQ</field>
+                        <value name="A">
+                          <block type="variables_get" id="v_i5">
+                            <field name="VAR" id="i_id">i</field>
+                          </block>
+                        </value>
+                        <value name="B">
+                          <block type="math_number" id="n3">
+                            <field name="NUM">4</field>
+                          </block>
+                        </value>
+                      </block>
+                    </value>
+                    <statement name="DO2">
+                      <block type="sb_play_drum" id="play_clap">
+                        <field name="TYPE">CH</field>
+                        <value name="VELOCITY">
+                          <shadow type="math_number" id="vel_100_4">
+                            <field name="NUM">60</field>
+                          </shadow>
+                        </value>
+                      </block>
+                    </statement>
+                  </block>
+                </statement>
+              </block>
+            </statement>
+            <next>
+              <block type="variables_set" id="save_state">
+                <field name="VAR" id="last_state_id">last_state</field>
+                <value name="VALUE">
+                  <block type="variables_get" id="get_data2">
+                    <field name="VAR" id="serial_data_id">serial_data</field>
+                  </block>
+                </value>
+              </block>
+            </next>
+          </block>
+        </statement>
+      </block>
+    </statement>
+  </block>
+</xml>

@@ -43,17 +43,10 @@
 | **音符演奏** | `(note, dur, time, vel)` | `dur` 統一採用 Tone.js 符號 (`4n`, `8n`, `1m`) |
 | **ADSR** | `(a, d, s, r)` | 數值範圍統一為 A, D, R (秒), S (0.0-1.0) |
 
----
-
-## 4. 關鍵功能實作對齊 (待辦事項)
-為了達成完全互通，#processing 專案需補齊以下功能：
-1.  **String Parser**: 在 Java 端實作能解析 `C4Q, E4.E` 等旋律字串的類別。
-2.  **Rhythm Engine**: 實作能解析 `x---x---` 16 格節奏並根據 BPM 換算的排程器。
-3.  **Container Context**: 產生器需實作 `getContainerTarget` 邏輯，自動抓取父層容器的 `NAME` 欄位。
 
 ---
 
-## 5. 名詞與翻譯對齊 (Glossary)
+## 4. 名詞與翻譯對齊 (Glossary)
 - **過採樣 (Oversample)**: 統一使用此名詞，而非超取樣。
 - **重新採樣 (Resampling)**: 統一使用此名詞，而非重新取樣。
 - **頻率倍率 (Frequency Ratio)**: 指諧波或加法合成中的頻率關係。
@@ -62,9 +55,9 @@
 
 ---
 
-## 6. VS Code 擴充功能開發技術規範 (Modularization)
+## 5. VS Code 擴充功能開發技術規範 (Modularization)
 
-### 6.1 通用工具別名 (Global Aliases)
+### 5.1 通用工具別名 (Global Aliases)
 為了確保模組化重構後的向下相容性，\media/utils.js\ 在全域掛載了以下別名：
 
 | 原始函式 (window.SB_Utils) | 全域別名 (window) | 用途 |
@@ -76,6 +69,6 @@
 | \createInstrumentField\ | \createInstrumentField\ | 建立具備樂器下拉選單功能的 Hybrid 文字輸入框。 |
 | \getChordDropdown\ | \getChordDropdown\ | 動態獲取當前工作區定義的所有和弦名稱。 |
 
-### 6.2 模組化開發約定
+### 5.2 模組化開發約定
 - **載入順序**：\utils.js\ 必須在 \_core.js\ 與所有 \blocks/\, \generators/\ 之前載入。
 - **產生器註冊**：應使用 \Blockly.Processing.registerGenerator(type, func)\ 進行產生器註冊，以確保 \forBlock\ 與舊版路徑同步。

@@ -102,7 +102,7 @@ window.SB_JavaLibs.AUDIO_CLASSES = `
           String noteName = fullName.substring(0, fullName.lastIndexOf('.'));
           int midi = noteToMidi(noteName);
           if (midi >= 0) {
-            Sampler s = new Sampler(folder + "/" + fullName, 4, m); TickRate tr = new TickRate(1.f);
+            Sampler s = new Sampler(folder + "/" + fullName, 10, m); TickRate tr = new TickRate(1.f);
             ADSR a = new ADSR(1.0, 0.001f, 0.001f, 1.0f, 0.5f); tr.setInterpolation(true);
             s.patch(tr).patch(a).patch(localMixer); samples.put(midi, s); rates.put(midi, tr); adsrs.put(midi, a);
           }
@@ -150,7 +150,7 @@ window.SB_JavaLibs.AUDIO_HELPERS = `
       if (type.equals("KICK")) path += "kick.wav"; else if (type.equals("SNARE")) path += "snare.wav";
       else if (type.equals("CH")) path += "ch.wav"; else if (type.equals("OH")) path += "oh.wav";
       else if (type.equals("CLAP")) path += "clap.wav"; else return;
-      Sampler s = new Sampler(path, 4, minim); Gain g = new Gain(0.f);
+      Sampler s = new Sampler(path, 20, minim); Gain g = new Gain(0.f);
       s.patch(g).patch(getInstrumentMixer(instName));
       samplerMap.put(instName, s); samplerGainMap.put(instName, g); instrumentMap.put(instName, "DRUM");
     }

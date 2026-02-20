@@ -54,10 +54,13 @@ Blockly.defineBlocksWithJsonArray([
   },
   {
     "type": "sb_serial_data_received",
-    "message0": "%{BKY_SERIAL_DATA_RECEIVED}",
-    "args0": [
-      { "type": "input_dummy" },
-      { "type": "field_variable", "name": "DATA", "variable": "serial_data" },
+    "message0": "%{BKY_SERIAL_DATA_RECEIVED_TITLE}",
+    "message1": "%{BKY_SERIAL_DATA_RECEIVED_VAR}",
+    "args1": [
+      { "type": "field_variable", "name": "DATA", "variable": "serial_data" }
+    ],
+    "message2": "%1",
+    "args2": [
       { "type": "input_statement", "name": "DO" }
     ],
     "colour": "#2c3e50",

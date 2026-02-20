@@ -70,7 +70,8 @@ Blockly.Processing.init = function(workspace) {
     "int getMidi(Object o) {\n" +
     "  if (o == null) return -1;\n" +
     "  if (o instanceof Number) return ((Number)o).intValue();\n" +
-    "  return noteToMidi(o.toString());\n" +
+    "  String s = o.toString().trim();\n" +
+    "  try { return (int)Float.parseFloat(s); } catch (Exception e) { return noteToMidi(s); }\n" +
     "}";
 
   if (!Blockly.Processing.nameDB_) {

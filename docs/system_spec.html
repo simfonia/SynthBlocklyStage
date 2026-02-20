@@ -1,0 +1,313 @@
+﻿<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SynthBlockly Stage 系統規格說明書</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #8E44AD; /* 音訊主題紫色 */
+            --accent-color: #E74C3C;    /* 警告/強調紅色 */
+            --sidebar-width: 280px;
+            --bg-light: #f8f9fa;
+            --text-main: #333;
+        }
+
+        body {
+            font-family: "Segoe UI", "PingFang TC", "Microsoft JhengHei", sans-serif;
+            margin: 0;
+            display: flex;
+            background-color: var(--bg-light);
+            color: var(--text-main);
+            line-height: 1.6;
+        }
+
+        /* 側邊導覽 */
+        #sidebar {
+            width: var(--sidebar-width);
+            height: 100vh;
+            background: var(--primary-color);
+            color: white;
+            position: fixed;
+            overflow-y: auto;
+            padding: 20px 0;
+        }
+
+        #sidebar h2 {
+            padding: 0 25px;
+            font-size: 1.2rem;
+            color: var(--secondary-color);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        #sidebar ul {
+            list-style: none;
+            padding: 0;
+            padding-bottom: 100px; /* 增加底部空間 */
+        }
+
+        #sidebar li a {
+            display: block;
+            padding: 12px 25px;
+            color: #ecf0f1;
+            text-decoration: none;
+            transition: 0.3s;
+            font-size: 0.95rem;
+        }
+
+        #sidebar li a:hover {
+            background: var(--secondary-color);
+            padding-left: 35px;
+        }
+
+        /* 主要內容區 */
+        #content {
+            margin-left: var(--sidebar-width);
+            padding: 40px 60px;
+            max-width: 1000px;
+        }
+
+        section {
+            margin-bottom: 60px;
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        h1 { font-size: 2.5rem; color: var(--primary-color); border-bottom: 3px solid var(--secondary-color); padding-bottom: 10px; }
+        h2 { font-size: 1.8rem; color: var(--secondary-color); margin-top: 0; border-left: 5px solid var(--secondary-color); padding-left: 15px; }
+        h3 { color: var(--primary-color); margin-top: 25px; }
+
+        code { font-family: 'Consolas', monospace; background: #eee; padding: 2px 5px; border-radius: 4px; color: #d63384; }
+        pre code { background: none; color: inherit; padding: 0; }
+
+        .file-tree { background: #2d3436; color: #f1f2f6; padding: 20px; border-radius: 5px; font-family: monospace; }
+        .spec-table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+        .spec-table th, .spec-table td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+        .spec-table th { background-color: #f2f2f2; color: var(--primary-color); }
+
+        .tag { display: inline-block; padding: 3px 8px; border-radius: 12px; font-size: 0.8rem; margin-right: 5px; background: #e1e1e1; }
+        .tag-ts { background: #3178c6; color: white; }
+        .tag-js { background: #f7df1e; color: black; }
+        .tag-java { background: #b07219; color: white; }
+        .tag-xml { background: #ff6600; color: white; }
+
+        footer { text-align: center; margin-top: 40px; color: #888; font-size: 0.8rem; }
+    </style>
+</head>
+<body>
+
+<nav id="sidebar">
+    <h2>SynthBlockly Spec</h2>
+    <ul>
+        <li><a href="#overview">1. 專案概述</a></li>
+        <li><a href="#naming">2. 開發與命名規範</a></li>
+        <li><a href="#structure">3. 模組化架構 (Phase 8)</a></li>
+        <li><a href="#generator-core">4. Java 產生器核心機制</a></li>
+        <li><a href="#audio-engine">5. 音訊引擎 (Minim/Summer)</a></li>
+        <li><a href="#instrument-sys">6. 樂器容器與定義系統</a></li>
+        <li><a href="#transport">7. 時序與多執行緒演奏</a></li>
+        <li><a href="#resource-mgmt">8. 資源掛載機制 (Junction)</a></li>
+        <li><a href="#midi-serial">9. MIDI 與 Serial 多裝置</a></li>
+        <li><a href="#ui-bridge">10. 跨端非同步對話框</a></li>
+        <li><a href="#performance">11. 效能優化 (Zero Allocation)</a></li>
+        <li><a href="#type-mapping">12. 動態型別轉換規範</a></li>
+    </ul>
+</nav>
+
+<main id="content">
+    <header>
+        <h1>SynthBlockly Stage 系統規格說明書 v1.0</h1>
+        <p><strong>Code, Sound, Visual</strong> - 視覺化音樂與互動藝術開發環境。</p>
+    </header>
+
+    <section id="overview">
+        <h2>1. 專案概述</h2>
+        <p>SynthBlockly Stage 是一個結合了 Blockly 與 Processing (Java) 的 VS Code 擴充功能。使用者透過積木編寫音樂與視覺邏輯，並在整合了 Minim 與 ControlP5 的「超級舞台」中即時執行。</p>
+        <h3>核心技術</h3>
+        <ul>
+            <li><strong>Extension Host:</strong> TypeScript (VS Code API)</li>
+            <li><strong>Frontend:</strong> ES Module JavaScript (Modularized)</li>
+            <li><strong>Logic Engine:</strong> Google Blockly v12.x</li>
+            <li><strong>Rendering Engine:</strong> Processing 3.5.4 (Java)</li>
+            <li><strong>Audio Core:</strong> Minim 2.2.2</li>
+        </ul>
+    </section>
+
+    <section id="naming">
+        <h2>2. 開發與命名規範</h2>
+        <table class="spec-table">
+            <thead>
+                <tr><th>類型</th><th>規範</th><th>範例</th></tr>
+            </thead>
+            <tbody>
+                <tr><td>類別名稱</td><td><code>PascalCase</code></td><td><code>BlocklyManager</code></td></tr>
+                <tr><td>變數與函式</td><td><code>camelCase</code></td><td><code>isDirty</code>, <code>checkMainMixer()</code></td></tr>
+                <tr><td>積木 ID</td><td><code>sb_[type]_[name]</code></td><td><code>sb_audio_play_note</code>, <code>sb_visual_ellipse</code></td></tr>
+                <tr><td>轉義字元</td><td><code>Triple Layer</code></td><td><code>\n</code> -> <code>\\n</code> -> <code>\\\\n</code> (確保 Java 識別為換行)</td></tr>
+                <tr><td>索引規範</td><td><code>1-based to 0-based</code></td><td>Blockly 傳入 1，產生器自動 <code>-1</code> 轉為 Java 索引</td></tr>
+            </tbody>
+        </table>
+    </section>
+
+    <section id="structure">
+        <h2>3. 模組化架構 (Phase 8)</h2>
+        <p>為了解決單一檔案過大的問題，前端邏輯與積木定義已全面拆分：</p>
+        <div class="file-tree">
+            media/<br>
+            ├── blocks/ (積木 JSON 與 Mutators)<br>
+            │   ├── audio_core.js, audio_fx.js...<br>
+            │   └── visual_geometry.js, visual_transform.js...<br>
+            ├── generators/ (Java 代碼產生邏輯)<br>
+            │   ├── _core.js (框架注入與 Placeholder 替換)<br>
+            │   └── java_libs.js (高品質自訂 UGen 與 Sampler 類別庫)<br>
+            ├── utils.js (Polyfills, 顏色與邏輯輔助函式)<br>
+            └── modules/ (ESM 分離後的邏輯控制器)
+        </div>
+    </section>
+
+    <section id="generator-core">
+        <h2>4. Java 產生器核心機制</h2>
+        <p>系統採用「佔位符替換」與「框架注入」並行機制，解決 Java 的強型別與宣告順序要求。</p>
+        
+        <h3>A. 框架注入 (provideSetup)</h3>
+        <p>透過 <code>Blockly.Processing.provideSetup(key, code)</code>，代碼會被強制注入到 <code>setup()</code> 函式中，且相同的 <code>key</code> 只會注入一次。常用於初始化音訊引擎或全域變數。</p>
+
+        <h3>B. 佔位符替換 (The finish_ Method)</h3>
+        <p>在代碼產出的最後階段，<code>_core.js</code> 會掃描特定標籤並進行動態替換：</p>
+        <ul>
+            <li><code>/*{{EVENT_KEY_PRESSED}}*/</code>: 注入自定義按鍵事件邏輯。</li>
+            <li><code>/*{{VARIABLES}}*/</code>: 自動掃描工作區變數並產出強型別宣告 (float, String...)。</li>
+            <li><code>/*{{DEFS}}*/</code>: 注入自定義的 Java 類別 (如 SBReverb)。</li>
+        </ul>
+    </section>
+
+    <section id="audio-engine">
+        <h2>5. 音訊引擎 (Minim/Summer)</h2>
+        <p>SynthBlockly 採用加法合成架構，所有音源必須遵循標準訊號鏈：</p>
+        <pre><code class="language-java">Source (Oscillator/Sampler) 
+  -> Summer (Mixer) 
+  -> Effects (Filter, Delay, etc.) 
+  -> Pan (Stereo Control) 
+  -> Master (Main Mix + Limiter)</code></pre>
+        <p><strong>重要規範：</strong> 效果器必須接在 <code>Pan</code> 之前，以避免立體聲訊號被單聲道效果器強行降維導致的編譯錯誤。</p>
+    </section>
+
+    <section id="instrument-sys">
+        <h2>6. 樂器容器與定義系統</h2>
+        <p>為了解決多聲部管理，系統實作了基於 <code>ConcurrentHashMap</code> 的樂器管理機制：</p>
+        <ul>
+            <li><strong>sb_instrument_container:</strong> 核心容器，負責定義 <code>instrumentMap</code> 與 <code>instrumentADSR</code>。</li>
+            <li><strong>動態參數連動:</strong> 透過 Java 反射 (Reflection)，<code>sb_set_effect_param</code> 能即時更新 Minim UGen 的內部欄位，無需重啟程式。</li>
+            <li><strong>自動語音記憶 (Voice Memory):</strong> 在 MIDI 演奏中，系統會記憶按下時的樂器，確保釋放音符時與按下時的音色一致，避免 Stuck Note。</li>
+        </ul>
+    </section>
+
+    <section id="transport">
+        <h2>7. 時序與多執行緒演奏</h2>
+        <p>為了解決 Processing <code>draw()</code> 幀數不穩導致的音樂卡頓，演奏邏輯全面採用 **Java Thread**：</p>
+        <ul>
+            <li><strong>sb_tone_loop:</strong> 開啟獨立執行緒進行無限循環，使用 <code>Thread.sleep()</code> 達成微秒級精準對位。</li>
+            <li><strong>Melody Parser:</strong> 支援字串解析 (如 <code>C4Q, E4H</code>)，將時值轉換為絕對毫秒。</li>
+            <li><strong>Count-in (預備拍):</strong> 實作非同步旗標機制，確保音樂執行緒在預備拍結束後精準同步啟動。</li>
+        </ul>
+    </section>
+
+    <section id="resource-mgmt">
+        <h2>8. 資源掛載機制 (Junction)</h2>
+        <p>擴充功能在執行前會自動建立 Windows Junction (目錄連結)，將 media/samples/ 下的系統音色庫映射至使用者專案的 data/ 資料夾下，達成「雲端下載感的在地體驗」。</p>
+    </section>
+
+    <section id="midi-serial">
+        <h2>9. MIDI 與 Serial 多裝置</h2>
+        <p>支援命名裝置系統 (Named Busses)：</p>
+        <ul>
+            <li><strong>MIDI:</strong> 使用者可為不同的硬體 (如 LaunchPad) 定義別名。產生器會自動產出具名的 <code>noteOn(..., String busName)</code> 回呼函式。</li>
+            <li><strong>Serial:</strong> 支援 <code>bufferUntil('\n')</code> 強制同步，確保高速傳輸時資料解析不亂碼。</li>
+        </ul>
+
+        <h3>A. 序列埠按鍵通訊規範 (Key Message Formats)</h3>
+        <p>為了解決不同 Arduino 程式輸出的按鍵資訊，<code>checkKeyMask</code> 輔助函式支援雙模式解析：</p>
+        <table class="spec-table">
+            <thead>
+                <tr><th>格式前綴</th><th>解析模式</th><th>範例與說明</th></tr>
+            </thead>
+            <tbody>
+                <tr><td><code>KEY:</code></td><td>單鍵編號 (Equality)</td><td><code>KEY:3</code> 表示按鍵 3。執行 <code>val == 3</code> 比對。</td></tr>
+                <tr><td><code>KEYS:</code></td><td>位元遮罩 (Bitmask)</td><td><code>KEYS:5</code> 表示按鍵 1 與 3 同時按下 ($2^0 + 2^2 = 5$)。執行 <code>(val & (1 << (n-1)))</code> 運算。</td></tr>
+            </tbody>
+        </table>
+    </section>
+
+    <section id="ui-bridge">
+        <h2>10. 跨端非同步對話框</h2>
+        <p>由於 Webview 禁止同步 <code>prompt()</code>，系統實作了 Request-Response 橋接機制：</p>
+        <pre><code class="language-javascript">// Webview 端呼叫
+const result = await vscodeBridge.prompt("請輸入樂器名稱");
+// Bridge 會發送訊息至 Extension Host 呼叫 vscode.window.showInputBox</code></pre>
+    </section>
+
+    <section id="performance">
+        <h2>11. 效能優化 (Zero Allocation)</h2>
+        <p>針對音訊渲染迴圈進行深度優化：</p>
+        <ul>
+            <li><strong>SBSummer/SBPan:</strong> 移除 <code>uGenerate</code> 內的所有 <code>new float[]</code> 操作，改用預配置成員變數。</li>
+            <li><strong>CLIP 偵測:</strong> 僅在最終樣本振幅 <code>> 0.99f</code> 時觸發 UI 更新，將視覺指示與數位失真 1:1 對齊。</li>
+        </ul>
+    </section>
+
+    <section id="type-mapping">
+        <h2>12. 動態型別轉換規範 (Type Mapping)</h2>
+        <p>為了解決 Blockly 動態弱型別與 Java 強型別之間的衝突，產生器遵循以下映射與轉換規則：</p>
+        
+        <h3>A. 基礎型別映射表</h3>
+        <table class="spec-table">
+            <thead>
+                <tr><th>Blockly 類型</th><th>Java (PDE) 類型</th><th>轉換處理邏輯</th></tr>
+            </thead>
+            <tbody>
+                <tr><td>Number</td><td><code>float</code></td><td>Processing 預設數學運算皆使用 float 以確保精度。</td></tr>
+                <tr><td>Boolean</td><td><code>boolean</code></td><td>產生器強制將 <code>'TRUE'/'FALSE'</code> 轉為小寫 <code>true/false</code>。</td></tr>
+                <tr><td>String</td><td><code>String</code></td><td>字串比較自動由 <code>==</code> 轉為 <code>.equals()</code> 方法。</td></tr>
+                <tr><td>Color</td><td><code>int (Hex)</code></td><td>透過 <code>utils.js</code> 將 <code>#RRGGBB</code> 轉為 Processing 專用色碼 <code>#FFRRGGBB</code>。</td></tr>
+            </tbody>
+        </table>
+
+        <h3>B. 混合輸入處理 (Hybrid Input)</h3>
+        <p>針對如「音高 (Pitch)」等同時支援 MIDI 數字與音名 (C4) 的插槽，系統在 <code>_core.js</code> 中定義了 Java 輔助函式：</p>
+        <pre><code class="language-java">// 產出的 Java 輔助邏輯 (v1.3 優化版)
+int getMidi(Object o) {
+    if (o == null) return -1;
+    if (o instanceof Number) return ((Number)o).intValue();
+    String s = o.toString().trim();
+    // 優先嘗試解析為數字（包含處理 float 產生的 "60.0" 格式），失敗則視為音名
+    try { return (int)Float.parseFloat(s); } 
+    catch(Exception e) { return noteToMidi(s); }
+}</code></pre>
+
+        <h3>C. 字串操作與安全轉型 (String Safety)</h3>
+        <p>為避免 Java 原始型別 (char, int, float) 與物件型別 (String) 混合使用導致的編譯錯誤，產生器遵循以下規範：</p>
+        <ul>
+            <li><strong>預設浮點數陷阱:</strong> SynthBlockly 產出的 Java 變數（如迴圈索引、計數器）預設皆宣告為 <code>float</code> 以維持運算一致性。</li>
+            <li><strong>強制索引轉型:</strong> 由於 Java 字串方法（如 <code>substring</code>, <code>charAt</code>）嚴格要求 <code>int</code> 參數，產生器在產出相關索引時必須加上 <code>(int)</code> 強制轉型，否則會報參數不符錯誤。</li>
+            <li><strong>統一物件化:</strong> 字串積木（如 <code>text_charAt</code>）統一使用回傳 <code>String</code> 的方法（如 <code>substring</code>）而非 <code>charAt</code>，確保能穩定使用 <code>.equals()</code> 進行比對。</li>
+            <li><strong>防禦型包裹:</strong> 在呼叫字串方法前，應使用 <code>String.valueOf()</code> 包裹變數，以應對變數被 Java 誤判為數值型別而無法呼叫方法的情況。</li>
+        </ul>
+
+        <h3>D. 變數自動宣告機制</h3>
+        <p>透過 <code>Blockly.Processing.nameDB_.getName</code> 獲取變數名稱，並在 <code>/*{{VARIABLES}}*/</code> 佔位符處根據首個賦值動作自動推斷型別（預設為 <code>float</code>），確保變數在使用前具備全域定義。</p>
+    </section>
+
+    <footer>
+        <p>© 2026 simfonia - SynthBlockly 專案組。文件更新日期：2026-02-20 (v1.1)</p>
+    </footer>
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script>hljs.highlightAll();</script>
+</body>
+</html>

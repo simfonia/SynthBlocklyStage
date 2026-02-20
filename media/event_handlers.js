@@ -66,9 +66,8 @@ export function initUIHandlers() {
         const xmlText = BlocklyMgr.getXmlText();
         const finalCode = BlocklyMgr.generateFullCode();
         VSCode.postMessage({ command: 'saveProject', xml: xmlText, code: finalCode });
-        isDirty = false;
-        hasPath = true;
-        updateStatusUI();
+        // Removed: isDirty = false; hasPath = true; updateStatusUI();
+        // The UI will be updated via 'initializeWorkspace' message from Host upon successful save.
     });
 }
 

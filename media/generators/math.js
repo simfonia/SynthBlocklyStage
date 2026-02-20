@@ -128,6 +128,6 @@ Blockly.Processing.forBlock['math_map'] = function(block) {
 Blockly.Processing.forBlock['math_random_int'] = function(block) {
   const arg0 = Blockly.Processing.valueToCode(block, 'FROM', Blockly.Processing.ORDER_NONE) || '0';
   const arg1 = Blockly.Processing.valueToCode(block, 'TO', Blockly.Processing.ORDER_NONE) || '0';
-  const code = 'int(random(' + arg0 + ', ' + arg1 + '))';
+  const code = 'int(random(floatVal(' + arg0 + '), floatVal(' + arg1 + ')))';
   return [code, Blockly.Processing.ORDER_FUNCTION_CALL];
 };

@@ -95,7 +95,8 @@ float floatVal(Object o) {
 int getMidi(Object o) {
   if (o == null) return -1;
   if (o instanceof Number) return ((Number)o).intValue();
-  return noteToMidi(o.toString());
+  String s = o.toString().trim();
+  try { return (int)Float.parseFloat(s); } catch (Exception e) { return noteToMidi(s); }
 }
 
 class SBSummer extends ddf.minim.ugens.Summer {
@@ -191,7 +192,7 @@ class SBSummer extends ddf.minim.ugens.Summer {
           String noteName = fullName.substring(0, fullName.lastIndexOf('.'));
           int midi = noteToMidi(noteName);
           if (midi >= 0) {
-            Sampler s = new Sampler(folder + "/" + fullName, 4, m); TickRate tr = new TickRate(1.f);
+            Sampler s = new Sampler(folder + "/" + fullName, 10, m); TickRate tr = new TickRate(1.f);
             ADSR a = new ADSR(1.0, 0.001f, 0.001f, 1.0f, 0.5f); tr.setInterpolation(true);
             s.patch(tr).patch(a).patch(localMixer); samples.put(midi, s); rates.put(midi, tr); adsrs.put(midi, a);
           }
@@ -234,7 +235,7 @@ class SBSummer extends ddf.minim.ugens.Summer {
       if (type.equals("KICK")) path += "kick.wav"; else if (type.equals("SNARE")) path += "snare.wav";
       else if (type.equals("CH")) path += "ch.wav"; else if (type.equals("OH")) path += "oh.wav";
       else if (type.equals("CLAP")) path += "clap.wav"; else return;
-      Sampler s = new Sampler(path, 4, minim); Gain g = new Gain(0.f);
+      Sampler s = new Sampler(path, 20, minim); Gain g = new Gain(0.f);
       s.patch(g).patch(getInstrumentMixer(instName));
       samplerMap.put(instName, s); samplerGainMap.put(instName, g); instrumentMap.put(instName, "DRUM");
     }
@@ -848,21 +849,21 @@ void setup() {
     instrumentADSR.put("Bass", new float[]{(float)0.01, (float)0.5, (float)0, (float)0.5});
     if (!instrumentMap.containsKey("Clap")) instrumentMap.put("Clap", "TRIANGLE");
   if (!instrumentADSR.containsKey("Clap")) instrumentADSR.put("Clap", new float[]{defAdsrA, defAdsrD, defAdsrS, defAdsrR});
-    samplerMap.put("Clap", new ddf.minim.ugens.Sampler("drum/clap.wav", 4, minim));
+    samplerMap.put("Clap", new ddf.minim.ugens.Sampler("drum/clap.wav", 20, minim));
     samplerGainMap.put("Clap", new Gain(0.f));
     ((ddf.minim.ugens.Sampler)samplerMap.get("Clap")).patch((Gain)samplerGainMap.get("Clap")).patch(getInstrumentMixer("Clap"));
     instrumentMap.put("Clap", "DRUM");
     instrumentADSR.put("Clap", new float[]{defAdsrA, defAdsrD, defAdsrS, defAdsrR});
     if (!instrumentMap.containsKey("Kick")) instrumentMap.put("Kick", "TRIANGLE");
   if (!instrumentADSR.containsKey("Kick")) instrumentADSR.put("Kick", new float[]{defAdsrA, defAdsrD, defAdsrS, defAdsrR});
-    samplerMap.put("Kick", new ddf.minim.ugens.Sampler("drum/kick.wav", 4, minim));
+    samplerMap.put("Kick", new ddf.minim.ugens.Sampler("drum/kick.wav", 20, minim));
     samplerGainMap.put("Kick", new Gain(0.f));
     ((ddf.minim.ugens.Sampler)samplerMap.get("Kick")).patch((Gain)samplerGainMap.get("Kick")).patch(getInstrumentMixer("Kick"));
     instrumentMap.put("Kick", "DRUM");
     instrumentADSR.put("Kick", new float[]{defAdsrA, defAdsrD, defAdsrS, defAdsrR});
     if (!instrumentMap.containsKey("CHiHat")) instrumentMap.put("CHiHat", "TRIANGLE");
   if (!instrumentADSR.containsKey("CHiHat")) instrumentADSR.put("CHiHat", new float[]{defAdsrA, defAdsrD, defAdsrS, defAdsrR});
-    samplerMap.put("CHiHat", new ddf.minim.ugens.Sampler("drum/ch.wav", 4, minim));
+    samplerMap.put("CHiHat", new ddf.minim.ugens.Sampler("drum/ch.wav", 20, minim));
     samplerGainMap.put("CHiHat", new Gain(0.f));
     ((ddf.minim.ugens.Sampler)samplerMap.get("CHiHat")).patch((Gain)samplerGainMap.get("CHiHat")).patch(getInstrumentMixer("CHiHat"));
     instrumentMap.put("CHiHat", "DRUM");

@@ -70,7 +70,7 @@ Blockly.Processing.registerGenerator('sb_drum_sampler', function(block) {
   const path = (type === 'CUSTOM') ? block.getFieldValue('CUSTOM_PATH_VALUE') : type;
   
   let code = '';
-  code += 'samplerMap.put("' + name + '", new ddf.minim.ugens.Sampler("' + path + '", 4, minim));\n';
+  code += 'samplerMap.put("' + name + '", new ddf.minim.ugens.Sampler("' + path + '", 20, minim));\n';
   code += 'samplerGainMap.put("' + name + '", new Gain(0.f));\n';
   code += '((ddf.minim.ugens.Sampler)samplerMap.get("' + name + '")).patch((Gain)samplerGainMap.get("' + name + '")).patch(getInstrumentMixer("' + name + '"));\n';
   code += 'instrumentMap.put("' + name + '", "DRUM");\n';

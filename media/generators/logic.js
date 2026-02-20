@@ -28,16 +28,24 @@ Blockly.Processing.forBlock['logic_compare'] = function(block) {
   const argument0 = Blockly.Processing.valueToCode(block, 'A', order) || '0';
   const argument1 = Blockly.Processing.valueToCode(block, 'B', order) || '0';
   
-  // Heuristic: If either side is a string literal (contains quotes), 
-  // or if one side is a known string variable like 'serial_data'.
-  const isString = argument0.includes('"') || argument1.includes('"') || 
-                   argument0.includes('serial_data') || argument1.includes('serial_data') ||
-                   argument0.includes('received') || argument1.includes('received');
+  // Heuristic: Check if inputs are likely strings.
+  const stringKeywords = ['"', 'serial_data', 'last_state', 'received', '.substring', '.trim', 'String.valueOf'];
+  const isArg0String = stringKeywords.some(k => argument0.includes(k)) && !argument0.includes('.length()');
+  const isArg1String = stringKeywords.some(k => argument1.includes(k)) && !argument1.includes('.length()');
+  
+  // Also check if they are NOT clearly numbers or simple loop variables
+  const isArg0SimpleVar = /^[a-zA-Z_][a-zA-Z0-9_]*$/.test(argument0);
+  
+  // We use .equals() IF:
+  // 1. One side is a literal string (contains quotes)
+  // 2. OR one side is a known string variable and it's not a .length() call
+  const useEquals = argument0.includes('"') || argument1.includes('"') || 
+                    ((isArg0String || isArg1String) && (!isArg0SimpleVar || isKnownStringVar(argument0)));
 
-  if (isString) {
+  if (useEquals && (op === 'EQ' || op === 'NEQ')) {
     if (op === 'EQ') {
       return [argument0 + '.equals(' + argument1 + ')', Blockly.Processing.ORDER_FUNCTION_CALL];
-    } else if (op === 'NEQ') {
+    } else {
       return ['!' + argument0 + '.equals(' + argument1 + ')', Blockly.Processing.ORDER_FUNCTION_CALL];
     }
   }

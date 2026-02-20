@@ -97,7 +97,8 @@ float floatVal(Object o) {
 int getMidi(Object o) {
   if (o == null) return -1;
   if (o instanceof Number) return ((Number)o).intValue();
-  return noteToMidi(o.toString());
+  String s = o.toString().trim();
+  try { return (int)Float.parseFloat(s); } catch (Exception e) { return noteToMidi(s); }
 }
 
 class SBSummer extends ddf.minim.ugens.Summer {
@@ -193,7 +194,7 @@ class SBSummer extends ddf.minim.ugens.Summer {
           String noteName = fullName.substring(0, fullName.lastIndexOf('.'));
           int midi = noteToMidi(noteName);
           if (midi >= 0) {
-            Sampler s = new Sampler(folder + "/" + fullName, 4, m); TickRate tr = new TickRate(1.f);
+            Sampler s = new Sampler(folder + "/" + fullName, 10, m); TickRate tr = new TickRate(1.f);
             ADSR a = new ADSR(1.0, 0.001f, 0.001f, 1.0f, 0.5f); tr.setInterpolation(true);
             s.patch(tr).patch(a).patch(localMixer); samples.put(midi, s); rates.put(midi, tr); adsrs.put(midi, a);
           }
@@ -236,7 +237,7 @@ class SBSummer extends ddf.minim.ugens.Summer {
       if (type.equals("KICK")) path += "kick.wav"; else if (type.equals("SNARE")) path += "snare.wav";
       else if (type.equals("CH")) path += "ch.wav"; else if (type.equals("OH")) path += "oh.wav";
       else if (type.equals("CLAP")) path += "clap.wav"; else return;
-      Sampler s = new Sampler(path, 4, minim); Gain g = new Gain(0.f);
+      Sampler s = new Sampler(path, 20, minim); Gain g = new Gain(0.f);
       s.patch(g).patch(getInstrumentMixer(instName));
       samplerMap.put(instName, s); samplerGainMap.put(instName, g); instrumentMap.put(instName, "DRUM");
     }
@@ -504,7 +505,7 @@ void serialEvent(Serial p) {
       if (_25O_8_604_253bnA_7DgAPggU__.toString().length() > 0) {
         println("[Serial] Received: " + _25O_8_604_253bnA_7DgAPggU__);
         logToScreen("Serial In: " + _25O_8_604_253bnA_7DgAPggU__, 0);
-          key_id_var = new ArrayList<Object>(Arrays.asList(_25O_8_604_253bnA_7DgAPggU__.split(":"))).get(1);
+          key_id_var = new ArrayList<Object>(Arrays.asList(String.valueOf(_25O_8_604_253bnA_7DgAPggU__).split(":"))).get((int)(1));
   if (floatVal(key_id_var) == floatVal(1)) {
     { 
       Object dVal = "4n";
@@ -611,7 +612,7 @@ void setup() {
   if (surface.getNative() instanceof java.awt.Canvas) { ((java.awt.Canvas)surface.getNative()).requestFocus(); }
     println("--- Available Serial Ports ---");
     println(Serial.list());
-    serialBaud = 9600;
+    serialBaud = 115200;
     try {
       myPort = new Serial(this, Serial.list()[0], serialBaud);
       myPort.bufferUntil('\n');

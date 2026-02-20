@@ -103,10 +103,11 @@
     "SERIAL_AVAILABLE": "序列埠有新資料？",
     "SERIAL_READ_STRING": "讀取字串直到換行",
     "SERIAL_WRITE": "寫入序列埠 內容 %1",
-    "SERIAL_DATA_RECEIVED": "當收到序列埠資料時 %1 存入變數 %2 %3",
+    "SERIAL_DATA_RECEIVED_TITLE": "當收到序列埠資料時",
+    "SERIAL_DATA_RECEIVED_VAR": "存入變數 %1",
     "SERIAL_CHECK_MASK": "檢查位元遮罩 %1 是否包含鍵碼 %2",
     "SB_SERIAL_CHECK_KEY_MASK_MESSAGE": "檢查資料 %1 中按鍵 %2 是否按下？",
-    "SB_SERIAL_CHECK_KEY_MASK_TOOLTIP": "解析位元遮罩資料 (例如 KEYS:5)，檢查特定按鍵是否包含在內。",
+    "SB_SERIAL_CHECK_KEY_MASK_TOOLTIP": "解析序列埠按鍵資料。支援 'KEY:n' (單鍵編號，如 KEY:3) 或 'KEYS:n' (位元遮罩，如 KEYS:5 代表 1 與 3 鍵) 兩種格式。",
 
     // Tools Blocks
     "TOOLS_COMMENT": "註解 %1",
