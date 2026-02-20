@@ -95,7 +95,8 @@ float floatVal(Object o) {
 int getMidi(Object o) {
   if (o == null) return -1;
   if (o instanceof Number) return ((Number)o).intValue();
-  return noteToMidi(o.toString());
+  String s = o.toString().trim();
+  try { return (int)Float.parseFloat(s); } catch (Exception e) { return noteToMidi(s); }
 }
 
 class SBSummer extends ddf.minim.ugens.Summer {
@@ -191,7 +192,7 @@ class SBSummer extends ddf.minim.ugens.Summer {
           String noteName = fullName.substring(0, fullName.lastIndexOf('.'));
           int midi = noteToMidi(noteName);
           if (midi >= 0) {
-            Sampler s = new Sampler(folder + "/" + fullName, 4, m); TickRate tr = new TickRate(1.f);
+            Sampler s = new Sampler(folder + "/" + fullName, 10, m); TickRate tr = new TickRate(1.f);
             ADSR a = new ADSR(1.0, 0.001f, 0.001f, 1.0f, 0.5f); tr.setInterpolation(true);
             s.patch(tr).patch(a).patch(localMixer); samples.put(midi, s); rates.put(midi, tr); adsrs.put(midi, a);
           }
@@ -234,7 +235,7 @@ class SBSummer extends ddf.minim.ugens.Summer {
       if (type.equals("KICK")) path += "kick.wav"; else if (type.equals("SNARE")) path += "snare.wav";
       else if (type.equals("CH")) path += "ch.wav"; else if (type.equals("OH")) path += "oh.wav";
       else if (type.equals("CLAP")) path += "clap.wav"; else return;
-      Sampler s = new Sampler(path, 4, minim); Gain g = new Gain(0.f);
+      Sampler s = new Sampler(path, 20, minim); Gain g = new Gain(0.f);
       s.patch(g).patch(getInstrumentMixer(instName));
       samplerMap.put(instName, s); samplerGainMap.put(instName, g); instrumentMap.put(instName, "DRUM");
     }
@@ -556,7 +557,7 @@ void setup() {
     instrumentVolumes.put("Lead", floatVal(100) / 100.0f);
     if (!instrumentMap.containsKey("clap")) instrumentMap.put("clap", "TRIANGLE");
   if (!instrumentADSR.containsKey("clap")) instrumentADSR.put("clap", new float[]{defAdsrA, defAdsrD, defAdsrS, defAdsrR});
-    samplerMap.put("clap", new ddf.minim.ugens.Sampler("drum/clap.wav", 4, minim));
+    samplerMap.put("clap", new ddf.minim.ugens.Sampler("drum/clap.wav", 20, minim));
     samplerGainMap.put("clap", new Gain(0.f));
     ((ddf.minim.ugens.Sampler)samplerMap.get("clap")).patch((Gain)samplerGainMap.get("clap")).patch(getInstrumentMixer("clap"));
     instrumentMap.put("clap", "DRUM");
@@ -568,17 +569,25 @@ void setup() {
         try { Thread.sleep(200); } catch(Exception e) {}
         int timeout = 0;
         while(isCountingIn && timeout < 500) { try { Thread.sleep(10); timeout++; } catch(Exception e) {} }
-          for (int count = 0; count < 1; count++) {
-            parseAndPlayNote("Lead", "G5Q", floatVal(50));
-            parseAndPlayNote("Lead", "E5Q", floatVal(50));
-            parseAndPlayNote("Lead", "E5Q", floatVal(50));
-            parseAndPlayNote("clap", "XQ", floatVal(100));
+          for (int count = 0; count < 2; count++) {
+            new Thread(new Runnable() { public void run() { parseAndPlayNote("Lead", "C3E", floatVal(80)); } }).start();
+            delay((int)((float)(0.5) * 60000.0f / bpm));
+            new Thread(new Runnable() { public void run() { parseAndPlayNote("Lead", "G3E", floatVal(30)); } }).start();
+            delay((int)((float)(0.5) * 60000.0f / bpm));
+            new Thread(new Runnable() { public void run() { parseAndPlayNote("Lead", "E3E", floatVal(30)); } }).start();
+            delay((int)((float)(0.5) * 60000.0f / bpm));
+            new Thread(new Runnable() { public void run() { parseAndPlayNote("Lead", "G3E", floatVal(30)); } }).start();
+            delay((int)((float)(0.5) * 60000.0f / bpm));
           }
-          for (int count2 = 0; count2 < 1; count2++) {
-            parseAndPlayNote("Lead", "F5Q", floatVal(50));
-            parseAndPlayNote("Lead", "D5Q", floatVal(50));
-            parseAndPlayNote("Lead", "D5Q", floatVal(50));
-            parseAndPlayNote("clap", "XQ", floatVal(100));
+          for (int count2 = 0; count2 < 2; count2++) {
+            new Thread(new Runnable() { public void run() { parseAndPlayNote("Lead", "D3E", floatVal(80)); } }).start();
+            delay((int)((float)(0.5) * 60000.0f / bpm));
+            new Thread(new Runnable() { public void run() { parseAndPlayNote("Lead", "G3E", floatVal(30)); } }).start();
+            delay((int)((float)(0.5) * 60000.0f / bpm));
+            new Thread(new Runnable() { public void run() { parseAndPlayNote("Lead", "F3E", floatVal(30)); } }).start();
+            delay((int)((float)(0.5) * 60000.0f / bpm));
+            new Thread(new Runnable() { public void run() { parseAndPlayNote("Lead", "G3E", floatVal(30)); } }).start();
+            delay((int)((float)(0.5) * 60000.0f / bpm));
           }
         
         activeMelodyCount--;
@@ -590,17 +599,25 @@ void setup() {
         try { Thread.sleep(200); } catch(Exception e) {}
         int timeout = 0;
         while(isCountingIn && timeout < 500) { try { Thread.sleep(10); timeout++; } catch(Exception e) {} }
-          for (int count3 = 0; count3 < 2; count3++) {
-            parseAndPlayNote("Lead", "C3E", floatVal(80));
-            parseAndPlayNote("Lead", "G3E", floatVal(30));
-            parseAndPlayNote("Lead", "E3E", floatVal(30));
-            parseAndPlayNote("Lead", "G3E", floatVal(30));
+          for (int count3 = 0; count3 < 1; count3++) {
+            new Thread(new Runnable() { public void run() { parseAndPlayNote("Lead", "G5Q", floatVal(50)); } }).start();
+            delay((int)((float)(1) * 60000.0f / bpm));
+            new Thread(new Runnable() { public void run() { parseAndPlayNote("Lead", "E5Q", floatVal(50)); } }).start();
+            delay((int)((float)(1) * 60000.0f / bpm));
+            new Thread(new Runnable() { public void run() { parseAndPlayNote("Lead", "E5Q", floatVal(50)); } }).start();
+            delay((int)((float)(1) * 60000.0f / bpm));
+            new Thread(new Runnable() { public void run() { parseAndPlayNote("clap", "XQ", floatVal(100)); } }).start();
+            delay((int)((float)(1) * 60000.0f / bpm));
           }
-          for (int count4 = 0; count4 < 2; count4++) {
-            parseAndPlayNote("Lead", "D3E", floatVal(80));
-            parseAndPlayNote("Lead", "G3E", floatVal(30));
-            parseAndPlayNote("Lead", "F3E", floatVal(30));
-            parseAndPlayNote("Lead", "G3E", floatVal(30));
+          for (int count4 = 0; count4 < 1; count4++) {
+            new Thread(new Runnable() { public void run() { parseAndPlayNote("Lead", "F5Q", floatVal(50)); } }).start();
+            delay((int)((float)(1) * 60000.0f / bpm));
+            new Thread(new Runnable() { public void run() { parseAndPlayNote("Lead", "D5Q", floatVal(50)); } }).start();
+            delay((int)((float)(1) * 60000.0f / bpm));
+            new Thread(new Runnable() { public void run() { parseAndPlayNote("Lead", "D5Q", floatVal(50)); } }).start();
+            delay((int)((float)(1) * 60000.0f / bpm));
+            new Thread(new Runnable() { public void run() { parseAndPlayNote("clap", "XQ", floatVal(100)); } }).start();
+            delay((int)((float)(1) * 60000.0f / bpm));
           }
         
         activeMelodyCount--;

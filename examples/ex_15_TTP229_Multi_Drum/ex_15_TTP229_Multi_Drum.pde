@@ -49,12 +49,13 @@ LinkedHashMap<String, String> instrumentMap = new LinkedHashMap<String, String>(
 LinkedHashMap<String, float[]> instrumentADSR = new LinkedHashMap<String, float[]>();
 MidiBus myBus;
 Minim minim;
+Object last_state_id = "0";
 SBSummer mainMixer;
 Sampler currentSample;
 Serial myPort;
 String currentInstrument = "default";
 String lastInstrument = "";
-String my_2peI_5D_25s_7DP_VM0u__8xX_ = "";
+String serial_data_id = "";
 UGen masterEffectEnd;
 boolean isMidiMode = false;
 boolean showADSR = true;
@@ -71,7 +72,8 @@ float defAdsrA = 0.01;
 float defAdsrD = 0.1;
 float defAdsrR = 0.5;
 float defAdsrS = 0.5;
-float fgHue = 230.0;
+float fgHue = 85.0;
+float i_id = 0.0f;
 float masterGain = -5.0;
 float trailAlpha = 100.0;
 float waveScale = 2.5;
@@ -498,15 +500,25 @@ void logToScreen(String msg, int type) {
 
 void serialEvent(Serial p) {
   try {
-    my_2peI_5D_25s_7DP_VM0u__8xX_ = p.readString();
-    if (my_2peI_5D_25s_7DP_VM0u__8xX_ != null) {
-      my_2peI_5D_25s_7DP_VM0u__8xX_ = my_2peI_5D_25s_7DP_VM0u__8xX_.toString().trim();
-      if (my_2peI_5D_25s_7DP_VM0u__8xX_.toString().length() > 0) {
-        println("[Serial] Received: " + my_2peI_5D_25s_7DP_VM0u__8xX_);
-        logToScreen("Serial In: " + my_2peI_5D_25s_7DP_VM0u__8xX_, 0);
-          if (my_2peI_5D_25s_7DP_VM0u__8xX_.equals("KICK")) {
-    playBuiltinDrum("KICK", floatVal(100));
-    new Thread(new Runnable() { public void run() { parseAndPlayNote("Ride", "X", floatVal(70)); } }).start();
+    serial_data_id = p.readString();
+    if (serial_data_id != null) {
+      serial_data_id = serial_data_id.toString().trim();
+      if (serial_data_id.toString().length() > 0) {
+        println("[Serial] Received: " + serial_data_id);
+        logToScreen("Serial In: " + serial_data_id, 0);
+          if (floatVal(String.valueOf(serial_data_id).length()) == floatVal(16)) {
+    for (i_id = 1; i_id <= 16; i_id++) {
+      if (String.valueOf(serial_data_id).substring((int)(i_id - 1), (int)(i_id - 1) + 1).equals("1") && String.valueOf(last_state_id).substring((int)(i_id - 1), (int)(i_id - 1) + 1).equals("0")) {
+        if (floatVal(i_id) == floatVal(1)) {
+          playBuiltinDrum("KICK", floatVal(120));
+        } else if (floatVal(i_id) == floatVal(6)) {
+          playBuiltinDrum("SNARE", floatVal(100));
+        } else if (floatVal(i_id) == floatVal(4)) {
+          playBuiltinDrum("CH", floatVal(60));
+        }
+      }
+    }
+    last_state_id = serial_data_id;
   }
 
       }
@@ -518,23 +530,23 @@ void serialEvent(Serial p) {
 }
 
 void setup() {
-  size(1600, 600);
+  size(1400, 600);
     pixelDensity(displayDensity());
     
     checkMainMixer();
     
-    stageBgColor = color(0, 0, 0);
-  stageFgColor = color(255, 0, 150);
+    stageBgColor = color(26, 26, 26);
+  stageFgColor = color(0, 255, 0);
   adsrState = 0;
   fft = new FFT(out.bufferSize(), out.sampleRate());
   cp5 = new ControlP5(this);
   cp5.setFont(createFont("Arial", 16));
   
     // --- Log Textareas --- 
-  cp5.addTextarea("alertsArea").setPosition(1200, 35).setSize(400, 265)
+  cp5.addTextarea("alertsArea").setPosition(1000, 35).setSize(400, 265)
      .setFont(createFont("Arial", 18)).setLineHeight(22).setColor(color(255, 100, 100))
      .setColorBackground(color(40, 0, 0));
-  cp5.addTextarea("consoleArea").setPosition(1200, 335)
+  cp5.addTextarea("consoleArea").setPosition(1000, 335)
      .setSize(400, 265).setFont(createFont("Arial", 18))
      .setLineHeight(22).setColor(color(200)).setColorBackground(color(20));
   
@@ -545,7 +557,7 @@ void setup() {
   cp5.addToggle("showLog").setPosition(230, 430).setSize(40, 20).setCaptionLabel("LOG");
   cp5.addSlider("trailAlpha").setPosition(20, 495).setSize(150, 15).setRange(0, 255).setCaptionLabel("TRAIL");
   cp5.addSlider("waveScale").setPosition(20, 525).setSize(150, 15).setRange(0.1, 10).setCaptionLabel("SCALE");
-  cp5.addSlider("fgHue").setPosition(20, 555).setSize(150, 15).setRange(0, 255).setValue(230.0).setCaptionLabel("FG COLOR");
+  cp5.addSlider("fgHue").setPosition(20, 555).setSize(150, 15).setRange(0, 255).setValue(85.0).setCaptionLabel("FG COLOR");
   cp5.addSlider("adsrA").setPosition(320, 485).setSize(15, 80).setRange(0, 2).setDecimalPrecision(2).setCaptionLabel("A");
   cp5.addSlider("adsrD").setPosition(380, 485).setSize(15, 80).setRange(0, 1).setDecimalPrecision(2).setCaptionLabel("D");
   cp5.addSlider("adsrS").setPosition(440, 485).setSize(15, 80).setRange(0, 1).setDecimalPrecision(2).setCaptionLabel("S");
@@ -563,12 +575,13 @@ void setup() {
   if (startInputs.length > 0) sl.setValue(0);
   sl.close();
   cp5.addButton("scanMidi").setPosition(970, 430).setSize(50, 30).setCaptionLabel("SCAN");
-  cp5.addButton("copyLogs").setPosition(1405, 5).setSize(90, 25).setCaptionLabel("COPY LOG");
-  cp5.addButton("clearLogs").setPosition(1500, 5).setSize(90, 25).setCaptionLabel("CLEAR LOG");
+  cp5.addButton("copyLogs").setPosition(1205, 5).setSize(90, 25).setCaptionLabel("COPY LOG");
+  cp5.addButton("clearLogs").setPosition(1300, 5).setSize(90, 25).setCaptionLabel("CLEAR LOG");
   logToScreen("System Initialized.", 0);
   surface.setTitle("Super Stage");
   surface.setVisible(true);
   if (surface.getNative() instanceof java.awt.Canvas) { ((java.awt.Canvas)surface.getNative()).requestFocus(); }
+    last_state_id = "0000000000000000";
     println("--- Available Serial Ports ---");
     println(Serial.list());
     serialBaud = 115200;
@@ -578,14 +591,7 @@ void setup() {
     } catch (Exception e) {
       println("Serial Init Failed: " + e.getMessage());
     }
-    if (!instrumentMap.containsKey("Ride")) instrumentMap.put("Ride", "TRIANGLE");
-  if (!instrumentADSR.containsKey("Ride")) instrumentADSR.put("Ride", new float[]{defAdsrA, defAdsrD, defAdsrS, defAdsrR});
-    samplerMap.put("Ride", new ddf.minim.ugens.Sampler("drum/ride.wav", 20, minim));
-    samplerGainMap.put("Ride", new Gain(0.f));
-    ((ddf.minim.ugens.Sampler)samplerMap.get("Ride")).patch((Gain)samplerGainMap.get("Ride")).patch(getInstrumentMixer("Ride"));
-    instrumentMap.put("Ride", "DRUM");
-    instrumentADSR.put("Ride", new float[]{defAdsrA, defAdsrD, defAdsrS, defAdsrR});
-    updatePanning("Ride", floatVal((-1)));
+    logToScreen(String.valueOf("TTP229 Multi-Touch Drum Pad Ready!"), 0);
 }
 
 
@@ -601,7 +607,7 @@ void draw() {
   if (isMasterClipping && millis() - clippingTimer > 500) { isMasterClipping = false; }
   // Draw rainbow bar behind fgHue slider
   pushStyle(); for (int i = 0; i < 150; i++) { colorMode(HSB, 150); stroke(i, 150, 150); line(20 + i, 572, 20 + i, 575); } popStyle();
-  colorMode(RGB, 255); float currentVisualW = showLog ? 1200.0 : width;
+  colorMode(RGB, 255); float currentVisualW = showLog ? 1000.0 : width;
   noStroke(); fill(stageBgColor, 255 - trailAlpha); rect(0, 0, currentVisualW, 400);
   int activeViews = int(showWave) + int(showADSR) + int(showSpec);
   if (activeViews > 0) {
@@ -652,7 +658,7 @@ void draw() {
   if (cp5.get(Textarea.class, "alertsArea") != null) {
     if (showLog) {
       cp5.get(Textarea.class, "alertsArea").show(); cp5.get(Textarea.class, "consoleArea").show();
-      pushMatrix(); translate(1200, 0); float spH = height / 2.0;
+      pushMatrix(); translate(1000, 0); float spH = height / 2.0;
       fill(40, 0, 0); rect(0, 0, 400, spH); fill(255, 100, 100); text("ALERTS", 10, 25);
       translate(0, spH); fill(20); rect(0, 0, 400, height-spH); fill(200); text("CONSOLE", 10, 25);
       popMatrix();

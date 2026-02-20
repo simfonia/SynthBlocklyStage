@@ -36,7 +36,8 @@ Blockly.Processing.registerGenerator('sb_trigger_sample', function(block) {
   const name = block.getFieldValue('NAME');
   const velocity = Blockly.Processing.valueToCode(block, 'VELOCITY', Blockly.Processing.ORDER_ATOMIC) || '100';
   const note = block.getFieldValue('NOTE') || 'C4Q';
-  return `parseAndPlayNote("${name}", "${note}", floatVal(${velocity}));\n`;
+  // Wrap in thread to make it non-blocking for event handlers
+  return `new Thread(new Runnable() { public void run() { parseAndPlayNote("${name}", "${note}", floatVal(${velocity})); } }).start();\n`;
 });
 
 Blockly.Processing.registerGenerator('sb_play_melody', function(block) {

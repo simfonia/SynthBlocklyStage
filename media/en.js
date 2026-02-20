@@ -102,10 +102,11 @@
     "SERIAL_AVAILABLE": "Serial Data Available?",
     "SERIAL_READ_STRING": "Read String until Newline",
     "SERIAL_WRITE": "Write Serial %1",
-    "SERIAL_DATA_RECEIVED": "When Serial data received %1 store in %2 %3",
+    "SERIAL_DATA_RECEIVED_TITLE": "When Serial data received",
+    "SERIAL_DATA_RECEIVED_VAR": "Save to variable %1",
     "SERIAL_CHECK_MASK": "Check Mask %1 for Key %2",
     "SB_SERIAL_CHECK_KEY_MASK_MESSAGE": "Is Key %2 Pressed in Data %1?",
-    "SB_SERIAL_CHECK_KEY_MASK_TOOLTIP": "Parses bitmask data (e.g., KEYS:5) to check if a specific key is pressed.",
+    "SB_SERIAL_CHECK_KEY_MASK_TOOLTIP": "Parses serial key data. Supports 'KEY:n' (single key index, e.g., KEY:3) or 'KEYS:n' (bitmask, e.g., KEYS:5 for keys 1 & 3).",
 
     // Tools Blocks
     "TOOLS_COMMENT": "Comment %1",

@@ -98,7 +98,8 @@ float floatVal(Object o) {
 int getMidi(Object o) {
   if (o == null) return -1;
   if (o instanceof Number) return ((Number)o).intValue();
-  return noteToMidi(o.toString());
+  String s = o.toString().trim();
+  try { return (int)Float.parseFloat(s); } catch (Exception e) { return noteToMidi(s); }
 }
 
 class SBSummer extends ddf.minim.ugens.Summer {
@@ -194,7 +195,7 @@ class SBSummer extends ddf.minim.ugens.Summer {
           String noteName = fullName.substring(0, fullName.lastIndexOf('.'));
           int midi = noteToMidi(noteName);
           if (midi >= 0) {
-            Sampler s = new Sampler(folder + "/" + fullName, 4, m); TickRate tr = new TickRate(1.f);
+            Sampler s = new Sampler(folder + "/" + fullName, 10, m); TickRate tr = new TickRate(1.f);
             ADSR a = new ADSR(1.0, 0.001f, 0.001f, 1.0f, 0.5f); tr.setInterpolation(true);
             s.patch(tr).patch(a).patch(localMixer); samples.put(midi, s); rates.put(midi, tr); adsrs.put(midi, a);
           }
@@ -237,7 +238,7 @@ class SBSummer extends ddf.minim.ugens.Summer {
       if (type.equals("KICK")) path += "kick.wav"; else if (type.equals("SNARE")) path += "snare.wav";
       else if (type.equals("CH")) path += "ch.wav"; else if (type.equals("OH")) path += "oh.wav";
       else if (type.equals("CLAP")) path += "clap.wav"; else return;
-      Sampler s = new Sampler(path, 4, minim); Gain g = new Gain(0.f);
+      Sampler s = new Sampler(path, 20, minim); Gain g = new Gain(0.f);
       s.patch(g).patch(getInstrumentMixer(instName));
       samplerMap.put(instName, s); samplerGainMap.put(instName, g); instrumentMap.put(instName, "DRUM");
     }
@@ -534,8 +535,8 @@ void serialEvent(Serial p) {
         logToScreen("Serial In: " + AMsTv___Yy_y8A_5DoD7Z_, 0);
           if (AMsTv___Yy_y8A_5DoD7Z_.equals("KICK")) {
     playBuiltinDrum("KICK", floatVal(100));
-  } else if (floatVal(AMsTv___Yy_y8A_5DoD7Z_.indexOf("LDR:") + 1) >= floatVal(1)) {
-    C_1_5Eb8R_5BwzF_Nl_7DYjV_L = new ArrayList<Object>(Arrays.asList(AMsTv___Yy_y8A_5DoD7Z_.split(":"))).get(1);
+  } else if (floatVal(String.valueOf(AMsTv___Yy_y8A_5DoD7Z_).indexOf(String.valueOf("LDR:")) + 1) >= floatVal(1)) {
+    C_1_5Eb8R_5BwzF_Nl_7DYjV_L = new ArrayList<Object>(Arrays.asList(String.valueOf(AMsTv___Yy_y8A_5DoD7Z_).split(":"))).get((int)(1));
     my_8y6_D_qG_zLwOa_V7_60_7C_ = map(floatVal(constrain(floatVal(C_1_5Eb8R_5BwzF_Nl_7DYjV_L), floatVal(350), floatVal(800))), floatVal(350), floatVal(800), floatVal(5000), floatVal(200));
     setEffectParam("DefaultSynth", "filter", "frequency", floatVal(my_8y6_D_qG_zLwOa_V7_60_7C_));
     logToScreen(String.valueOf((String.valueOf(C_1_5Eb8R_5BwzF_Nl_7DYjV_L) + String.valueOf(" -> ") + String.valueOf(my_8y6_D_qG_zLwOa_V7_60_7C_))), 0);
@@ -603,7 +604,7 @@ void setup() {
   if (surface.getNative() instanceof java.awt.Canvas) { ((java.awt.Canvas)surface.getNative()).requestFocus(); }
     println("--- Available Serial Ports ---");
     println(Serial.list());
-    serialBaud = 9600;
+    serialBaud = 115200;
     try {
       myPort = new Serial(this, Serial.list()[0], serialBaud);
       myPort.bufferUntil('\n');

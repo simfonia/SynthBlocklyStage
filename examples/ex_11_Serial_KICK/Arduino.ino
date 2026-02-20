@@ -41,18 +41,18 @@
 uint16_t currentKeys = 0;
 uint16_t lastKeys = 0;
 
-// 2. 按鈕相關 (防抖動)
-int buttonState = HIGH;         // 目前穩定狀態
-int lastButtonState = HIGH;     // 上次讀取狀態
+// 2. 按鈕相關 (音樂優化版防抖)
+int buttonState = HIGH;         
+int lastReading = HIGH;     
 unsigned long lastDebounceTime = 0;
-unsigned long debounceDelay = 50;
+unsigned long debounceDelay = 5; // 音樂觸發只需 5ms 防抖
 
 // 3. LDR 相關
 unsigned long lastLdrTime = 0;
-unsigned long ldrInterval = 50; // 每 50ms 發送一次 (避免塞爆序列埠)
+unsigned long ldrInterval = 20; // 提高 LDR 取樣率至 50Hz (20ms)
 
 void setup() {
-  Serial.begin(9600);
+  Serial.begin(115200); // 確保高波特率
   
   // TTP229 初始化
   pinMode(TTP229_SCL_PIN, OUTPUT);
@@ -67,49 +67,48 @@ void loop() {
   unsigned long now = millis();
 
   // ==========================================
-  // 任務 1: 讀取 TTP229 (16鍵)
+  // 任務 1: 讀取 TTP229 (保持相容性)
   // ==========================================
-  currentKeys = 0;
+  uint16_t currentKeys = 0;
   for (int i = 0; i < 16; i++) {
     digitalWrite(TTP229_SCL_PIN, LOW);
-    delayMicroseconds(50); // 等待時脈穩定
+    delayMicroseconds(50); 
     if (digitalRead(TTP229_SDO_PIN) == LOW) {
-      currentKeys |= (1 << i); // 紀錄按下的位元
+      currentKeys |= (1 << i); 
     }
     digitalWrite(TTP229_SCL_PIN, HIGH);
     delayMicroseconds(50);
   }
 
-  // 檢查按鍵變化 (Rising Edge: 剛按下)
   for (int i = 0; i < 16; i++) {
     bool isPressed = bitRead(currentKeys, i);
     bool wasPressed = bitRead(lastKeys, i);
     if (isPressed && !wasPressed) {
       Serial.print("KEY:");
-      Serial.println(i + 1); // 輸出 KEY:1 ~ KEY:16
+      Serial.println(i + 1); 
     }
   }
   lastKeys = currentKeys;
 
   // ==========================================
-  // 任務 2: 處理按鈕 (KICK)
+  // 任務 2: 處理按鈕 (KICK) - 立即觸發邏輯
   // ==========================================
   int reading = digitalRead(BUTTON_PIN);
 
-  if (reading != lastButtonState) {
+  if (reading != lastReading) {
     lastDebounceTime = now;
   }
 
   if ((now - lastDebounceTime) > debounceDelay) {
     if (reading != buttonState) {
       buttonState = reading;
-      // 偵測按下 (FALLING EDGE, 因為是 INPUT_PULLUP)
+      // 偵測按下 (立即觸發)
       if (buttonState == LOW) {
         Serial.println("KICK");
       }
     }
   }
-  lastButtonState = reading;
+  lastReading = reading;
 
   // ==========================================
   // 任務 3: 讀取光敏電阻 (LDR)

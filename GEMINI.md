@@ -3,7 +3,7 @@
 ## 專案概述
 **SynthBlockly Stage** 是一個結合了 **Blockly** 視覺化程式設計與 **Processing (Java)** 強大效能的 VS Code 擴充功能。它專為即時音樂表演與互動視覺藝術設計，提供使用者「積木即程式碼」的創作體驗。
 
-### 核心技術棧
+### 核心技術
 - **VS Code Extension API**: 擴充功能開發框架。
 - **Blockly**: 視覺化積木程式庫。
 - **Processing (Java)**: 影音渲染引擎。
@@ -12,25 +12,8 @@
   - **TheMidiBus**: MIDI 通訊支援。
 - **Node.js**: 擴充功能後端邏輯。
 
----
-
-## 快速開始
-
-### 環境需求
-1.  **Processing v3.5.4**: 必須安裝於系統中（[下載連結](https://processing.org/download/)）。
-2.  **Processing 函式庫**: 安裝 `Minim`, `ControlP5`, `TheMidiBus`。
-3.  **VS Code**: 開發環境。
-
-### 啟動與執行
-1.  在 VS Code 中開啟本專案目錄。
-2.  按 `F5` 啟動擴充功能開發主機。
-3.  在開發主機中，執行指令 `SynthBlockly Stage: Open Workspace` 開啟工作區。
-4.  初次執行需設定 `processing-java.exe` 的路徑（點擊工具列齒輪）。
-5.  點擊工具列的「Run」圖示（綠色按鈕）編譯並執行 Processing 舞台。
-
----
-
 ## 專案結構與重要檔案
+- **`FILE_STRUCTURE.md`**: 記錄專案結構
 
 ### 擴充功能核心 (`src/`)
 - **`extension.ts`**: 進入點。負責 Webview 管理、檔案系統操作（讀/寫/另存）、啟動 Processing 程序、以及處理資源掛載 (Junctions)。
@@ -69,6 +52,10 @@
 - **髒狀態 (Dirty State)**: 監控 Webview 變動，於工具列顯示狀態並在關閉前提示。
 - **自動存檔**: 2 秒防抖 (Debounce) 機制。
 
+### 文件維護規範 (Critical)
+- **系統規格書同步**: 任何涉及架構異動、新增積木模組、音訊訊號鏈變更或 Java 產生器邏輯更新時，**必須同步更新 `docs/system_spec.html`**。這份文件是專案的「真理來源」，須確保其技術描述與代碼現況 100% 吻合。
+- **日誌記錄**: 異動需記錄於 `log/work/` 與 `log/todo.md`。
+
 ### 積木說明文件系統 (Help System)
 - **檔案路徑**: 位於 `media/docs/` 下。
 - **命名規範**: 格式為 `[id]_[lang].html`。
@@ -81,6 +68,8 @@
     - `tooltip` 末端應附加 `%{BKY_HELP_HINT}` 以提示使用者可按右鍵查看說明。
 - **安全機制**: Webview 內透過攔截 `window.open` 由 Extension Host 使用預設瀏覽器開啟 HTML，避開沙盒限制。
 
+### 筆記
+- 隨時參閱及修正系統規格檔(`docs/system_spec.html`)及專案結構檔(`FILE_STRUCTURE.md`)，開發時務必遵守。
 ---
 
 ## 待辦事項與未來方向

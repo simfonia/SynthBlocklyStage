@@ -94,20 +94,26 @@ Blockly.Processing.forBlock['sb_serial_check_key_mask'] = function(block) {
   // We should use a helper method instead.
   
   const helperName = Blockly.Processing.provideFunction_('checkKeyMask', `
-boolean checkKeyMask(String data, int key) {
-  if (data == null) return false;
+boolean checkKeyMask(Object dataObj, int key) {
+  if (dataObj == null) return false;
+  String data = String.valueOf(dataObj).trim();
   int splitIdx = data.indexOf(":");
   if (splitIdx == -1) return false;
   
   String prefix = data.substring(0, splitIdx).toUpperCase();
-  if (!prefix.equals("KEYS") && !prefix.equals("KEY")) return false;
+  String valStr = data.substring(splitIdx + 1).trim();
   
   try {
-    int val = Integer.parseInt(data.substring(splitIdx + 1).trim());
-    return (val & (1 << (key - 1))) != 0;
-  } catch(Exception e) {
-    return false;
-  }
+    int val = Integer.parseInt(valStr);
+    if (prefix.equals("KEYS")) {
+      // Bitmask mode: check if Nth bit is set
+      return (val & (1 << (key - 1))) != 0;
+    } else if (prefix.equals("KEY")) {
+      // Single key mode: check if index matches
+      return val == key;
+    }
+  } catch(Exception e) {}
+  return false;
 }
 `);
   return [helperName + "(" + dataVar + ", " + keyNum + ")", Blockly.Processing.ORDER_FUNCTION_CALL];

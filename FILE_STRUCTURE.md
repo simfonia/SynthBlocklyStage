@@ -37,7 +37,8 @@
 
 ## 支援與靜態資源
 
-*   **`examples/`**: 內建教學範例庫，每個範例包含 `.xml` 專案檔及其產出的 `.pde`。
+*   **`docs/`**: 專案官方文件。包含 `system_spec.html` (系統規格說明書)。
+*   **`examples/`**: 內建教學範例庫 (ex_00 ~ ex_15)。每個範例包含 `.xml` 專案檔及 `Arduino.ino` 韌體代碼。
 *   **`media/docs/`**: 積木說明文件 (HTML)，供使用者右鍵點擊「說明」時查看。
 *   **`media/samples/`**: 內建音訊取樣庫（鋼琴、小提琴、電子鼓等）。
 *   **`media/blockly/`**: Blockly 核心函式庫與必要插件 (FieldColour, MultilineInput)。
