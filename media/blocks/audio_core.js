@@ -11,14 +11,14 @@ Blockly.defineBlocksWithJsonArray([
   // Mutator Helper Blocks
   {
     "type": "sb_harmonic_partial_container",
-    "message0": "諧波清單",
+    "message0": "%{BKY_SB_HARMONIC_PARTIAL_CONTAINER}",
     "nextStatement": null,
     "enableContextMenu": false,
     "colour": "#E74C3C"
   },
   {
     "type": "sb_harmonic_partial_item",
-    "message0": "泛音層級",
+    "message0": "%{BKY_SB_HARMONIC_PARTIAL_ITEM}",
     "previousStatement": null,
     "nextStatement": null,
     "enableContextMenu": false,
@@ -26,14 +26,14 @@ Blockly.defineBlocksWithJsonArray([
   },
   {
     "type": "sb_additive_synth_container",
-    "message0": "振盪器清單",
+    "message0": "%{BKY_SB_ADDITIVE_SYNTH_CONTAINER}",
     "nextStatement": null,
     "enableContextMenu": false,
     "colour": "#E74C3C"
   },
   {
     "type": "sb_additive_synth_item",
-    "message0": "振盪器組件",
+    "message0": "%{BKY_SB_ADDITIVE_SYNTH_ITEM}",
     "previousStatement": null,
     "nextStatement": null,
     "enableContextMenu": false,
@@ -43,11 +43,11 @@ Blockly.defineBlocksWithJsonArray([
   // Standard Audio Initialization
   {
     "type": "sb_minim_init",
-    "message0": "啟動 Minim 音訊引擎",
+    "message0": "%{BKY_SB_MINIM_INIT}",
     "previousStatement": null,
     "nextStatement": null,
     "colour": "%{BKY_SOUND_SOURCES_HUE}",
-    "tooltip": "初始化 Minim 音訊引擎（應放於 setup 最上方）。%{BKY_HELP_HINT}",
+    "tooltip": "%{BKY_SB_MINIM_INIT_TOOLTIP}%{BKY_HELP_HINT}",
     "helpUrl": "sound_sources"
   },
   

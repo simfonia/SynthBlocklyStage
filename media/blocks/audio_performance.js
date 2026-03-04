@@ -10,14 +10,14 @@
 Blockly.defineBlocksWithJsonArray([
   {
     "type": "sb_rhythm_v2_container",
-    "message0": "音軌清單",
+    "message0": "%{BKY_SB_RHYTHM_V2_CONTAINER}",
     "nextStatement": null,
     "enableContextMenu": false,
     "colour": "#E67E22"
   },
   {
     "type": "sb_rhythm_v2_item",
-    "message0": "音軌",
+    "message0": "%{BKY_SB_RHYTHM_V2_ITEM}",
     "previousStatement": null,
     "nextStatement": null,
     "enableContextMenu": false,
@@ -59,7 +59,7 @@ Blockly.defineBlocksWithJsonArray([
     "nextStatement": null,
     "inputsInline": true,
     "colour": "%{BKY_PERFORMANCE_HUE}",
-    "tooltip": "在正式演奏前播放預備拍（節拍器聲音）。"
+    "tooltip": "%{BKY_AUDIO_COUNT_IN_TOOLTIP}"
   },
   {
     "type": "sb_transport_set_bpm",
@@ -70,7 +70,7 @@ Blockly.defineBlocksWithJsonArray([
     "previousStatement": null,
     "nextStatement": null,
     "colour": "%{BKY_PERFORMANCE_HUE}",
-    "tooltip": "設定全域演奏速度（每分鐘拍數）。"
+    "tooltip": "%{BKY_AUDIO_SET_BPM_TOOLTIP}"
   },
   {
     "type": "sb_tone_loop",
@@ -103,7 +103,7 @@ Blockly.defineBlocksWithJsonArray([
     "previousStatement": null,
     "nextStatement": null,
     "colour": "%{BKY_PERFORMANCE_HUE}",
-    "tooltip": "定義一個自訂和弦名稱，可在旋律中使用。%{BKY_HELP_HINT}",
+    "tooltip": "%{BKY_AUDIO_DEFINE_CHORD_TOOLTIP}",
     "helpUrl": "melody"
   },
   {

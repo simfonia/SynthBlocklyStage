@@ -20,7 +20,7 @@ Blockly.defineBlocksWithJsonArray([
     "nextStatement": null,
     "colour": "#5B67E7",
     "tooltip": "%{BKY_MIDI_INIT_TOOLTIP}",
-    "helpUrl": "launchpad"
+    "helpUrl": window.docsBaseUri + "launchpad" + (Blockly.Msg['HELP_LANG_SUFFIX'] || "_zh-hant.html")
   },
   {
     "type": "midi_on_note",
@@ -36,7 +36,7 @@ Blockly.defineBlocksWithJsonArray([
     ],
     "colour": "#5B67E7",
     "tooltip": "%{BKY_MIDI_ON_NOTE_TOOLTIP}",
-    "helpUrl": "launchpad",
+    "helpUrl": window.docsBaseUri + "launchpad" + (Blockly.Msg['HELP_LANG_SUFFIX'] || "_zh-hant.html"),
     "hat": true
   },
   {
@@ -53,7 +53,7 @@ Blockly.defineBlocksWithJsonArray([
     ],
     "colour": "#5B67E7",
     "tooltip": "%{BKY_MIDI_OFF_NOTE_TOOLTIP}",
-    "helpUrl": "launchpad",
+    "helpUrl": window.docsBaseUri + "launchpad" + (Blockly.Msg['HELP_LANG_SUFFIX'] || "_zh-hant.html"),
     "hat": true
   },
   {
@@ -70,12 +70,12 @@ Blockly.defineBlocksWithJsonArray([
     ],
     "colour": "#5B67E7",
     "tooltip": "%{BKY_MIDI_ON_CONTROLLER_CHANGE_TOOLTIP}",
-    "helpUrl": "launchpad",
+    "helpUrl": window.docsBaseUri + "launchpad" + (Blockly.Msg['HELP_LANG_SUFFIX'] || "_zh-hant.html"),
     "hat": true
   },
   {
     "type": "midi_send_note",
-    "message0": "向 %1 %2 傳送 MIDI 音符 %3 頻道 %4 鍵號 %5 力度 %6",
+    "message0": "%{BKY_MIDI_SEND_NOTE}",
     "args0": [
       { "type": "field_input", "name": "BUS_NAME", "text": "MIDI_1" },
       { "type": "input_dummy" },
@@ -92,11 +92,11 @@ Blockly.defineBlocksWithJsonArray([
     "nextStatement": null,
     "colour": "#5B67E7",
     "tooltip": "%{BKY_MIDI_SEND_NOTE_TOOLTIP}",
-    "helpUrl": "launchpad"
+    "helpUrl": window.docsBaseUri + "launchpad" + (Blockly.Msg['HELP_LANG_SUFFIX'] || "_zh-hant.html")
   },
   {
     "type": "midi_send_cc",
-    "message0": "向 %1 傳送 MIDI CC 頻道 %2 號碼 %3 數值 %4",
+    "message0": "%{BKY_MIDI_SEND_CC}",
     "args0": [
       { "type": "field_input", "name": "BUS_NAME", "text": "MIDI_1" },
       { "type": "input_value", "name": "CHANNEL", "check": "Number" },
@@ -108,7 +108,7 @@ Blockly.defineBlocksWithJsonArray([
     "nextStatement": null,
     "colour": "#5B67E7",
     "tooltip": "%{BKY_MIDI_SEND_CC_TOOLTIP}",
-    "helpUrl": "launchpad"
+    "helpUrl": window.docsBaseUri + "launchpad" + (Blockly.Msg['HELP_LANG_SUFFIX'] || "_zh-hant.html")
   },
   {
     "type": "midi_lp_xy_to_note",

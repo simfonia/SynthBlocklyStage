@@ -21,6 +21,6 @@ Blockly.defineBlocksWithJsonArray([
     "previousStatement": null,
     "nextStatement": null,
     "colour": "#6a8871",
-    "tooltip": "在程式中加入多行文字註解，不會產生任何程式碼。"
+    "tooltip": "%{BKY_TOOLS_COMMENT_TOOLTIP}"
   }
 ]);

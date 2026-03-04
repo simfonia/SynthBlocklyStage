@@ -10,7 +10,7 @@
 Blockly.defineBlocksWithJsonArray([
   {
     "type": "visual_size",
-    "message0": "設定畫布大小 寬 %1 高 %2",
+    "message0": "%{BKY_VISUAL_SIZE}",
     "args0": [
       { "type": "field_number", "name": "WIDTH", "value": 800, "min": 100 },
       { "type": "field_number", "name": "HEIGHT", "value": 600, "min": 100 }
@@ -18,11 +18,11 @@ Blockly.defineBlocksWithJsonArray([
     "previousStatement": null,
     "nextStatement": null,
     "colour": "#3498DB",
-    "tooltip": "設定 Processing 執行視窗的大小。應放在 setup 中。"
+    "tooltip": "%{BKY_VISUAL_SIZE_TOOLTIP}"
   },
   {
     "type": "visual_background",
-    "message0": "設定背景顏色 %1",
+    "message0": "%{BKY_VISUAL_BACKGROUND}",
     "args0": [
       { "type": "input_value", "name": "COLOR" }
     ],
@@ -30,7 +30,7 @@ Blockly.defineBlocksWithJsonArray([
     "previousStatement": null,
     "nextStatement": null,
     "colour": "#3498DB",
-    "tooltip": "清除畫面並填充背景顏色。"
+    "tooltip": "%{BKY_VISUAL_BACKGROUND_TOOLTIP}"
   },
   {
     "type": "visual_color_picker",
@@ -40,7 +40,7 @@ Blockly.defineBlocksWithJsonArray([
     ],
     "output": null,
     "colour": "#3498DB",
-    "tooltip": "選取一個顏色數值。"
+    "tooltip": "%{BKY_VISUAL_COLOR_PICKER_TOOLTIP}"
   },
   {
     "type": "visual_constant",
@@ -50,16 +50,16 @@ Blockly.defineBlocksWithJsonArray([
         "type": "field_dropdown",
         "name": "CONSTANT",
         "options": [
-          ["寬度 (width)", "width"],
-          ["高度 (height)", "height"],
-          ["滑鼠 X (mouseX)", "mouseX"],
-          ["滑鼠 Y (mouseY)", "mouseY"]
+          ["%{BKY_VISUAL_CONSTANT_WIDTH}", "width"],
+          ["%{BKY_VISUAL_CONSTANT_HEIGHT}", "height"],
+          ["%{BKY_VISUAL_CONSTANT_MOUSE_X}", "mouseX"],
+          ["%{BKY_VISUAL_CONSTANT_MOUSE_Y}", "mouseY"]
         ]
       }
     ],
     "output": "Number",
     "colour": "#3498DB",
-    "tooltip": "取得畫布的大小或滑鼠位置。"
+    "tooltip": "%{BKY_VISUAL_CONSTANT_TOOLTIP}"
   },
   {
     "type": "visual_pixel_density",
@@ -97,7 +97,7 @@ Blockly.defineBlocksWithJsonArray([
     "previousStatement": null,
     "nextStatement": null,
     "colour": "#2C3E50",
-    "tooltip": "在 draw 迴圈或事件中動態改變舞台顏色。"
+    "tooltip": "%{BKY_VISUAL_STAGE_SET_COLOR_TOOLTIP}"
   }
 ]);
 
@@ -120,7 +120,7 @@ Blockly.Blocks['visual_stage_setup'] = {
       "nextStatement": null,
       "colour": "#2C3E50",
       "tooltip": "%{BKY_VISUAL_STAGE_SETUP_TOOLTIP}%{BKY_HELP_HINT}",
-      "helpUrl": window.docsBaseUri + "visual_stage_zh-hant.html"
+      "helpUrl": window.docsBaseUri + "visual_stage" + (Blockly.Msg['HELP_LANG_SUFFIX'] || "_zh-hant.html")
     });
     this.setInputsInline(false);
   }

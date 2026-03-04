@@ -17,7 +17,7 @@ Blockly.defineBlocksWithJsonArray([
     "previousStatement": null,
     "nextStatement": null,
     "colour": "#3498DB",
-    "tooltip": "旋轉座標系統（角度單位：度）。"
+    "tooltip": "%{BKY_VISUAL_ROTATE_TOOLTIP}"
   },
   {
     "type": "visual_translate",
@@ -29,7 +29,7 @@ Blockly.defineBlocksWithJsonArray([
     "previousStatement": null,
     "nextStatement": null,
     "colour": "#3498DB",
-    "tooltip": "平移原點位置。"
+    "tooltip": "%{BKY_VISUAL_TRANSLATE_TOOLTIP}"
   },
   {
     "type": "visual_push_pop",
@@ -40,7 +40,7 @@ Blockly.defineBlocksWithJsonArray([
     "previousStatement": null,
     "nextStatement": null,
     "colour": "#3498DB",
-    "tooltip": "使用 pushMatrix/popMatrix 與 pushStyle/popStyle 隔離內部的變換與顏色設定。"
+    "tooltip": "%{BKY_VISUAL_PUSH_POP_TOOLTIP}"
   },
   {
     "type": "visual_scale",
@@ -51,6 +51,6 @@ Blockly.defineBlocksWithJsonArray([
     "previousStatement": null,
     "nextStatement": null,
     "colour": "#3498DB",
-    "tooltip": "縮放後續繪圖的大小。"
+    "tooltip": "%{BKY_VISUAL_SCALE_TOOLTIP}"
   }
 ]);
