@@ -30,6 +30,7 @@
     "CAT_VISUAL": "Visuals",
     "CAT_EFFECTS": "Effects",
     "CAT_UI": "UI Control",
+    "CAT_SEARCH": "Search Blocks",
 
     // Effect Blocks
     "SB_SETUP_EFFECT_MESSAGE": "Set Effect Type %1",

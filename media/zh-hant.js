@@ -30,6 +30,7 @@
     "CAT_EFFECTS": "音訊效果器",
     "CAT_UI": "介面控制 (UI)",
     "CAT_VISUAL": "視覺繪圖",
+    "CAT_SEARCH": "搜尋積木",
 
     // Effect Blocks
     "SB_SETUP_EFFECT_MESSAGE": "設定效果器 類型 %1",

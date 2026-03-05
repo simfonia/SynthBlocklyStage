@@ -16,15 +16,19 @@ async function init() {
     const toolboxXml = document.getElementById('toolbox-xml').textContent;
     const workspace = await BlocklyMgr.initBlockly(blocklyDiv, toolboxXml);
 
-    // 3. Initialize UI & Listeners
+    // 3. Initialize Search Engine (Ported from Cocoya)
+    window.SB_Utils.BlockSearcher.buildIndex(workspace);
+    window.SB_Utils.BlockSearcher.inject(workspace);
+
+    // 4. Initialize UI & Listeners
     Events.initUIHandlers();
     Events.attachWorkspaceListeners(workspace);
 
-    // 4. Signal Extension Host
+    // 5. Signal Extension Host
     VSCode.postMessage({ command: 'webviewReady' });
     Events.updateStatusUI();
 
-    // 5. Handle Messages from Extension Host
+    // 6. Handle Messages from Extension Host
     window.addEventListener('message', event => {
         const message = event.data;
         switch (message.command) {

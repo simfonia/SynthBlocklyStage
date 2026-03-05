@@ -30,6 +30,11 @@ export async function initBlockly(blocklyDiv, toolboxXml) {
         try { Blockly.fieldRegistry.register('field_colour', FieldColour); } catch (e) {}
     }
 
+    // Scroll Options Configuration
+    const ScrollOptionsPlugin = window.ScrollOptions || (window.ScrollOptionsPlugin && window.ScrollOptionsPlugin.ScrollOptions);
+    const scrollDragger = window.ScrollBlockDragger || (ScrollOptionsPlugin ? ScrollOptionsPlugin.ScrollBlockDragger : undefined);
+    const scrollMetrics = window.ScrollMetricsManager || (ScrollOptionsPlugin ? ScrollOptionsPlugin.ScrollMetricsManager : undefined);
+
     // Load Modules
     await loadModules(window.coreExtensionManifestUri);
 
@@ -73,11 +78,118 @@ export async function initBlockly(blocklyDiv, toolboxXml) {
         zoom: { controls: true, wheel: true, startScale: 1.0 },
         move: { scrollbars: true, drag: true, wheel: true },
         disable: true,
-        sounds: false
+        sounds: false,
+        plugins: { 
+            'blockDragger': scrollDragger, 
+            'metricsManager': scrollMetrics 
+        }
     });
+
+    // Configure Scroll Speed (Slower than default)
+    if (ScrollOptionsPlugin) {
+        try {
+            const scrollOptions = new ScrollOptionsPlugin(workspace);
+            scrollOptions.init({
+                enableWheelScroll: true,
+                enableEdgeScroll: true,
+                edgeScrollOptions: {
+                    slowBlockSpeed: 0.15,    // Default: 0.28
+                    fastBlockSpeed: 0.8,     // Default: 1.4
+                    slowMouseSpeed: 0.25,    // Default: 0.5
+                    fastMouseSpeed: 1.0,     // Default: 1.6
+                    fastBlockStartDistance: 80,
+                    fastMouseStartDistance: 60
+                }
+            });
+        } catch (e) {
+            console.error('ScrollOptions init failed:', e);
+        }
+    }
+
+    // Initialize Minimap
+    initMinimap(workspace);
 
     return workspace;
 }
+
+function initMinimap(primaryWorkspace) {
+    try {
+        const MinimapClass = (window.workspaceMinimap && window.workspaceMinimap.PositionedMinimap) || 
+                           (window.PositionedMinimap) || 
+                           (Blockly.workspaceMinimap && Blockly.workspaceMinimap.PositionedMinimap);
+        if (!MinimapClass) return;
+
+        // Apply NaN protection for metrics
+        const originalUpdate = MinimapClass.prototype.update;
+        MinimapClass.prototype.update = function() {
+            try {
+                if (!this.primaryWorkspace) return;
+                const pm = this.primaryWorkspace.getMetricsManager().getContentMetrics(true);
+                if (!pm || !pm.width || isNaN(pm.width)) return;
+                originalUpdate.apply(this, arguments);
+            } catch (e) { }
+        };
+
+        const minimap = new MinimapClass(primaryWorkspace);
+        minimap.init();
+        
+        // Mirroring fix for empty workspace/shadow blocks
+        const originalMirror = minimap.mirror.bind(minimap);
+        minimap.mirror = (event) => {
+            if (minimap._isPaused) return;
+            try {
+                if (event.type === Blockly.Events.BLOCK_CREATE && !primaryWorkspace.getBlockById(event.blockId)) return;
+                originalMirror(event);
+            } catch (e) { }
+        };
+
+        // --- Define Sync Logic ---
+        window.SB_MinimapSync = () => {
+            if (minimap.minimapWorkspace) {
+                try {
+                    const dom = Blockly.Xml.workspaceToDom(primaryWorkspace);
+                    minimap.minimapWorkspace.clear();
+                    Blockly.Xml.domToWorkspace(dom, minimap.minimapWorkspace);
+                    setTimeout(() => {
+                        if (minimap.minimapWorkspace) {
+                            minimap.minimapWorkspace.zoomToFit();
+                            Blockly.svgResize(minimap.minimapWorkspace);
+                        }
+                    }, 50);
+                } catch (e) { }
+            }
+        };
+
+        // Perform initial sync
+        window.SB_MinimapSync();
+
+        // Create Toggle Button
+        const blocklyDiv = primaryWorkspace.getInjectionDiv();
+        const toggleBtn = document.createElement('div');
+        toggleBtn.id = 'minimap-toggle';
+        toggleBtn.innerHTML = '&#10005;'; // X
+        toggleBtn.title = 'Toggle Minimap';
+        blocklyDiv.parentNode.appendChild(toggleBtn);
+
+        toggleBtn.onclick = () => {
+            const mWrapper = document.querySelector('.blockly-minimap');
+            if (mWrapper) {
+                const isCollapsed = mWrapper.classList.toggle('collapsed');
+                toggleBtn.classList.toggle('collapsed', isCollapsed);
+                toggleBtn.innerHTML = isCollapsed ? '&#128506;' : '&#10005;'; // Map or X
+                minimap._isPaused = isCollapsed;
+                if (!isCollapsed) {
+                    window.SB_MinimapSync();
+                }
+            }
+        };
+    } catch (e) {
+        console.warn('Minimap initialization failed:', e);
+    }
+}
+
+// --- Minimap Global Sync Helper ---
+window.SB_MinimapSync = () => {}; 
 
 export function loadXml(xmlText) {
     if (!xmlText) return;
@@ -85,6 +197,13 @@ export function loadXml(xmlText) {
     const xml = Blockly.utils.xml.textToDom(xmlText);
     Blockly.Xml.clearWorkspaceAndLoadFromXml(xml, workspace);
     Blockly.Events.enable();
+
+    // Force Minimap Sync after loading XML (for Startup, Open, New, Examples)
+    setTimeout(() => {
+        if (typeof window.SB_MinimapSync === 'function') {
+            window.SB_MinimapSync();
+        }
+    }, 100);
 }
 
 export function getXmlText() {

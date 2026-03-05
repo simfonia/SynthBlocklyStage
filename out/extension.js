@@ -511,6 +511,9 @@ class SynthBlocklyPanel {
     <script nonce="${nonce}" src="${blocklyUri}/blockly.js"></script>
     <script nonce="${nonce}" src="${blocklyUri}/field-multilineinput.js"></script>
     <script nonce="${nonce}" src="${blocklyUri}/field-colour.js"></script>
+    <script nonce="${nonce}" src="${blocklyUri}/scroll-options.js"></script>
+    <script nonce="${nonce}" src="${blocklyUri}/workspace-minimap.js"></script>
+    <script nonce="${nonce}" src="${blocklyUri}/blockly-modal.js"></script>
     <script nonce="${nonce}" src="${langUri}"></script>
     <script nonce="${nonce}" src="${mediaUri}/utils.js"></script>
     <script nonce="${nonce}" src="${mediaUri}/generators/java_libs.js"></script>

@@ -76,3 +76,89 @@ body {
     flex-grow: 1;
     width: 100%;
 }
+
+/* Ensure Flyout shows above Toolbox when searching */
+.blocklyFlyout {
+    z-index: 150 !important;
+}
+
+.blocklyToolboxDiv {
+    z-index: 140 !important;
+}
+
+/* Block Search Box */
+#block-search-container {
+    padding: 8px !important;
+    background: #ffffff !important;
+    border-bottom: 1px solid #ddd !important;
+    display: flex !important;
+    justify-content: center !important;
+    box-sizing: border-box !important;
+    position: relative !important;
+    z-index: 145 !important;
+    width: 100% !important;
+}
+
+#block-search {
+    width: 100% !important;
+    height: 32px !important;
+    padding: 0 10px !important;
+    border: 1px solid #ddd !important;
+    border-radius: 4px !important;
+    font-size: 13px !important;
+    outline: none !important;
+    transition: border-color 0.2s, box-shadow 0.2s !important;
+    background: #fafafa !important;
+}
+
+#block-search:focus {
+    border-color: #E67E22 !important; /* Performance Orange */
+    box-shadow: 0 0 4px rgba(230, 126, 34, 0.2) !important;
+    background: #ffffff !important;
+}
+
+/* Minimap Toggle Button */
+#minimap-toggle {
+    position: absolute;
+    top: 48px; /* Just below 40px toolbar + 8px margin */
+    right: 12px;
+    width: 28px;
+    height: 28px;
+    background: #E67E22; /* Performance Orange */
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    z-index: 101;
+    font-size: 14px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    transition: transform 0.3s, background-color 0.2s;
+    user-select: none;
+}
+
+#minimap-toggle:hover {
+    background-color: #D35400;
+}
+
+#minimap-toggle.collapsed {
+    background-color: #7F8C8D;
+}
+
+/* Ensure Minimap is below Tooltips but above Workspace */
+.blockly-minimap {
+    z-index: 100 !important;
+    transition: opacity 0.3s, transform 0.3s;
+    top: 48px !important; /* Force position below toolbar */
+    right: 50px !important; /* Force position to the left of the toggle button */
+    left: auto !important; /* Disable plugin's dynamic left calculation */
+    border: 1px solid #ddd;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1) !important;
+}
+
+.blockly-minimap.collapsed {
+    transform: scale(0);
+    opacity: 0;
+    pointer-events: none;
+}

@@ -667,3 +667,124 @@ window.SB_Utils.SETUP_EFFECT_MUTATOR = {
         }
     }
 };
+
+/**
+ * --- Block Search Engine ---
+ * Ported and adapted from Cocoya project.
+ */
+window.SB_Utils.BlockSearcher = {
+    _cache: new Map(), // Maps block type to search blob string
+
+    /**
+     * Build search index for all available blocks.
+     */
+    buildIndex: function (workspace) {
+        this._cache.clear();
+        const allTypes = Object.keys(Blockly.Blocks);
+
+        Blockly.Events.disable();
+        try {
+            allTypes.forEach(type => {
+                try {
+                    let searchBlob = type.toLowerCase();
+                    const msgKey = type.toUpperCase();
+                    if (Blockly.Msg[msgKey]) searchBlob += ' ' + Blockly.Msg[msgKey].toLowerCase();
+
+                    // Create a temporary block to extract text from its fields
+                    const tempBlock = workspace.newBlock(type);
+                    if (tempBlock) {
+                        tempBlock.inputList.forEach(input => {
+                            input.fieldRow.forEach(field => {
+                                const text = field.getText ? field.getText().toLowerCase() : '';
+                                if (text && !text.includes('%')) searchBlob += ' ' + text;
+                            });
+                        });
+                        tempBlock.dispose();
+                    }
+                    this._cache.set(type, searchBlob);
+                } catch (err) { }
+            });
+        } finally {
+            Blockly.Events.enable();
+        }
+        console.log(`BlockSearcher: Indexed ${this._cache.size} blocks.`);
+    },
+
+    /**
+     * Search for blocks matching the query.
+     */
+    search: function (query) {
+        const results = [];
+        const q = query.toLowerCase().trim();
+        if (!q) return results;
+
+        this._cache.forEach((blob, type) => {
+            if (blob.includes(q)) {
+                results.push({ 'kind': 'block', 'type': type });
+            }
+        });
+        return results;
+    },
+
+    /**
+     * Inject search box into the Blockly toolbox.
+     */
+    inject: function (workspace) {
+        const tryInject = () => {
+            const toolboxDiv = document.querySelector('.blocklyToolboxDiv') ||
+                document.querySelector('.blocklyTreeRoot') ||
+                document.querySelector('[role="tree"]');
+
+            if (!toolboxDiv) return false;
+            if (document.getElementById('block-search-container')) return true;
+
+            console.log('BlockSearcher: Injecting search box...');
+
+            const container = document.createElement('div');
+            container.id = 'block-search-container';
+            container.innerHTML = `<input type="text" id="block-search" placeholder="${Blockly.Msg['CAT_SEARCH'] || '搜尋積木...'}" autocomplete="off">`;
+
+            if (toolboxDiv.firstChild) {
+                toolboxDiv.insertBefore(container, toolboxDiv.firstChild);
+            } else {
+                toolboxDiv.appendChild(container);
+            }
+
+            // Stop all possible events from reaching the Blockly Toolbox to prevent selection errors
+            const stopEvents = ['click', 'mousedown', 'mouseup', 'pointerdown', 'pointerup', 'touchstart', 'touchend'];
+            stopEvents.forEach(eventName => {
+                container.addEventListener(eventName, (e) => e.stopPropagation());
+            });
+
+            const searchInput = document.getElementById('block-search');
+            searchInput.addEventListener('input', (e) => {
+                const query = e.target.value.toLowerCase().trim();
+                if (!query) {
+                    workspace.getFlyout().hide();
+                    return;
+                }
+                const results = this.search(query);
+                if (results.length > 0) {
+                    // Limit results to prevent lag
+                    workspace.getFlyout().show(results.slice(0, 30));
+                } else {
+                    workspace.getFlyout().hide();
+                }
+            });
+            return true;
+        };
+
+        // Retry injection until toolbox is ready
+        if (!tryInject()) {
+            const observer = new MutationObserver((mutations, obs) => {
+                if (tryInject()) obs.disconnect();
+            });
+            observer.observe(document.body, { childList: true, subtree: true });
+
+            let retry = 0;
+            const timer = setInterval(() => {
+                if (tryInject() || retry++ > 20) clearInterval(timer);
+            }, 500);
+        }
+    }
+};

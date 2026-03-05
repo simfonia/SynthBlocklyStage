@@ -98,11 +98,20 @@
     - [x] 8-3-2. 清理 `_core.js` 僅保留產生器框架邏輯。
 - [x] **8-4. 前端邏輯重構 (Frontend Refactor)**
     - [x] 8-4-1. 拆分 `main.js` 為 `blockly_manager.js`, `vscode_bridge.js`, `event_handlers.js`。
-- [ ] **8-5. 功能優化**
-    - [ ] 8-5-1. 實作 `sb_set_effect_param` 的動態監聽 (積木連動)。
 
 ### 待辦與優化
 - [ ] **持續優化**：針對複雜樂句的執行緒同步安全強化。
+
+### 階段九：開發者工具與輔助功能
+- [ ] **9-1. 積木截圖系統 (Screenshot)**
+    - [ ] 實作針對「選中積木及其子積木」的 SVG 轉圖片功能。
+    - [ ] 整合進積木右鍵選單。
+- [x] **9-2. 工作區導覽與優化 (Plugins)**
+    - [x] 整合 `workspace-minimap` 提供縮圖導覽。
+    - [x] 整合 `scroll-options` 支援積木拖曳邊界自動捲動。
+- [x] **9-3. 智慧搜尋 (Search Engine)**
+    - [x] 實作 Toolbox 嵌入式積木搜尋框。
+    - [x] 支援 i18n 文字索引與即時 Flyout 顯示。
 
 
 ---
